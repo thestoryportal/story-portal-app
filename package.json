@@ -11,9 +11,14 @@
     "format:check": "prettier --check .",
     "test": "vitest",
     "shots": "playwright test e2e/screenshots.spec.ts",
+    "capture:smoke": "node tools/capture/capture.mjs --mode smoke --label smoke",
+    "capture:buttons": "node tools/capture/capture.mjs --mode buttons --label buttons",
     "assets:catalog": "node tools/assets_catalog.mjs",
     "prompt:server": "node tools/ai/prompt_receiver.mjs",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "ai:new-topics": "node tools/ai/iterate.mjs new-topics",
+    "ai:hamburger": "node tools/ai/iterate.mjs hamburger",
+    "ai:menu-sway": "node tools/ai/iterate.mjs menu-sway"
   },
   "dependencies": {
     "react": "^19.2.0",
@@ -33,9 +38,12 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
+    "fast-glob": "^3.3.3",
     "globals": "^16.5.0",
     "jsdom": "^27.3.0",
+    "playwright": "^1.57.0",
     "prettier": "^3.7.4",
+    "sharp": "^0.34.5",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
     "vite": "^7.2.4",

@@ -22,3 +22,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# AI capture output
+/tools/ai/screenshots/timeline/
+/tools/ai/iterations/
+
+# External development tools (have their own git repos)
+/puppeteer-mcp-server/
+/servers/
+/story-portal-chat-tools/

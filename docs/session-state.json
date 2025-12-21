@@ -1,0 +1,44 @@
+{
+  "lastUpdated": "2025-12-19",
+  "activeWorkstreams": [
+    {
+      "id": "aaa-animations",
+      "name": "AAA Video Game Quality Animations",
+      "status": "implementation-ready",
+      "contextFile": "docs/aaa-animation-context.md",
+      "priority": "high",
+      "summary": "Golden electricity effect for portal wheel using Three.js + R3F + postprocessing bloom",
+      "nextAction": "Install dependencies and scaffold component structure",
+      "decisions": {
+        "made": [
+          "Use Three.js + React Three Fiber (not Canvas 2D)",
+          "Golden/amber palette (#FFF5C8 core, #FFD27A glow, #FF9A2A bloom)",
+          "ACES filmic tone mapping",
+          "Simplex-noise for procedural lightning paths"
+        ],
+        "pending": [
+          "Integration approach (overlay vs replace)",
+          "Performance budget",
+          "Activation trigger",
+          "Fallback strategy"
+        ]
+      }
+    }
+  ],
+  "datasetInfo": {
+    "location": "tools/ai/history/datasets/",
+    "parsedOutput": "tools/ai/history/parsed/",
+    "conversationCount": 112,
+    "messageCount": 3364,
+    "relevantConversations": [
+      "game-quality-animations-libraries-6940c2fc.md"
+    ]
+  },
+  "projectScripts": {
+    "dev": "pnpm dev",
+    "lint": "pnpm lint",
+    "format": "pnpm format",
+    "shots": "pnpm shots",
+    "searchHistory": "node tools/ai/history/search-history.js"
+  }
+}

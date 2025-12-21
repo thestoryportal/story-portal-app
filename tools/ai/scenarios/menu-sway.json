@@ -1,0 +1,11 @@
+{
+  "name": "menu-sway",
+  "description": "Open menu then click a menu item to trigger rope sway ripple",
+  "actions": [
+    { "type": "wait", "ms": 600 },
+    { "type": "click", "selector": "[data-testid='btn-hamburger']" },
+    { "type": "wait", "ms": 1200 },
+    { "type": "click", "selector": "[data-testid='menu-item-how-to-play']" },
+    { "type": "wait", "ms": 1400 }
+  ]
+}

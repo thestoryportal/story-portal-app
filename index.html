@@ -2,12 +2,182 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,700,1,0" rel="stylesheet">
+
+
+    <!-- Google Material Symbols (newer) -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,200..700,0..1,-50..200" />
+    <!-- Google Material Icons (older “material-icons” class) -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>story-portal</title>
   </head>
   <body>
     <div id="root"></div>
+    <!-- SVG filter for CNC carved text inner shadow effect -->
+<svg width="0" height="0" style="position:absolute;visibility:hidden;">
+  <defs>
+    <!-- Bronze gradient for SVG icons - complex fluctuating brass tones -->
+    <linearGradient id="bronze-gradient" x1="0%" y1="0%" x2="10%" y2="100%">
+      <stop offset="0%" style="stop-color:#faf0b0"/>
+      <stop offset="3%" style="stop-color:#f0e498"/>
+      <stop offset="6%" style="stop-color:#e8d888"/>
+      <stop offset="9%" style="stop-color:#f2e090"/>
+      <stop offset="12%" style="stop-color:#dcc878"/>
+      <stop offset="16%" style="stop-color:#d4c068"/>
+      <stop offset="19%" style="stop-color:#e0c870"/>
+      <stop offset="23%" style="stop-color:#cbb458"/>
+      <stop offset="27%" style="stop-color:#c4a850"/>
+      <stop offset="30%" style="stop-color:#d0b058"/>
+      <stop offset="34%" style="stop-color:#bca048"/>
+      <stop offset="38%" style="stop-color:#b49440"/>
+      <stop offset="41%" style="stop-color:#c4a448"/>
+      <stop offset="45%" style="stop-color:#a88830"/>
+      <stop offset="48%" style="stop-color:#b89038"/>
+      <stop offset="52%" style="stop-color:#a08028"/>
+      <stop offset="55%" style="stop-color:#ac8830"/>
+      <stop offset="59%" style="stop-color:#987420"/>
+      <stop offset="62%" style="stop-color:#a47c28"/>
+      <stop offset="66%" style="stop-color:#8c6818"/>
+      <stop offset="69%" style="stop-color:#987020"/>
+      <stop offset="73%" style="stop-color:#846014"/>
+      <stop offset="76%" style="stop-color:#906820"/>
+      <stop offset="80%" style="stop-color:#7a5810"/>
+      <stop offset="83%" style="stop-color:#886018"/>
+      <stop offset="87%" style="stop-color:#704c0c"/>
+      <stop offset="91%" style="stop-color:#7c5410"/>
+      <stop offset="95%" style="stop-color:#684408"/>
+      <stop offset="100%" style="stop-color:#5c3c04"/>
+    </linearGradient>
+    
+    <!-- Bronze gradient pressed state -->
+    <linearGradient id="bronze-gradient-pressed" x1="0%" y1="0%" x2="10%" y2="100%">
+      <stop offset="0%" style="stop-color:#d8c880"/>
+      <stop offset="15%" style="stop-color:#c8b868"/>
+      <stop offset="30%" style="stop-color:#b8a050"/>
+      <stop offset="45%" style="stop-color:#a89040"/>
+      <stop offset="60%" style="stop-color:#988030"/>
+      <stop offset="75%" style="stop-color:#806818"/>
+      <stop offset="100%" style="stop-color:#604808"/>
+    </linearGradient>
+    
+    <filter id="carved-text-filter" x="-20%" y="-20%" width="140%" height="140%">
+      <!-- Inner shadow (dark, from top - simulates depth of cut) -->
+      <feOffset dx="0" dy="2" in="SourceAlpha" result="shadowOffsetTop"/>
+      <feGaussianBlur stdDeviation="1" in="shadowOffsetTop" result="shadowBlurTop"/>
+      <feComposite in="shadowBlurTop" in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1" result="shadowCutoutTop"/>
+      <feFlood flood-color="rgba(30, 15, 5, 0.8)" result="shadowColorTop"/>
+      <feComposite in="shadowColorTop" in2="shadowCutoutTop" operator="in" result="innerShadowTop"/>
+      
+      <!-- Inner shadow (subtle, from sides) -->
+      <feOffset dx="1" dy="1" in="SourceAlpha" result="shadowOffsetSide"/>
+      <feGaussianBlur stdDeviation="0.5" in="shadowOffsetSide" result="shadowBlurSide"/>
+      <feComposite in="shadowBlurSide" in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1" result="shadowCutoutSide"/>
+      <feFlood flood-color="rgba(50, 30, 15, 0.5)" result="shadowColorSide"/>
+      <feComposite in="shadowColorSide" in2="shadowCutoutSide" operator="in" result="innerShadowSide"/>
+      
+      <!-- Bottom edge highlight (light catching carved edge) -->
+      <feOffset dx="0" dy="-1" in="SourceAlpha" result="highlightOffset"/>
+      <feGaussianBlur stdDeviation="0.5" in="highlightOffset" result="highlightBlur"/>
+      <feComposite in="highlightBlur" in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1" result="highlightCutout"/>
+      <feFlood flood-color="rgba(255, 250, 240, 0.7)" result="highlightColor"/>
+      <feComposite in="highlightColor" in2="highlightCutout" operator="in" result="innerHighlight"/>
+      
+      <!-- Combine all layers -->
+      <feMerge>
+        <feMergeNode in="SourceGraphic"/>
+        <feMergeNode in="innerShadowTop"/>
+        <feMergeNode in="innerShadowSide"/>
+        <feMergeNode in="innerHighlight"/>
+      </feMerge>
+    </filter>
+    
+    <!-- Bronze button engraved text filter - subtle metal engraving -->
+    <filter id="bronze-engraved-filter" x="-20%" y="-20%" width="140%" height="140%">
+      <!-- Create prominent brass grain texture -->
+      <feTurbulence type="fractalNoise" baseFrequency="1.5" numOctaves="5" seed="5" result="noise"/>
+      <feColorMatrix type="matrix" in="noise" result="brassNoise"
+        values="0.4 0 0 0 0
+                0.35 0 0 0 0
+                0.15 0 0 0 0
+                0 0 0 0.6 0"/>
+      <feComposite in="brassNoise" in2="SourceGraphic" operator="in" result="clippedNoise"/>
+      <feBlend in="SourceGraphic" in2="clippedNoise" mode="multiply" result="texturedText"/>
+      
+      <!-- Sharp dark line at top inner edge - crisp engraved shadow -->
+      <feOffset dx="0" dy="0.8" in="SourceAlpha" result="shadowOffset"/>
+      <feGaussianBlur stdDeviation="0.15" in="shadowOffset" result="shadowBlur"/>
+      <feComposite in="shadowBlur" in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1" result="shadowCutout"/>
+      <feFlood flood-color="rgba(15, 8, 0, 0.95)" result="shadowColor"/>
+      <feComposite in="shadowColor" in2="shadowCutout" operator="in" result="innerShadow"/>
+      
+      <!-- Sharp light line at bottom inner edge - crisp engraved highlight -->
+      <feOffset dx="0" dy="-0.6" in="SourceAlpha" result="highlightOffset"/>
+      <feGaussianBlur stdDeviation="0.1" in="highlightOffset" result="highlightBlur"/>
+      <feComposite in="highlightBlur" in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1" result="highlightCutout"/>
+      <feFlood flood-color="rgba(255, 235, 180, 0.8)" result="highlightColor"/>
+      <feComposite in="highlightColor" in2="highlightCutout" operator="in" result="highlight"/>
+      
+      <!-- Combine: textured text + inner shadow + highlight -->
+      <feMerge>
+        <feMergeNode in="texturedText"/>
+        <feMergeNode in="innerShadow"/>
+        <feMergeNode in="highlight"/>
+      </feMerge>
+    </filter>
+    
+    <!-- Patina button engraved text filter - matches bronze approach with rust/patina colors -->
+    <filter id="patina-engraved-filter" x="-20%" y="-20%" width="140%" height="140%">
+      <!-- Create prominent rust/patina grain texture -->
+      <feTurbulence type="fractalNoise" baseFrequency="1.5" numOctaves="5" seed="8" result="noise"/>
+      <feColorMatrix type="matrix" in="noise" result="patinaNoise"
+        values="0.35 0 0 0 0
+                0.30 0 0 0 0
+                0.25 0 0 0 0
+                0 0 0 0.6 0"/>
+      <feComposite in="patinaNoise" in2="SourceGraphic" operator="in" result="clippedNoise"/>
+      <feBlend in="SourceGraphic" in2="clippedNoise" mode="multiply" result="texturedText"/>
+      
+      <!-- Sharp dark line at top inner edge - crisp engraved shadow -->
+      <feOffset dx="0" dy="0.8" in="SourceAlpha" result="shadowOffset"/>
+      <feGaussianBlur stdDeviation="0.15" in="shadowOffset" result="shadowBlur"/>
+      <feComposite in="shadowBlur" in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1" result="shadowCutout"/>
+      <feFlood flood-color="rgba(10, 15, 12, 0.95)" result="shadowColor"/>
+      <feComposite in="shadowColor" in2="shadowCutout" operator="in" result="innerShadow"/>
+      
+      <!-- Sharp light line at bottom inner edge - crisp engraved highlight -->
+      <feOffset dx="0" dy="-0.6" in="SourceAlpha" result="highlightOffset"/>
+      <feGaussianBlur stdDeviation="0.1" in="highlightOffset" result="highlightBlur"/>
+      <feComposite in="highlightBlur" in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1" result="highlightCutout"/>
+      <feFlood flood-color="rgba(220, 210, 190, 0.8)" result="highlightColor"/>
+      <feComposite in="highlightColor" in2="highlightCutout" operator="in" result="highlight"/>
+      
+      <!-- Combine: textured text + inner shadow + highlight -->
+      <feMerge>
+        <feMergeNode in="texturedText"/>
+        <feMergeNode in="innerShadow"/>
+        <feMergeNode in="highlight"/>
+      </feMerge>
+    </filter>
+    
+    <!-- Brass texture gradient for icons -->
+    <linearGradient id="brass-texture-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#c9a855"/>
+      <stop offset="50%" style="stop-color:#9a7535"/>
+      <stop offset="100%" style="stop-color:#c4a050"/>
+    </linearGradient>
+    
+    <!-- Darker brass gradient for pressed state -->
+    <linearGradient id="brass-texture-gradient-dark" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#a08040"/>
+      <stop offset="50%" style="stop-color:#7a5525"/>
+      <stop offset="100%" style="stop-color:#a48545"/>
+    </linearGradient>
+  </defs>
+</svg>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

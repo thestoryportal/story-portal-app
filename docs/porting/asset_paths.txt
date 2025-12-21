@@ -1,0 +1,11 @@
+/MollysanscpersonalBlack-zWE4.ttf
+/background.webp
+/portal-ring.webp
+/story-portal-app-hamburger-menu-gear.webp
+/story-portal-button-click.webp
+/story-portal-button-primary.webp
+/story-portal-button-secondary.webp
+/story-portal-button-spin-click.webp
+/story-portal-button-spin-static.webp
+/story-portal-logo.svg
+/wood-panel.webp

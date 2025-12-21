@@ -10,7 +10,6 @@ import type { HamburgerAnimPhase } from '../../types';
 interface HamburgerMenuProps {
   isOpen: boolean;
   animPhase: HamburgerAnimPhase;
-  isAnimating: boolean;
   buttonShadowStyle: CSSProperties;
   onToggle: () => void;
 }
@@ -18,10 +17,11 @@ interface HamburgerMenuProps {
 export function HamburgerMenu({
   isOpen,
   animPhase,
-  isAnimating,
   buttonShadowStyle,
   onToggle,
 }: HamburgerMenuProps) {
+  // Determine if currently animating (any non-null phase)
+  const isAnimating = animPhase !== null;
   // Determine effect states (lifted/floating vs engraved)
   const isLifted = [
     'opening-extrude',

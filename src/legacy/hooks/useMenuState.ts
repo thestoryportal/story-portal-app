@@ -9,6 +9,8 @@ import type { HamburgerAnimPhase, MenuState } from '../types';
 
 export interface UseMenuStateReturn extends MenuState {
   toggleMenu: () => void;
+  closeMenu: () => void;
+  handlePanelClick: (panelIndex: number) => void;
   setSwayingFromPanel: (panel: number | null) => void;
   hamburgerAnimatingRef: React.MutableRefObject<boolean>;
   smokeTimeoutRef: React.MutableRefObject<ReturnType<typeof setTimeout> | null>;
@@ -140,6 +142,18 @@ export function useMenuState(): UseMenuStateReturn {
     }
   }, []);
 
+  // Close menu (wrapper around toggleMenu when menu is open)
+  const closeMenu = useCallback(() => {
+    if (menuOpen && !hamburgerAnimatingRef.current) {
+      toggleMenu();
+    }
+  }, [menuOpen, toggleMenu]);
+
+  // Handle panel click - triggers sway animation
+  const handlePanelClick = useCallback((panelIndex: number) => {
+    setSwayingFromPanel(panelIndex);
+  }, [setSwayingFromPanel]);
+
   return {
     // State
     menuOpen,
@@ -153,6 +167,8 @@ export function useMenuState(): UseMenuStateReturn {
 
     // Actions
     toggleMenu,
+    closeMenu,
+    handlePanelClick,
     setSwayingFromPanel,
 
     // Refs

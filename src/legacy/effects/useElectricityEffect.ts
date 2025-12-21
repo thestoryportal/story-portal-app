@@ -34,7 +34,7 @@ export interface UseElectricityEffectOptions {
   /** Whether the effect is active */
   enabled: boolean;
   /** Canvas ref to render to */
-  canvasRef: React.RefObject<HTMLCanvasElement>;
+  canvasRef: React.RefObject<HTMLCanvasElement | null>;
 }
 
 interface FramebufferPair {

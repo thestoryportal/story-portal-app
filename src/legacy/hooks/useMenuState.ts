@@ -88,12 +88,14 @@ export function useMenuState(): UseMenuStateReturn {
         }, 200);
       }, 150);
 
-      // Trigger smoke poof immediately when menu starts to unfold
-      setSmokeAnimKey((k) => k + 1);
-      setShowSmokePoof(true);
-      smokeTimeoutRef.current = setTimeout(() => {
-        setShowSmokePoof(false);
-      }, 3500);
+      // Trigger smoke poof just before panels start to unfold (~700ms)
+      smokeDelayTimeoutRef.current = setTimeout(() => {
+        setSmokeAnimKey((k) => k + 1);
+        setShowSmokePoof(true);
+        smokeTimeoutRef.current = setTimeout(() => {
+          setShowSmokePoof(false);
+        }, 3500);
+      }, 650);
     } else {
       // Closing sequence
       setShowMenuLogo(false);
@@ -122,14 +124,14 @@ export function useMenuState(): UseMenuStateReturn {
         }, 200);
       }, 150);
 
-      // Trigger smoke poof when menu panels land back down (900ms delay)
+      // Trigger smoke poof when menu panels land back down (1150ms delay)
       smokeDelayTimeoutRef.current = setTimeout(() => {
         setSmokeAnimKey((k) => k + 1);
         setShowSmokePoof(true);
         smokeTimeoutRef.current = setTimeout(() => {
           setShowSmokePoof(false);
         }, 3500);
-      }, 900);
+      }, 1150);
     }
   }, [menuOpen]);
 

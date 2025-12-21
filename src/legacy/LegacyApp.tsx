@@ -4,7 +4,7 @@
  * Refactored to use extracted modules for maintainability.
  */
 
-import './legacy.css';
+import './styles/index.css';
 import { useState, useRef, useCallback } from 'react';
 
 // Types

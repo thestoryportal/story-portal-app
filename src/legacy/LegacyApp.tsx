@@ -31,9 +31,11 @@ import {
   SpinButton,
   NewTopicsButton,
   RecordButton,
+  NavButtons,
   HamburgerMenu,
   MenuBackdrop,
   MenuPanels,
+  MenuLogo,
   SmokeEffect,
 } from './components';
 
@@ -128,6 +130,7 @@ export default function LegacyApp() {
     smokeAnimKey,
     swayingFromPanel,
     swayAnimKey,
+    showMenuLogo,
     toggleMenu,
     closeMenu,
     handlePanelClick,
@@ -368,6 +371,16 @@ export default function LegacyApp() {
 
         {/* Smoke Effect */}
         <SmokeEffect visible={showSmokePoof} animKey={smokeAnimKey} />
+
+        {/* Menu Logo */}
+        <MenuLogo visible={showMenuLogo} hasBeenOpened={menuHasBeenOpened} />
+
+        {/* Nav Buttons (How to Play, My Stories) */}
+        <NavButtons
+          onHowToPlay={() => setView('about')}
+          onMyStories={() => setView('stories')}
+          buttonShadowStyle={buttonShadowStyle}
+        />
       </div>
     </div>
   );

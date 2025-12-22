@@ -67,14 +67,27 @@ async function main() {
   const browser = await chromium.launch({
     headless: false,
     args: [
-      '--use-gl=egl',
+      // GPU/WebGL settings (macOS compatible)
       '--enable-webgl',
+      '--enable-webgl2',
       '--ignore-gpu-blocklist',
+      '--enable-gpu-rasterization',
+      // Stability
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      // Consistent rendering
+      '--force-device-scale-factor=1',
+      '--high-dpi-support=1',
     ]
   });
 
   const context = await browser.newContext({
-    viewport: { width: 1920, height: 1080 }
+    viewport: {
+      width: 1920,
+      height: 1080,
+      deviceScaleFactor: 2,  // Retina capture
+    }
   });
   const page = await context.newPage();
 

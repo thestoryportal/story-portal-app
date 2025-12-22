@@ -1,0 +1,105 @@
+{
+  "name": "electricity-portal",
+  "description": "Electricity arc effect inside the portal ring",
+
+  "capture": {
+    "selector": "[data-capture='portal']",
+    "fallbackSelector": ".portal-container",
+    "duration": 3500,
+    "fps": 30,
+    "captureMode": "video",
+    "videoFps": 30,
+    "extractFrames": true,
+    "waitForEffect": true,
+    "effectReadySignal": "window.__CAPTURE__?.effectActive",
+    "viewport": { "width": 1440, "height": 768 },
+    "deviceScaleFactor": 1,
+    "settleMs": 500,
+    "headless": false,
+    "mode": "newtopics",
+    "crop": {
+      "x": 485,
+      "y": 41,
+      "width": 465,
+      "height": 465,
+      "circularMask": true,
+      "_note": "Centered on portal at (717,273) for 1440x768 viewport"
+    },
+    "effectTiming": {
+      "startMs": 600,
+      "endMs": 2450,
+      "_note": "Time-based effect window (~1.85s duration, ~94 frames at 50fps)"
+    }
+  },
+
+  "reference": {
+    "withEffect": "animations/electricity-portal/references/465x465/with_effect.png",
+    "withoutEffect": "animations/electricity-portal/references/465x465/without_effect.png",
+    "animation": "animations/electricity-portal/references/465x465/reference_animation.apng",
+    "mask": "animations/electricity-portal/references/465x465/golden_mask.png",
+    "baseline": "animations/electricity-portal/references/465x465/quality_spec.json"
+  },
+
+  "thresholds": {
+    "ssim": {
+      "fail": 0.70,
+      "pass": 0.85,
+      "good": 0.90,
+      "excellent": 0.95
+    },
+    "diffPercent": {
+      "max": 15,
+      "warning": 10,
+      "ideal": 5
+    },
+    "maxIterations": 20
+  },
+
+  "convergence": {
+    "minImprovement": 0.01,
+    "plateauIterations": 3,
+    "targetSsim": 0.90
+  },
+
+  "feedback": {
+    "includeHeatmap": true,
+    "includeComparison": true,
+    "includePerFrameScores": false,
+    "maxFramesToShow": 6
+  },
+
+  "codeTargets": [
+    "src/components/Portal/ElectricityEffect.tsx",
+    "src/components/Portal/ElectricityEffect.css",
+    "src/shaders/electricity.glsl"
+  ],
+
+  "setupStatus": {
+    "viewportVerified": true,
+    "cropCalibrated": true,
+    "maskVerified": true,
+    "timingVerified": true,
+    "videoPipelineVerified": true,
+    "verifiedDate": "2025-12-22",
+    "captureFormat": "jpeg",
+    "captureMode": "video-screencast",
+    "effectDuration": "~1.85s",
+    "effectTimingMs": "600-2450",
+    "circularMaskApplied": true
+  },
+
+  "visualSpec": {
+    "color": {
+      "primary": "#FFB800",
+      "secondary": "#FF6B00",
+      "glow": "#FFF4D4"
+    },
+    "characteristics": [
+      "Bright orange/yellow electricity arcs",
+      "Intense radial glow from center",
+      "Multiple branching lightning bolts",
+      "Pulsing/flickering animation",
+      "No visible background through effect"
+    ]
+  }
+}

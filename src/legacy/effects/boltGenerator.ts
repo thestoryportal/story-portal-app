@@ -13,6 +13,36 @@ export interface Point {
   y: number;
 }
 
+// Maximum radius from center to fit within golden mask
+const MAX_RADIUS_TOP = 136;
+const MAX_RADIUS_BOTTOM_LEFT = 134;
+const MAX_RADIUS_BOTTOM_RIGHT = 131;
+const CENTER_X = 201;
+const CENTER_Y = 193;
+
+// Clamp a point to stay within the max radius from center
+// Different radii for different quadrants
+function clampToRadius(x: number, y: number): Point {
+  const dx = x - CENTER_X;
+  const dy = y - CENTER_Y;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+
+  let maxRadius: number;
+  if (dy <= 0) {
+    maxRadius = MAX_RADIUS_TOP;
+  } else if (dx < 0) {
+    maxRadius = MAX_RADIUS_BOTTOM_LEFT;
+  } else {
+    maxRadius = MAX_RADIUS_BOTTOM_RIGHT;
+  }
+
+  if (dist > maxRadius) {
+    const scale = maxRadius / dist;
+    return { x: CENTER_X + dx * scale, y: CENTER_Y + dy * scale };
+  }
+  return { x, y };
+}
+
 export interface Branch {
   startT: number;
   angle: number;
@@ -47,7 +77,7 @@ export function initializeBolts(): BoltWithBranches[] {
   const numRadialBolts = cfg.numMainBolts;
   for (let i = 0; i < numRadialBolts; i++) {
     const angle = (i / numRadialBolts) * Math.PI * 2 + (Math.random() - 0.5) * 0.15;
-    const length = 170 + Math.random() * 25;
+    const length = MAX_RADIUS_BOTTOM_RIGHT; // Fixed length to reach exactly to golden mask edge
     const seed = Math.random() * 1000;
     const thickness = cfg.boltThicknessMin + Math.random() * (cfg.boltThicknessMax - cfg.boltThicknessMin);
     const speed = cfg.boltSpeedMin + Math.random() * (cfg.boltSpeedMax - cfg.boltSpeedMin);
@@ -63,7 +93,7 @@ export function initializeBolts(): BoltWithBranches[] {
       branches.push({
         startT: branchT + (Math.random() - 0.5) * 0.06,
         angle: angle + (Math.random() - 0.5) * 1.4,
-        length: 18 + Math.random() * 50,
+        length: 12 + Math.random() * 18, // Tighter branch range (12-30)
         seed: Math.random() * 1000,
         thickness: branchThickness,
         speed: 3.5 + Math.random() * 2.5,
@@ -155,7 +185,7 @@ export function updateBoltOpacities(
  */
 export function createFlashArc(): FlashArc {
   const angle = Math.random() * Math.PI * 2;
-  const length = 100 + Math.random() * 80;
+  const length = MAX_RADIUS_BOTTOM_RIGHT; // Fixed length to reach exactly to golden mask edge
 
   return {
     id: Date.now() + Math.random(),
@@ -198,10 +228,9 @@ export function generateAnimatedPath(
     const taper = Math.sin(t * Math.PI);
     const displacement = (noiseVal + jitter) * bolt.length * 0.25 * taper;
 
-    points.push({
-      x: baseX + perpX * displacement,
-      y: baseY + perpY * displacement,
-    });
+    const finalX = baseX + perpX * displacement;
+    const finalY = baseY + perpY * displacement;
+    points.push(clampToRadius(finalX, finalY));
   }
   return points;
 }
@@ -229,10 +258,9 @@ export function generateBranchPath(
     const noiseVal = fractalNoise(noise, t * 4 + time * branch.speed + branch.seed, branch.seed);
     const taper = Math.sin(t * Math.PI);
     const displacement = noiseVal * branch.length * 0.3 * taper;
-    points.push({
-      x: baseX + perpBX * displacement,
-      y: baseY + perpBY * displacement,
-    });
+    const finalX = baseX + perpBX * displacement;
+    const finalY = baseY + perpBY * displacement;
+    points.push(clampToRadius(finalX, finalY));
   }
   return points;
 }
@@ -260,10 +288,9 @@ export function generateFlashPath(
     const noiseVal = fractalNoise(arc.noise, t * 6 + time * 5, arc.seed);
     const taper = Math.sin(t * Math.PI);
     const displacement = noiseVal * arc.length * 0.25 * taper;
-    points.push({
-      x: baseX + perpX * displacement,
-      y: baseY + perpY * displacement,
-    });
+    const finalX = baseX + perpX * displacement;
+    const finalY = baseY + perpY * displacement;
+    points.push(clampToRadius(finalX, finalY));
   }
   return points;
 }

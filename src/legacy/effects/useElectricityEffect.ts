@@ -78,8 +78,8 @@ export function useElectricityEffect({ enabled, canvasRef }: UseElectricityEffec
     }
 
     const state = electricStateRef.current;
-    const centerX = 200,
-      centerY = 200;
+    const centerX = 201,  // Adjusted right 2px
+      centerY = 193; // Adjusted down 3px
     const resolution = 400;
 
     // Initialize bolts on first run

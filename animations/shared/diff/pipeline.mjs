@@ -130,7 +130,7 @@ export async function runPipeline(options) {
  * Load scenario configuration
  */
 function loadScenario(name) {
-  const scenarioPath = path.join(PROJECT_ROOT, 'Animations', name, 'scenario.json');
+  const scenarioPath = path.join(PROJECT_ROOT, 'animations', name, 'scenario.json');
 
   if (!fs.existsSync(scenarioPath)) {
     throw new Error(`Scenario not found: ${scenarioPath}`);
@@ -161,21 +161,132 @@ async function runCapture(scenario, iterationDir) {
   const captureConfig = scenario.capture || {};
   const useVideo = captureConfig.captureMode === 'video';
 
-  // Build capture command arguments
-  const headless = captureConfig.headless !== false; // default true
+  if (useVideo) {
+    // Use video.mjs for video capture mode (Puppeteer screencast)
+    return runVideoCapture(scenario, captureDir, captureConfig);
+  } else {
+    // Use run.mjs for screenshot burst mode
+    return runScreenshotCapture(scenario, captureDir, captureConfig);
+  }
+}
+
+/**
+ * Run video capture using video.mjs (Puppeteer screencast)
+ */
+async function runVideoCapture(scenario, captureDir, captureConfig) {
+  const viewport = captureConfig.viewport || { width: 1440, height: 768 };
+  const cropConfig = captureConfig.crop || {};
+  const effectTiming = captureConfig.effectTiming || {};
+
+  const args = [
+    'node',
+    'animations/shared/capture/video.mjs',
+    '--scenario', scenario.name,
+    '--label', `iter-${scenario.name}`,
+    '--mode', captureConfig.mode || 'newtopics',
+    '--duration', String(captureConfig.duration || 4000),
+    '--settleMs', String(captureConfig.settleMs || 500),
+    '--fps', String(captureConfig.videoFps || 30),
+    '--effectStartMs', String(effectTiming.startMs || 600),
+    '--effectEndMs', String(effectTiming.endMs || 2450),
+  ];
+
+  // Add crop args if specified
+  if (cropConfig.x !== undefined) {
+    args.push('--cropX', String(cropConfig.x));
+    args.push('--cropY', String(cropConfig.y));
+    args.push('--cropWidth', String(cropConfig.width));
+    args.push('--cropHeight', String(cropConfig.height));
+  }
+
+  if (!cropConfig.circularMask) {
+    args.push('--no-mask');
+  }
+
+  console.log(`  Running video capture: ${args.slice(0, 4).join(' ')} ...`);
+  console.log(`  Mode: Video screencast with effect timing ${effectTiming.startMs}-${effectTiming.endMs}ms`);
+
+  const result = spawnSync(args[0], args.slice(1), {
+    cwd: PROJECT_ROOT,
+    stdio: 'pipe',
+    env: { ...process.env }
+  });
+
+  const stdout = result.stdout?.toString() || '';
+  const stderr = result.stderr?.toString() || '';
+
+  if (result.status !== 0) {
+    console.error('  Capture stdout:', stdout);
+    console.error('  Capture stderr:', stderr);
+    throw new Error(`Video capture failed with status ${result.status}`);
+  }
+
+  // Parse output to find the capture directory
+  const outDirMatch = stdout.match(/Output directory:\s*(.+)/);
+  if (!outDirMatch) {
+    console.error('  Capture output:', stdout);
+    throw new Error('Could not parse video capture output directory');
+  }
+
+  const videoCaptureDir = outDirMatch[1].trim();
+  const maskedDir = path.join(videoCaptureDir, 'masked');
+
+  // Copy masked frames to our iteration frames directory
+  if (fs.existsSync(maskedDir)) {
+    const maskedFrames = fs.readdirSync(maskedDir)
+      .filter(f => f.endsWith('.png'))
+      .sort();
+
+    for (const frame of maskedFrames) {
+      fs.copyFileSync(
+        path.join(maskedDir, frame),
+        path.join(captureDir, frame)
+      );
+    }
+
+    console.log(`  Copied ${maskedFrames.length} masked frames to ${captureDir}`);
+  } else {
+    // Fallback to crops directory
+    const cropsDir = path.join(videoCaptureDir, 'crops');
+    if (fs.existsSync(cropsDir)) {
+      const cropFrames = fs.readdirSync(cropsDir)
+        .filter(f => f.endsWith('.png'))
+        .sort();
+
+      for (const frame of cropFrames) {
+        fs.copyFileSync(
+          path.join(cropsDir, frame),
+          path.join(captureDir, frame)
+        );
+      }
+
+      console.log(`  Copied ${cropFrames.length} cropped frames to ${captureDir}`);
+    } else {
+      throw new Error(`No frames found in ${videoCaptureDir}`);
+    }
+  }
+
+  return captureDir;
+}
+
+/**
+ * Run screenshot burst capture using run.mjs
+ */
+async function runScreenshotCapture(scenario, captureDir, captureConfig) {
+  const headless = captureConfig.headless !== false;
   const viewport = captureConfig.viewport || { width: 2560, height: 1600 };
   const cropConfig = captureConfig.crop || null;
+
   const args = [
     'node',
     'animations/shared/capture/run.mjs',
+    '--scenario', scenario.name,
     '--label', scenario.name,
     '--mode', captureConfig.mode || 'smoke',
     '--burstFrames', String(captureConfig.burstFrames || 30),
     '--burstIntervalMs', String(captureConfig.burstIntervalMs || 50),
     '--settleMs', String(captureConfig.settleMs || 1000),
     '--headless', headless ? 'true' : 'false',
-    '--video', useVideo ? 'true' : 'false',
-    '--gif', 'false',
     '--viewportWidth', String(viewport.width),
     '--viewportHeight', String(viewport.height)
   ];
@@ -192,10 +303,7 @@ async function runCapture(scenario, iterationDir) {
     }
   }
 
-  console.log(`  Running: ${args.join(' ')}`);
-  if (useVideo) {
-    console.log(`  Mode: Video capture (will extract frames)`);
-  }
+  console.log(`  Running screenshot capture: ${args.slice(0, 4).join(' ')} ...`);
 
   const result = spawnSync(args[0], args.slice(1), {
     cwd: PROJECT_ROOT,
@@ -208,7 +316,7 @@ async function runCapture(scenario, iterationDir) {
     const stdout = result.stdout?.toString() || '';
     console.error('  Capture output:', stdout);
     console.error('  Capture errors:', stderr);
-    throw new Error(`Capture failed with status ${result.status}`);
+    throw new Error(`Screenshot capture failed with status ${result.status}`);
   }
 
   // Parse output to find the capture directory
@@ -218,65 +326,24 @@ async function runCapture(scenario, iterationDir) {
 
   if (outDirMatch) {
     const actualCaptureDir = outDirMatch[1].trim();
-    // Use crops directory if available (already cropped frames)
     const cropsDir = cropsMatch ? cropsMatch[1].trim() : null;
     const sourceDir = cropsDir && fs.existsSync(cropsDir) ? cropsDir : actualCaptureDir;
+
     console.log(`  Captured to: ${actualCaptureDir}`);
     if (cropsDir) console.log(`  Using crops from: ${cropsDir}`);
 
-    if (useVideo) {
-      // Find video file and extract frames
-      const videoFile = fs.readdirSync(actualCaptureDir)
-        .find(f => f.endsWith('.webm') || f.endsWith('.mp4'));
+    // Copy frames to our iteration directory
+    const sourceFrames = fs.readdirSync(sourceDir)
+      .filter(f => f.endsWith('.png'));
 
-      if (videoFile) {
-        const videoPath = path.join(actualCaptureDir, videoFile);
-        console.log(`  Extracting frames from video: ${videoFile}`);
-
-        const fps = captureConfig.videoFps || 30;
-        const durationMs = captureConfig.duration || 3000;
-        const durationSec = durationMs / 1000;
-        const maxFrames = Math.ceil(durationSec * fps);
-        // Start capturing right when click happens (at settle time)
-        const settleMs = captureConfig.settleMs || 500;
-        const startOffset = settleMs / 1000; // Start at click moment
-
-        console.log(`  Start: ${startOffset}s, Duration: ${durationSec}s, FPS: ${fps}, Max frames: ${maxFrames}`);
-
-        const ffmpegResult = spawnSync('ffmpeg', [
-          '-ss', String(startOffset),     // Skip to after click
-          '-i', videoPath,
-          '-t', String(durationSec),      // Limit duration
-          '-vf', `fps=${fps}`,
-          '-frames:v', String(maxFrames), // Safety limit on frame count
-          '-vsync', '0',
-          path.join(captureDir, 'frame_%03d.png')
-        ], { stdio: 'pipe' });
-
-        if (ffmpegResult.status !== 0) {
-          console.error('  ffmpeg error:', ffmpegResult.stderr?.toString());
-          throw new Error('Failed to extract frames from video');
-        }
-
-        const extractedFrames = fs.readdirSync(captureDir).filter(f => f.endsWith('.png'));
-        console.log(`  Extracted ${extractedFrames.length} frames at ${fps}fps`);
-      } else {
-        console.warn('  ⚠️  No video file found, falling back to screenshots');
-      }
-    } else {
-      // Copy screenshot frames to our iteration directory (from crops if available)
-      const sourceFrames = fs.readdirSync(sourceDir)
-        .filter(f => f.endsWith('.png'));
-
-      for (const frame of sourceFrames) {
-        fs.copyFileSync(
-          path.join(sourceDir, frame),
-          path.join(captureDir, frame)
-        );
-      }
-
-      console.log(`  Copied ${sourceFrames.length} frames from ${sourceDir} to ${captureDir}`);
+    for (const frame of sourceFrames) {
+      fs.copyFileSync(
+        path.join(sourceDir, frame),
+        path.join(captureDir, frame)
+      );
     }
+
+    console.log(`  Copied ${sourceFrames.length} frames to ${captureDir}`);
   } else {
     console.warn('  ⚠️  Could not parse capture output directory');
   }

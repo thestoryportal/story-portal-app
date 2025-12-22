@@ -69,9 +69,8 @@
   },
 
   "codeTargets": [
-    "src/components/Portal/ElectricityEffect.tsx",
-    "src/components/Portal/ElectricityEffect.css",
-    "src/shaders/electricity.glsl"
+    "src/legacy/effects/boltGenerator.ts",
+    "src/legacy/effects/useElectricityEffect.ts"
   ],
 
   "setupStatus": {

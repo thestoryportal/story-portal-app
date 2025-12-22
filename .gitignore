@@ -23,11 +23,14 @@ dist-ssr
 *.sln
 *.sw?
 
-# AI capture output
-/tools/ai/screenshots/timeline/
-/tools/ai/iterations/
-
 # External development tools (have their own git repos)
 /puppeteer-mcp-server/
 /servers/
 /story-portal-chat-tools/
+
+# Animation pipeline output (per-scenario, generated)
+animations/*/output/*
+!animations/*/output/.gitkeep
+
+# Archive directory (deprecated scripts, backups)
+animations/_archive/

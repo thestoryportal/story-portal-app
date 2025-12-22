@@ -1,222 +1,123 @@
-# Visual Iteration Pipeline Reference
+# Visual Iteration Pipeline — Skill Reference
 
-## Purpose
-Autonomously refine visual effects through measured iteration cycles until quality thresholds are met or human checkpoint is needed.
+## Overview
 
-## When to Use
-- AAA animation effects (electricity, smoke, particles)
-- Responsive layout tuning across device matrix
-- Visual regression testing
-- Any task with objective, measurable visual criteria
+The animation iteration pipeline enables automated capture, analysis, and comparison of visual effects for quality tuning.
 
-## Prerequisites Checklist
-Before entering visual iteration mode:
-- [ ] Reference assets available (mockup image, spec document)
-- [ ] Dev server running (`pnpm dev`)
-- [ ] Capture tools operational (test with `node tools/ai/capture/capture.mjs --test`)
-- [ ] Scoring thresholds defined for this effect
+**Full Documentation:** `animations/shared/docs/SKILL.md`
 
-## Pipeline Architecture
+## Directory Structure
 
 ```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   CAPTURE   │────▶│   ANALYZE   │────▶│  EVALUATE   │
-│  (frames)   │     │  (scoring)  │     │ (decision)  │
-└─────────────┘     └─────────────┘     └──────┬──────┘
-                                               │
-                    ┌──────────────────────────┼──────────────────────────┐
-                    │                          │                          │
-                    ▼                          ▼                          ▼
-             ┌─────────────┐           ┌─────────────┐           ┌─────────────┐
-             │  CONTINUE   │           │ CHECKPOINT  │           │  COMPLETE   │
-             │  (adjust)   │           │  (human)    │           │  (done)     │
-             └──────┬──────┘           └─────────────┘           └─────────────┘
-                    │
-                    └─────────────────────▶ Back to CAPTURE
+animations/
+├── shared/                         # Shared tooling
+│   ├── capture/
+│   │   ├── run.mjs                 # Primary Puppeteer capture
+│   │   └── pick_artifact.mjs       # Artifact selector
+│   ├── diff/
+│   │   ├── pipeline.mjs            # Main iteration loop
+│   │   ├── analyze.mjs             # SSIM analysis
+│   │   └── crop.mjs                # Frame cropping
+│   ├── rules/                      # Pipeline guidelines
+│   ├── docs/                       # Full documentation
+│   │   ├── SKILL.md                # Main skill doc
+│   │   ├── sessions/               # Session guides
+│   │   ├── workflows/              # Per-phase workflows
+│   │   ├── references/             # Reference docs
+│   │   └── analysis/               # Troubleshooting
+│   └── iterate.mjs                 # CLI entry point
+│
+├── electricity-portal/             # Per-scenario directory
+│   ├── scenario.json               # Scenario configuration
+│   ├── context.md                  # Scenario context
+│   ├── references/                 # Baseline images/metrics
+│   │   └── 465x465/                # Reference assets
+│   └── output/                     # Generated (gitignored)
+│
+├── hamburger/                      # Other scenarios
+├── menu-sway/
+└── new-topics/
 ```
 
-## Iteration Cycle
+## 4 Setup Phases (Human Verified)
 
-### 1. CAPTURE
+Before running the iteration loop, complete these setup phases:
+
+| Phase | Purpose | Verification |
+|-------|---------|--------------|
+| 1. Viewport Debug | Ensure full UI captured | "Is entire UI visible?" |
+| 2. Crop Calibration | Center effect region | "Is portal centered?" |
+| 3. Golden Mask | Define scoring area | "Does mask cover effect?" |
+| 4. Timing Verification | Capture at peak | "Is effect visible?" |
+
+**Full setup guide:** `animations/shared/docs/sessions/session-setup.md`
+
+## Key Commands
+
 ```bash
-# Single frame
-node tools/ai/capture/capture.mjs --output ./iteration-N/
+# Run full iteration pipeline
+node animations/shared/diff/pipeline.mjs --scenario electricity-portal
 
-# Burst mode for animations (recommended)
-node tools/ai/capture/capture.mjs --burst 10 --duration 2000 --output ./iteration-N/
+# Capture only
+node animations/shared/capture/run.mjs --mode smoke --label test
+
+# Analyze existing frames
+node animations/shared/diff/run-analysis.mjs --latest
+
+# Pick best artifact from capture
+node animations/shared/capture/pick_artifact.mjs
 ```
 
-**WebGL Configuration (CRITICAL):**
-- Do NOT use `--use-gl=egl` flag (breaks WebGL on macOS)
-- Use default Puppeteer GL or `--use-gl=angle`
-- Ensure `preserveDrawingBuffer: true` in WebGL context
+## npm Scripts
 
-**Capture settings:**
-```javascript
-// Working Puppeteer config
-{
-  headless: 'new',
-  args: [
-    '--enable-webgl',
-    '--enable-webgl2',
-    '--ignore-gpu-blocklist',
-    // NO --use-gl=egl
-  ]
-}
-```
+| Script | Command |
+|--------|---------|
+| `pnpm cap:smoke` | Smoke test capture |
+| `pnpm cap:buttons` | Button animation capture |
+| `pnpm cap:newtopics` | New topics animation |
+| `pnpm cap:menu-open` | Menu open animation |
+| `pnpm cap:menu-close` | Menu close animation |
+| `pnpm diff:pipeline` | Run diff pipeline |
+| `pnpm diff:analyze` | Run analysis |
+| `pnpm iterate:electricity` | Full electricity iteration |
 
-### 2. ANALYZE
-```bash
-node tools/ai/capture/pipeline.mjs --input ./iteration-N/ --reference ./reference/
-```
+## Scoring Thresholds
 
-**Metrics extracted:**
-| Metric | Tool | Purpose |
-|--------|------|---------|
-| SSIM | ssim.js | Structural similarity to reference |
-| Pixel diff | pixelmatch | Localized differences |
-| Color histogram | custom | Palette compliance |
-
-**Known limitation:** SSIM is problematic for stochastic effects (electricity, particles). Two "correct" frames may score differently. Use best-of-N scoring for animations.
-
-### 3. EVALUATE
-
-| Score Range | Status | Action |
-|-------------|--------|--------|
-| ≥ 0.95 | EXCELLENT | Complete - report success |
-| 0.90 - 0.94 | GOOD | Polish pass or accept |
-| 0.85 - 0.89 | PASS | Continue if improving |
-| 0.70 - 0.84 | NEEDS WORK | Continue, significant changes needed |
-| < 0.70 | FAIL | Major issues, may need architectural change |
-
-**Decision matrix:**
-```
-IF score ≥ EXCELLENT (0.95):
-  → COMPLETE
-  
-ELSE IF iteration = MAX_ITERATIONS:
-  → CHECKPOINT with human
-  
-ELSE IF score_delta < 0.01 for 3 iterations:
-  → CHECKPOINT (plateau detected)
-  
-ELSE IF score < previous_best:
-  → CHECKPOINT (regression detected)
-  
-ELSE IF tool_failure:
-  → STOP, report error
-  
-ELSE:
-  → CONTINUE to next iteration
-```
-
-### 4. ADJUST (if continuing)
-
-Map score deficiencies to specific code changes:
-
-| Deficiency | Likely Cause | Code Location |
-|------------|--------------|---------------|
-| Low orange intensity | Bolt color too dim | `BOLT_FRAGMENT_SHADER` |
-| Missing glow | Bloom not rendering | `bloomPass` settings |
-| Too few bolts | Count too low | `BOLT_COUNT` constant |
-| Wrong flicker rate | Timing parameter | `FLICKER_INTERVAL` |
-
-**Adjustment rules:**
-- Change ONE parameter per iteration
-- Document the change and rationale
-- Predict expected score impact
-
-### 5. LOG
-
-Each iteration must output:
-
-```markdown
-## Iteration [N] — [timestamp]
-
-### Metrics
-| Metric | Value | Δ from Previous | Δ from Best |
-|--------|-------|-----------------|-------------|
-| SSIM   | 0.82  | +0.04           | -0.02       |
-| Color  | 0.91  | +0.02           | +0.02       |
-
-### Change Applied
-- File: `src/effects/electricity.ts`
-- Line: 47
-- Change: Increased `GLOW_INTENSITY` from 1.2 to 1.5
-- Rationale: Previous frame showed insufficient bloom radius
-
-### Frame Analysis
-- Bolts visible: 8 (target: 6-12) ✅
-- Orange presence: 34% (target: 30-50%) ✅
-- Center glow: 210 (target: 180-255) ✅
-
-### Decision
-[CONTINUE | CHECKPOINT | COMPLETE]
-
-### Next Action
-[Description of planned change OR reason for checkpoint]
-```
+| Score | Rating | Action |
+|-------|--------|--------|
+| >= 0.95 | EXCELLENT | Auto-complete |
+| 0.85–0.95 | GOOD | Continue if improving |
+| 0.70–0.85 | ACCEPTABLE | Needs work |
+| < 0.70 | POOR | Major changes needed |
 
 ## Exit Conditions
 
-### COMPLETE (autonomous)
-- Score ≥ 0.95 with passing feature checks
-- Output final report and celebrate 🎉
+| Condition | Action |
+|-----------|--------|
+| Score >= 0.95 | Auto-complete, report success |
+| MAX_ITERATIONS reached | Checkpoint with human |
+| Score plateau (3 iterations, delta < 0.01) | Checkpoint with human |
+| Tool failure | Stop, report error |
+| Human interrupt | Stop immediately |
 
-### CHECKPOINT (need human)
-- MAX_ITERATIONS reached
-- Score plateau (no improvement for 3 iterations)
-- Score regression from best
-- Subjective quality judgment needed
-- Uncertainty about specification interpretation
+## Human Checkpoints
 
-### STOP (error state)
-- Capture tool failure
-- Analysis tool failure  
-- Human says "stop"
+NEVER proceed without human verification:
+- Viewport verified?
+- Crop calibrated?
+- Mask verified?
+- Timing verified?
+- Each iteration approved?
 
-## Thresholds
+## Related Documentation
 
-| Threshold | Default | Adjustable |
-|-----------|---------|------------|
-| EXCELLENT | 0.95 | Yes, per effect |
-| GOOD | 0.90 | Yes |
-| PASS | 0.85 | Yes |
-| FAIL | 0.70 | Yes |
-| MAX_ITERATIONS | 5 | Yes, suggest 5-10 |
-| PLATEAU_COUNT | 3 | Rarely change |
-| MIN_DELTA | 0.01 | Rarely change |
-
-## Known Issues & Workarounds
-
-### SSIM vs Stochastic Effects
-**Problem:** Electricity bolts take random paths, causing SSIM variance even for "correct" output.
-
-**Workaround:** 
-- Capture burst of 10+ frames
-- Use best-of-N scoring
-- Supplement with feature detection (bolt count, color presence)
-
-### Static Reference Paradox
-**Problem:** Comparing animation frames to static reference is conceptually flawed.
-
-**Workaround:**
-- Use multiple reference frames (peak, mid, calm states)
-- Score against best-matching reference
-- Validate behavioral characteristics separately
-
-### Color Calibration
-**Problem:** Monitor/capture color profiles may differ from reference.
-
-**Workaround:**
-- Use relative color ratios, not absolute values
-- Validate palette presence, not exact hex matches
-
-## Integration with CLAUDE.md
-
-This pipeline is activated via MODE: VISUAL_ITERATION in CLAUDE.md.
-
-Standard development still uses MODE: STANDARD with human checkpoints. Only enter visual iteration mode when:
-1. Human explicitly activates it
-2. Task has objective visual criteria
-3. Capture tools are verified working
+| Document | Location |
+|----------|----------|
+| Full Skill Documentation | `animations/shared/docs/SKILL.md` |
+| Setup Session Guide | `animations/shared/docs/sessions/session-setup.md` |
+| Iteration Session Guide | `animations/shared/docs/sessions/session-iteration.md` |
+| Viewport Debug Workflow | `animations/shared/docs/workflows/viewport-debug-workflow.md` |
+| Crop Calibration Workflow | `animations/shared/docs/workflows/crop-calibration-workflow.md` |
+| Timing Verification Workflow | `animations/shared/docs/workflows/timing-verification-workflow.md` |
+| Troubleshooting | `animations/shared/docs/references/troubleshooting.md` |
+| Capture Failure Diagnosis | `animations/shared/docs/analysis/capture-failure-diagnosis.md` |

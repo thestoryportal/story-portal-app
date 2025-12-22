@@ -1,0 +1,18 @@
+{
+  "ts": "2025-12-22T16:24:55.509Z",
+  "baseUrl": "http://localhost:5173",
+  "scenario": null,
+  "mode": "newtopics",
+  "label": "electricity-test",
+  "headless": true,
+  "burstFrames": 60,
+  "burstIntervalMs": 100,
+  "settleMs": 500,
+  "viewport": {
+    "width": 1280,
+    "height": 800,
+    "scale": 2
+  },
+  "outDir": "/Users/robertrhu/Projects/story-portal/animations/output/screenshots/timeline/2025-12-22/20251222_092455__electricity-test",
+  "crop": null
+}

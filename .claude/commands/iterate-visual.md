@@ -1,74 +1,61 @@
-Enter Visual Iteration Mode for autonomous visual QA.
+# Visual Iteration Mode
 
-## Mode Activation
-You are now in VISUAL_ITERATION mode. This overrides STANDARD mode until the task completes or human says "exit visual mode".
+Activate visual iteration mode for animation effects.
 
-## Load Context
-Read these skill references before proceeding:
-1. `.claude/skills/story-portal/references/visual-iteration-pipeline.md` — Full pipeline spec
-2. `.claude/skills/story-portal/references/animation-standards.md` — Quality benchmarks
+## Activation
 
-## Pre-Flight Checklist
-Before starting iterations, verify:
-- [ ] Dev server running (`pnpm dev`)
-- [ ] Reference image available (ask human if not provided)
-- [ ] Capture tools working: `node tools/ai/capture/capture.mjs --test`
+When user says "iterate on [effect]" or "visual iteration mode":
 
-If any check fails, resolve before proceeding.
+1. Read the scenario context:
+   - `animations/<scenario>/context.md` — Scenario-specific context
+   - `animations/<scenario>/scenario.json` — Scenario configuration
 
-## Parameters
-Set these for this session (ask human to confirm or adjust):
+2. Check setup status:
+   ```bash
+   cat animations/electricity-portal/scenario.json | grep -A5 "setupStatus"
+   ```
 
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| MAX_ITERATIONS | 5 | Stop and checkpoint after this many |
-| TARGET_SCORE | 0.90 | SSIM threshold for "good enough" |
-| BURST_FRAMES | 10 | Frames to capture per iteration |
+3. If setup incomplete, run setup first (refer to scenario context.md)
 
-## Iteration Loop
-```
-FOR iteration = 1 to MAX_ITERATIONS:
-  1. CAPTURE: node tools/ai/capture/capture.mjs --burst {BURST_FRAMES}
-  2. ANALYZE: Compare against reference, extract scores
-  3. EVALUATE: 
-     - Score ≥ 0.95 → COMPLETE
-     - Score ≥ TARGET and improving → Continue or accept
-     - Plateau (3 iterations, Δ < 0.01) → CHECKPOINT
-     - Regression → CHECKPOINT
-  4. ADJUST: Make ONE targeted code change
-  5. LOG: Output iteration report (see format below)
-  6. LOOP or EXIT
-```
+4. If setup complete, begin iteration:
+   ```bash
+   node animations/shared/diff/pipeline.mjs --scenario electricity-portal
+   ```
 
-## Iteration Report Format
-Output after each iteration:
+## Human Checkpoints
 
-```markdown
-## Iteration [N] — [timestamp]
+NEVER proceed without human verification at each checkpoint:
+- Viewport verified?
+- Crop calibrated?
+- Mask verified?
+- Timing verified?
+- Each iteration approved?
 
-### Score: [X.XX] (Δ [+/-Y.YY])
-Status: [CONTINUE | CHECKPOINT | COMPLETE]
+## Key Paths
 
-### Change Applied
-- File: `path/to/file`
-- What: [description]
-- Why: [rationale]
+| Path | Purpose |
+|------|---------|
+| `animations/shared/diff/pipeline.mjs` | Main iteration pipeline |
+| `animations/shared/capture/run.mjs` | Puppeteer capture |
+| `animations/<scenario>/scenario.json` | Scenario configuration |
+| `animations/<scenario>/references/` | Baseline images/metrics |
+| `animations/<scenario>/output/` | Generated output (gitignored) |
 
-### Next Action
-[What will be tried next OR why checkpointing]
-```
+## Available Scenarios
 
-## Exit Conditions
-- **COMPLETE:** Score ≥ 0.95, output celebration 🎉
-- **CHECKPOINT:** MAX_ITERATIONS reached, plateau, or regression — present summary, wait for human
-- **STOP:** Tool failure or human interrupt
+| Scenario | Description |
+|----------|-------------|
+| `electricity-portal` | Portal electricity effect |
+| `hamburger` | Hamburger menu animation |
+| `menu-sway` | Menu panel sway effect |
+| `new-topics` | New topics button animation |
 
-## Critical Reminders
-- WebGL capture: Do NOT use `--use-gl=egl` (breaks on macOS)
-- Change ONE parameter per iteration
-- SSIM is noisy for stochastic effects — use best-of-N scoring
-- Human can say "stop" or "exit visual mode" at any time
+## Documentation
 
----
-
-Begin by confirming parameters with human and running pre-flight checks.
+| Document | Purpose |
+|----------|---------|
+| `animations/shared/docs/SKILL.md` | Full pipeline skill documentation |
+| `animations/shared/docs/sessions/session-setup.md` | 4-phase setup guide |
+| `animations/shared/docs/sessions/session-iteration.md` | Iteration loop guide |
+| `animations/shared/docs/workflows/` | Per-phase workflow details |
+| `animations/shared/docs/references/troubleshooting.md` | Common issues |

@@ -195,7 +195,7 @@ Claude operates in different modes depending on task type.
 
 **Exit:** Human confirms complete
 
-### MODE: VISUAL_ITERATION
+### MODE: ANIMATION_ITERATION
 **Use for:** AAA animation effects, responsive layout tuning, visual regression
 
 **Activation:** Human says "Enter visual iteration mode" or invokes `/iterate-visual`
@@ -207,8 +207,8 @@ Claude operates in different modes depending on task type.
 - Checkpoint with human at cap or plateau
 
 **Tools:**
-- Capture: `node tools/ai/capture/capture.mjs`
-- Analysis: `node tools/ai/capture/pipeline.mjs`
+- Capture: `node animations/shared/capture/run.mjs`
+- Analysis: `node animations/shared/diff/pipeline.mjs`
 - See `references/visual-iteration-pipeline.md` in skill
 
 **Exit conditions:**
@@ -400,12 +400,25 @@ node "./tools/ai/history/search-history.js" --json "query"
 ## File Organization
 
 ```
-story-portal-app/
+story-portal/
 ├── .claude/
 │   ├── commands/           # Slash commands
 │   └── skills/             # Custom skills
 │       └── story-portal/   # Domain knowledge
 │           └── references/ # Skill files (design, recording, etc.)
+├── animations/             # Visual iteration pipeline
+│   ├── shared/             # Shared capture/diff tooling
+│   │   ├── capture/        # Puppeteer capture scripts
+│   │   ├── diff/           # SSIM analysis scripts
+│   │   ├── rules/          # Pipeline guidelines
+│   │   └── iterate.mjs     # CLI entry point
+│   ├── electricity-portal/ # Scenario: electricity effect
+│   │   ├── references/     # Baseline images, metrics
+│   │   ├── scenario.json   # Scenario config
+│   │   └── output/         # Generated (gitignored)
+│   ├── hamburger/          # Scenario: menu animation
+│   ├── menu-sway/          # Scenario: menu sway
+│   └── new-topics/         # Scenario: new topics button
 ├── docs/
 │   ├── APP_SPECIFICATION.md  # Product spec
 │   ├── USER_FLOWS.md         # State diagrams, interactions
@@ -426,7 +439,7 @@ story-portal-app/
 │   └── ai/
 │       ├── history/        # Dev history dataset
 │       └── inbox/          # Prompt inbox
-├── e2e/                    # Playwright tests
+├── e2e/                    # Playwright tests (app verification)
 ├── CLAUDE.md               # This file
 └── package.json
 ```

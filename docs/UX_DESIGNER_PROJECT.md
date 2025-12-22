@@ -283,11 +283,16 @@ When creating designs, provide:
 
 ## Reference Documents
 
-Request these documents for design sessions:
+These documents should be uploaded to Project Knowledge:
+
+**Required (upload to project):**
 - `APP_SPECIFICATION.md` — Full product requirements
 - `USER_FLOWS.md` — Interaction patterns, state diagrams
 - `UX_DESIGN_AUDIT.md` — Current design status
-- `steampunk-design-system.md` — Verified visual values
+- `steampunk-design-system.md` — Verified visual values (PRIMARY reference)
+- `design-tokens-quick-ref.md` — Copy-paste ready values
+
+**Reference as needed:**
 - `content-voice.md` — Copy and tone guidelines
 - `consent-flows.md` — Recording consent requirements
 

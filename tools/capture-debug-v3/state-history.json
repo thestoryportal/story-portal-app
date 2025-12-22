@@ -1,0 +1,239 @@
+{
+  "initialState": {
+    "canvasCount": 0,
+    "debug": {
+      "canvasCreated": false,
+      "canvasVisible": false,
+      "electricityStartCalled": false,
+      "electricityEndCalled": false,
+      "logs": []
+    }
+  },
+  "stateHistory": [
+    {
+      "time": 1766358674480,
+      "canvasCount": 1,
+      "canvasInDOM": true,
+      "debug": {
+        "canvasCreated": true,
+        "canvasVisible": false,
+        "electricityStartCalled": false,
+        "electricityEndCalled": false,
+        "logs": [
+          "Canvas created at 1766358674407"
+        ]
+      }
+    },
+    {
+      "time": 1766358675233,
+      "canvasCount": 1,
+      "canvasInDOM": true,
+      "debug": {
+        "canvasCreated": true,
+        "canvasVisible": false,
+        "electricityStartCalled": false,
+        "electricityEndCalled": false,
+        "logs": [
+          "Canvas created at 1766358674407"
+        ]
+      }
+    },
+    {
+      "time": 1766358675285,
+      "canvasCount": 1,
+      "canvasInDOM": true,
+      "debug": {
+        "canvasCreated": true,
+        "canvasVisible": false,
+        "electricityStartCalled": false,
+        "electricityEndCalled": false,
+        "logs": [
+          "Canvas created at 1766358674407"
+        ]
+      }
+    },
+    {
+      "time": 1766358675338,
+      "canvasCount": 1,
+      "canvasInDOM": true,
+      "debug": {
+        "canvasCreated": true,
+        "canvasVisible": false,
+        "electricityStartCalled": false,
+        "electricityEndCalled": false,
+        "logs": [
+          "Canvas created at 1766358674407"
+        ]
+      }
+    },
+    {
+      "time": 1766358675395,
+      "canvasCount": 1,
+      "canvasInDOM": true,
+      "debug": {
+        "canvasCreated": true,
+        "canvasVisible": false,
+        "electricityStartCalled": false,
+        "electricityEndCalled": false,
+        "logs": [
+          "Canvas created at 1766358674407"
+        ]
+      }
+    },
+    {
+      "time": 1766358675473,
+      "canvasCount": 1,
+      "canvasInDOM": true,
+      "debug": {
+        "canvasCreated": true,
+        "canvasVisible": false,
+        "electricityStartCalled": false,
+        "electricityEndCalled": false,
+        "logs": [
+          "Canvas created at 1766358674407"
+        ]
+      }
+    },
+    {
+      "time": 1766358676203,
+      "canvasCount": 1,
+      "canvasInDOM": true,
+      "debug": {
+        "canvasCreated": true,
+        "canvasVisible": false,
+        "electricityStartCalled": false,
+        "electricityEndCalled": false,
+        "logs": [
+          "Canvas created at 1766358674407"
+        ]
+      }
+    },
+    {
+      "time": 1766358676255,
+      "canvasCount": 1,
+      "canvasInDOM": true,
+      "debug": {
+        "canvasCreated": true,
+        "canvasVisible": false,
+        "electricityStartCalled": false,
+        "electricityEndCalled": false,
+        "logs": [
+          "Canvas created at 1766358674407"
+        ]
+      }
+    },
+    {
+      "time": 1766358676307,
+      "canvasCount": 1,
+      "canvasInDOM": true,
+      "debug": {
+        "canvasCreated": true,
+        "canvasVisible": false,
+        "electricityStartCalled": false,
+        "electricityEndCalled": false,
+        "logs": [
+          "Canvas created at 1766358674407"
+        ]
+      }
+    },
+    {
+      "time": 1766358676381,
+      "canvasCount": 1,
+      "canvasInDOM": true,
+      "debug": {
+        "canvasCreated": true,
+        "canvasVisible": false,
+        "electricityStartCalled": false,
+        "electricityEndCalled": false,
+        "logs": [
+          "Canvas created at 1766358674407"
+        ]
+      }
+    },
+    "... truncated ...",
+    {
+      "time": 1766358681400,
+      "canvasCount": 0,
+      "canvasInDOM": false,
+      "debug": {
+        "canvasCreated": true,
+        "canvasVisible": false,
+        "electricityStartCalled": false,
+        "electricityEndCalled": false,
+        "logs": [
+          "Canvas created at 1766358674407"
+        ]
+      }
+    },
+    {
+      "time": 1766358681452,
+      "canvasCount": 0,
+      "canvasInDOM": false,
+      "debug": {
+        "canvasCreated": true,
+        "canvasVisible": false,
+        "electricityStartCalled": false,
+        "electricityEndCalled": false,
+        "logs": [
+          "Canvas created at 1766358674407"
+        ]
+      }
+    },
+    {
+      "time": 1766358681510,
+      "canvasCount": 0,
+      "canvasInDOM": false,
+      "debug": {
+        "canvasCreated": true,
+        "canvasVisible": false,
+        "electricityStartCalled": false,
+        "electricityEndCalled": false,
+        "logs": [
+          "Canvas created at 1766358674407"
+        ]
+      }
+    },
+    {
+      "time": 1766358681562,
+      "canvasCount": 0,
+      "canvasInDOM": false,
+      "debug": {
+        "canvasCreated": true,
+        "canvasVisible": false,
+        "electricityStartCalled": false,
+        "electricityEndCalled": false,
+        "logs": [
+          "Canvas created at 1766358674407"
+        ]
+      }
+    },
+    {
+      "time": 1766358681613,
+      "canvasCount": 0,
+      "canvasInDOM": false,
+      "debug": {
+        "canvasCreated": true,
+        "canvasVisible": false,
+        "electricityStartCalled": false,
+        "electricityEndCalled": false,
+        "logs": [
+          "Canvas created at 1766358674407"
+        ]
+      }
+    }
+  ],
+  "finalState": {
+    "canvasCount": 0,
+    "debug": {
+      "canvasCreated": true,
+      "canvasVisible": false,
+      "electricityStartCalled": false,
+      "electricityEndCalled": false,
+      "logs": [
+        "Canvas created at 1766358674407"
+      ]
+    },
+    "reactRoot": false
+  },
+  "canvasAppeared": 0
+}

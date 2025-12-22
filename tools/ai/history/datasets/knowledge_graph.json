@@ -1,0 +1,656 @@
+{
+  "nodes": [
+    {
+      "id": "aces",
+      "label": "ACES",
+      "type": "technology",
+      "count": 1
+    },
+    {
+      "id": "bloom",
+      "label": "bloom",
+      "type": "technology",
+      "count": 3
+    },
+    {
+      "id": "webgl",
+      "label": "WebGL",
+      "type": "technology",
+      "count": 3
+    },
+    {
+      "id": "html",
+      "label": "HTML",
+      "type": "technology",
+      "count": 5
+    },
+    {
+      "id": "hdr",
+      "label": "HDR",
+      "type": "technology",
+      "count": 1
+    },
+    {
+      "id": "three.js",
+      "label": "Three.js",
+      "type": "technology",
+      "count": 2
+    },
+    {
+      "id": "simplexnoise",
+      "label": "SimplexNoise",
+      "type": "technology",
+      "count": 3
+    },
+    {
+      "id": "react",
+      "label": "React",
+      "type": "technology",
+      "count": 8
+    },
+    {
+      "id": "canvas",
+      "label": "Canvas",
+      "type": "technology",
+      "count": 3
+    },
+    {
+      "id": "fbm",
+      "label": "FBM",
+      "type": "technology",
+      "count": 1
+    },
+    {
+      "id": "codepen",
+      "label": "CodePen",
+      "type": "technology",
+      "count": 5
+    },
+    {
+      "id": "responsively",
+      "label": "Responsively",
+      "type": "technology",
+      "count": 3
+    },
+    {
+      "id": "css",
+      "label": "CSS",
+      "type": "technology",
+      "count": 10
+    },
+    {
+      "id": "svg",
+      "label": "SVG",
+      "type": "technology",
+      "count": 3
+    },
+    {
+      "id": "chrome",
+      "label": "Chrome",
+      "type": "technology",
+      "count": 3
+    },
+    {
+      "id": "iphone",
+      "label": "iPhone",
+      "type": "technology",
+      "count": 3
+    },
+    {
+      "id": "base64",
+      "label": "base64",
+      "type": "technology",
+      "count": 1
+    },
+    {
+      "id": "javascript",
+      "label": "JavaScript",
+      "type": "technology",
+      "count": 2
+    },
+    {
+      "id": "android",
+      "label": "Android",
+      "type": "technology",
+      "count": 1
+    },
+    {
+      "id": "babel",
+      "label": "Babel",
+      "type": "technology",
+      "count": 2
+    },
+    {
+      "id": "debugging",
+      "label": "Debugging",
+      "type": "topic",
+      "count": 13
+    },
+    {
+      "id": "visual_design",
+      "label": "Visual Design",
+      "type": "topic",
+      "count": 3
+    },
+    {
+      "id": "conv_8e3ceaca",
+      "label": "Recursive compacts for continu",
+      "type": "conversation",
+      "count": 1
+    },
+    {
+      "id": "conv_876dede0",
+      "label": "Electricity animation refineme",
+      "type": "conversation",
+      "count": 1
+    },
+    {
+      "id": "conv_693d6230",
+      "label": "Recursive compacts for continu",
+      "type": "conversation",
+      "count": 1
+    },
+    {
+      "id": "conv_1ae8a989",
+      "label": "Story Portal app project conti",
+      "type": "conversation",
+      "count": 1
+    },
+    {
+      "id": "conv_63ece1e3",
+      "label": "Story Portal app project conti",
+      "type": "conversation",
+      "count": 1
+    },
+    {
+      "id": "conv_cdf2b5a3",
+      "label": "Story Portal app project conti",
+      "type": "conversation",
+      "count": 1
+    },
+    {
+      "id": "conv_01f1bed0",
+      "label": "Conversation history summary",
+      "type": "conversation",
+      "count": 1
+    },
+    {
+      "id": "conv_732f9fec",
+      "label": "iPhone app preview setup with ",
+      "type": "conversation",
+      "count": 1
+    },
+    {
+      "id": "conv_9a26e98d",
+      "label": "3D spinning wheel rotation and",
+      "type": "conversation",
+      "count": 1
+    },
+    {
+      "id": "conv_cbab0b3d",
+      "label": "Story Portal app development c",
+      "type": "conversation",
+      "count": 1
+    },
+    {
+      "id": "conv_78590d41",
+      "label": "Building a 3D spinning prompt ",
+      "type": "conversation",
+      "count": 1
+    },
+    {
+      "id": "conv_cff68f5b",
+      "label": "Story Portal 3D wheel UI align",
+      "type": "conversation",
+      "count": 1
+    },
+    {
+      "id": "conv_9c0661b7",
+      "label": "Device screen wheel sizing con",
+      "type": "conversation",
+      "count": 1
+    },
+    {
+      "id": "conv_648c0e2f",
+      "label": "Ring centering issue",
+      "type": "conversation",
+      "count": 1
+    },
+    {
+      "id": "conv_08a3d50d",
+      "label": "Height collapse during wheel s",
+      "type": "conversation",
+      "count": 1
+    },
+    {
+      "id": "conv_ff866d2a",
+      "label": "Programming task brief review",
+      "type": "conversation",
+      "count": 1
+    }
+  ],
+  "edges": [
+    {
+      "source": "conv_8e3ceaca",
+      "target": "aces",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_8e3ceaca",
+      "target": "bloom",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_8e3ceaca",
+      "target": "webgl",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_8e3ceaca",
+      "target": "html",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_8e3ceaca",
+      "target": "hdr",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_8e3ceaca",
+      "target": "debugging",
+      "relation": "is_type"
+    },
+    {
+      "source": "conv_876dede0",
+      "target": "three.js",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_876dede0",
+      "target": "bloom",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_876dede0",
+      "target": "simplexnoise",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_876dede0",
+      "target": "webgl",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_876dede0",
+      "target": "react",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_876dede0",
+      "target": "canvas",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_876dede0",
+      "target": "fbm",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_876dede0",
+      "target": "html",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_876dede0",
+      "target": "debugging",
+      "relation": "is_type"
+    },
+    {
+      "source": "conv_693d6230",
+      "target": "three.js",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_693d6230",
+      "target": "codepen",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_693d6230",
+      "target": "bloom",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_693d6230",
+      "target": "responsively",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_693d6230",
+      "target": "simplexnoise",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_693d6230",
+      "target": "webgl",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_693d6230",
+      "target": "react",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_693d6230",
+      "target": "canvas",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_693d6230",
+      "target": "debugging",
+      "relation": "is_type"
+    },
+    {
+      "source": "conv_1ae8a989",
+      "target": "html",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_1ae8a989",
+      "target": "codepen",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_1ae8a989",
+      "target": "simplexnoise",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_1ae8a989",
+      "target": "canvas",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_1ae8a989",
+      "target": "visual_design",
+      "relation": "is_type"
+    },
+    {
+      "source": "conv_63ece1e3",
+      "target": "codepen",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_63ece1e3",
+      "target": "css",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_63ece1e3",
+      "target": "svg",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_63ece1e3",
+      "target": "debugging",
+      "relation": "is_type"
+    },
+    {
+      "source": "conv_cdf2b5a3",
+      "target": "css",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_cdf2b5a3",
+      "target": "svg",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_cdf2b5a3",
+      "target": "chrome",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_cdf2b5a3",
+      "target": "visual_design",
+      "relation": "is_type"
+    },
+    {
+      "source": "conv_01f1bed0",
+      "target": "responsively",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_01f1bed0",
+      "target": "iphone",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_01f1bed0",
+      "target": "debugging",
+      "relation": "is_type"
+    },
+    {
+      "source": "conv_732f9fec",
+      "target": "html",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_732f9fec",
+      "target": "codepen",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_732f9fec",
+      "target": "base64",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_732f9fec",
+      "target": "css",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_732f9fec",
+      "target": "react",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_732f9fec",
+      "target": "javascript",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_732f9fec",
+      "target": "iphone",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_732f9fec",
+      "target": "debugging",
+      "relation": "is_type"
+    },
+    {
+      "source": "conv_9a26e98d",
+      "target": "react",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_9a26e98d",
+      "target": "css",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_9a26e98d",
+      "target": "svg",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_9a26e98d",
+      "target": "debugging",
+      "relation": "is_type"
+    },
+    {
+      "source": "conv_cbab0b3d",
+      "target": "responsively",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_cbab0b3d",
+      "target": "chrome",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_cbab0b3d",
+      "target": "debugging",
+      "relation": "is_type"
+    },
+    {
+      "source": "conv_78590d41",
+      "target": "html",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_78590d41",
+      "target": "android",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_78590d41",
+      "target": "react",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_78590d41",
+      "target": "css",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_78590d41",
+      "target": "debugging",
+      "relation": "is_type"
+    },
+    {
+      "source": "conv_cff68f5b",
+      "target": "html",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_cff68f5b",
+      "target": "react",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_cff68f5b",
+      "target": "css",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_cff68f5b",
+      "target": "chrome",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_cff68f5b",
+      "target": "debugging",
+      "relation": "is_type"
+    },
+    {
+      "source": "conv_9c0661b7",
+      "target": "css",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_9c0661b7",
+      "target": "visual_design",
+      "relation": "is_type"
+    },
+    {
+      "source": "conv_648c0e2f",
+      "target": "html",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_648c0e2f",
+      "target": "codepen",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_648c0e2f",
+      "target": "css",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_648c0e2f",
+      "target": "babel",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_648c0e2f",
+      "target": "react",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_648c0e2f",
+      "target": "base64",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_648c0e2f",
+      "target": "javascript",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_648c0e2f",
+      "target": "iphone",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_648c0e2f",
+      "target": "debugging",
+      "relation": "is_type"
+    },
+    {
+      "source": "conv_08a3d50d",
+      "target": "css",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_08a3d50d",
+      "target": "debugging",
+      "relation": "is_type"
+    },
+    {
+      "source": "conv_ff866d2a",
+      "target": "react",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_ff866d2a",
+      "target": "babel",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_ff866d2a",
+      "target": "css",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_ff866d2a",
+      "target": "html",
+      "relation": "uses_technology"
+    },
+    {
+      "source": "conv_ff866d2a",
+      "target": "debugging",
+      "relation": "is_type"
+    }
+  ],
+  "stats": {
+    "node_count": 38,
+    "edge_count": 83,
+    "technology_nodes": 20,
+    "topic_nodes": 2,
+    "conversation_nodes": 16
+  }
+}

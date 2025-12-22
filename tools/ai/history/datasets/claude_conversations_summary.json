@@ -1,0 +1,892 @@
+{
+  "conversations": [
+    {
+      "id": "8e3ceaca-acd7-41c9-a313-e61641810852",
+      "url": "https://claude.ai/chat/8e3ceaca-acd7-41c9-a313-e61641810852",
+      "title": "Recursive compacts for continuity",
+      "updated_at": "2025-12-16T18:10:31.301887+00:00",
+      "content_hash": "5bf4b81dff373cd75dc6e2aeb733cf44f54e1dc5",
+      "keywords": [
+        "electricity",
+        "animation",
+        "image",
+        "quality",
+        "visual",
+        "webgl",
+        "existing",
+        "implementation",
+        "bloom",
+        "instead",
+        "multi",
+        "bolt",
+        "color",
+        "new",
+        "upgrade"
+      ],
+      "technologies": [
+        "ACES",
+        "bloom",
+        "WebGL",
+        "html",
+        "HDR"
+      ],
+      "code_blocks": [],
+      "conversation_type": "debugging",
+      "sentiment": {
+        "polarity": -1.0,
+        "subjectivity": 0.5
+      },
+      "word_count": 268,
+      "char_count": 2006,
+      "paragraph_count": 4,
+      "code_block_count": 0,
+      "_meta": {
+        "source": "Claude.ai",
+        "project": "The Story Portal",
+        "build_time": "2025-12-19T10:10:50.847145Z"
+      }
+    },
+    {
+      "id": "876dede0-33c8-452d-9fd5-8857d1532c6c",
+      "url": "https://claude.ai/chat/876dede0-33c8-452d-9fd5-8857d1532c6c",
+      "title": "Electricity animation refinement for Story Portal",
+      "updated_at": "2025-12-16T05:24:32.957046+00:00",
+      "content_hash": "cf022ac1df4b37bf4e8a54d03ff519ccef8e0c73",
+      "keywords": [
+        "portal",
+        "canvas",
+        "webgl",
+        "existing",
+        "bolt",
+        "while",
+        "implementation",
+        "wheel",
+        "html",
+        "file",
+        "bloom",
+        "glow",
+        "effects",
+        "react",
+        "electricity"
+      ],
+      "technologies": [
+        "Three.js",
+        "bloom",
+        "SimplexNoise",
+        "WebGL",
+        "React",
+        "Canvas",
+        "FBM",
+        "html"
+      ],
+      "code_blocks": [],
+      "conversation_type": "debugging",
+      "sentiment": {
+        "polarity": 0.5,
+        "subjectivity": 0.5
+      },
+      "word_count": 267,
+      "char_count": 1953,
+      "paragraph_count": 4,
+      "code_block_count": 0,
+      "_meta": {
+        "source": "Claude.ai",
+        "project": "The Story Portal",
+        "build_time": "2025-12-19T10:10:50.847145Z"
+      }
+    },
+    {
+      "id": "693d6230-7a15-4a20-b076-5316719a5546",
+      "url": "https://claude.ai/chat/693d6230-7a15-4a20-b076-5316719a5546",
+      "title": "Recursive compacts for continuity",
+      "updated_at": "2025-12-16T04:05:25.419833+00:00",
+      "content_hash": "bc0129f881f525e2fa0880322282b987c742bf80",
+      "keywords": [
+        "robert",
+        "wheel",
+        "effect",
+        "like",
+        "portal",
+        "involved",
+        "glow",
+        "effects",
+        "app",
+        "high",
+        "visual",
+        "electricity",
+        "animation",
+        "golden",
+        "bolts"
+      ],
+      "technologies": [
+        "Three.js",
+        "CodePen",
+        "bloom",
+        "Responsively",
+        "SimplexNoise",
+        "WebGL",
+        "React",
+        "Canvas"
+      ],
+      "code_blocks": [],
+      "conversation_type": "debugging",
+      "sentiment": {
+        "polarity": 0.0,
+        "subjectivity": 0.5
+      },
+      "word_count": 274,
+      "char_count": 2122,
+      "paragraph_count": 4,
+      "code_block_count": 0,
+      "_meta": {
+        "source": "Claude.ai",
+        "project": "The Story Portal",
+        "build_time": "2025-12-19T10:10:50.847145Z"
+      }
+    },
+    {
+      "id": "1ae8a989-ea09-4108-b384-dfbb79935695",
+      "url": "https://claude.ai/chat/1ae8a989-ea09-4108-b384-dfbb79935695",
+      "title": "Story Portal app project continuation",
+      "updated_at": "2025-12-15T23:53:48.792300+00:00",
+      "content_hash": "9b8f2b50f7f93cca181591f89198a3fbf6b6a0e7",
+      "keywords": [
+        "story",
+        "tool",
+        "portal",
+        "project",
+        "steampunk",
+        "hamburger",
+        "multiple",
+        "work",
+        "app",
+        "current",
+        "wheel",
+        "button",
+        "menu",
+        "animation",
+        "provided"
+      ],
+      "technologies": [
+        "HTML",
+        "CodePen",
+        "SimplexNoise",
+        "Canvas"
+      ],
+      "code_blocks": [],
+      "conversation_type": "visual_design",
+      "sentiment": {
+        "polarity": 1.0,
+        "subjectivity": 0.5
+      },
+      "word_count": 394,
+      "char_count": 2836,
+      "paragraph_count": 6,
+      "code_block_count": 0,
+      "_meta": {
+        "source": "Claude.ai",
+        "project": "The Story Portal",
+        "build_time": "2025-12-19T10:10:50.847145Z"
+      }
+    },
+    {
+      "id": "63ece1e3-4dcb-45da-bc8f-50b500d4fe05",
+      "url": "https://claude.ai/chat/63ece1e3-4dcb-45da-bc8f-50b500d4fe05",
+      "title": "Story Portal app project continuation",
+      "updated_at": "2025-12-15T23:52:02.853578+00:00",
+      "content_hash": "f4b0b2b23828d44a06190b418112557d7b454e45",
+      "keywords": [
+        "lines",
+        "gear",
+        "state",
+        "engraved",
+        "animation",
+        "hamburger",
+        "menu",
+        "button",
+        "through",
+        "rotation",
+        "rather",
+        "shape",
+        "two",
+        "element",
+        "story"
+      ],
+      "technologies": [
+        "CodePen",
+        "CSS",
+        "SVG"
+      ],
+      "code_blocks": [],
+      "conversation_type": "debugging",
+      "sentiment": {
+        "polarity": 0.0,
+        "subjectivity": 0.5
+      },
+      "word_count": 346,
+      "char_count": 2255,
+      "paragraph_count": 4,
+      "code_block_count": 0,
+      "_meta": {
+        "source": "Claude.ai",
+        "project": "The Story Portal",
+        "build_time": "2025-12-19T10:10:50.847145Z"
+      }
+    },
+    {
+      "id": "cdf2b5a3-50c5-469d-b57a-cb498ac91427",
+      "url": "https://claude.ai/chat/cdf2b5a3-50c5-469d-b57a-cb498ac91427",
+      "title": "Story Portal app project continuation",
+      "updated_at": "2025-12-14T21:35:13.360828+00:00",
+      "content_hash": "8642e93c306e07619db30354e6ef7e660aa7fe44",
+      "keywords": [
+        "button",
+        "story",
+        "portal",
+        "spin",
+        "text",
+        "effects",
+        "webp",
+        "buttons",
+        "through",
+        "custom",
+        "implementing",
+        "engraved",
+        "positioning",
+        "visual",
+        "click"
+      ],
+      "technologies": [
+        "CSS",
+        "SVG",
+        "Chrome"
+      ],
+      "code_blocks": [],
+      "conversation_type": "visual_design",
+      "sentiment": {
+        "polarity": 1.0,
+        "subjectivity": 0.5
+      },
+      "word_count": 266,
+      "char_count": 2180,
+      "paragraph_count": 4,
+      "code_block_count": 0,
+      "_meta": {
+        "source": "Claude.ai",
+        "project": "The Story Portal",
+        "build_time": "2025-12-19T10:10:50.847145Z"
+      }
+    },
+    {
+      "id": "01f1bed0-f83e-479f-8be6-da62f7f49817",
+      "url": "https://claude.ai/chat/01f1bed0-f83e-479f-8be6-da62f7f49817",
+      "title": "Conversation history summary",
+      "updated_at": "2025-12-10T02:29:58.440882+00:00",
+      "content_hash": "8d9fdf1aa0c8df82e32c0cb37ccda08befea06bc",
+      "keywords": [
+        "device",
+        "wheel",
+        "across",
+        "panels",
+        "larger",
+        "portal",
+        "screen",
+        "sizes",
+        "gaps",
+        "screens",
+        "scaling",
+        "multiple",
+        "initial",
+        "radius",
+        "cross"
+      ],
+      "technologies": [
+        "Responsively",
+        "iPhone"
+      ],
+      "code_blocks": [],
+      "conversation_type": "debugging",
+      "sentiment": {
+        "polarity": -0.6,
+        "subjectivity": 0.5
+      },
+      "word_count": 335,
+      "char_count": 2355,
+      "paragraph_count": 5,
+      "code_block_count": 0,
+      "_meta": {
+        "source": "Claude.ai",
+        "project": "The Story Portal",
+        "build_time": "2025-12-19T10:10:50.847145Z"
+      }
+    },
+    {
+      "id": "732f9fec-77fb-4744-94d7-de3328c2fe34",
+      "url": "https://claude.ai/chat/732f9fec-77fb-4744-94d7-de3328c2fe34",
+      "title": "iPhone app preview setup with local graphics",
+      "updated_at": "2025-12-10T02:29:58.440882+00:00",
+      "content_hash": "301c4810af0a80714b0432f1f809eb93d4ccc0ed",
+      "keywords": [
+        "iphone",
+        "story",
+        "detailed",
+        "instructions",
+        "hosting",
+        "images",
+        "image",
+        "portal",
+        "app",
+        "codepen",
+        "specifically",
+        "optimized",
+        "max",
+        "implementation",
+        "guidance"
+      ],
+      "technologies": [
+        "HTML",
+        "CodePen",
+        "Base64",
+        "CSS",
+        "React",
+        "JavaScript",
+        "iPhone"
+      ],
+      "code_blocks": [],
+      "conversation_type": "debugging",
+      "sentiment": {
+        "polarity": 0.0,
+        "subjectivity": 0.5
+      },
+      "word_count": 239,
+      "char_count": 1697,
+      "paragraph_count": 4,
+      "code_block_count": 0,
+      "_meta": {
+        "source": "Claude.ai",
+        "project": "The Story Portal",
+        "build_time": "2025-12-19T10:10:50.847145Z"
+      }
+    },
+    {
+      "id": "9a26e98d-c743-41f0-a2b6-3818485362e6",
+      "url": "https://claude.ai/chat/9a26e98d-c743-41f0-a2b6-3818485362e6",
+      "title": "3D spinning wheel rotation and prompt alignment bugs",
+      "updated_at": "2025-12-10T02:29:58.440882+00:00",
+      "content_hash": "8ec3d1dd6983439d20deb3d62fa5e88b55888bda",
+      "keywords": [
+        "wheel",
+        "spinning",
+        "story",
+        "visual",
+        "realistic",
+        "panel",
+        "during",
+        "high",
+        "direction",
+        "prompt",
+        "festival",
+        "experience",
+        "users",
+        "spin",
+        "prompts"
+      ],
+      "technologies": [
+        "React",
+        "CSS",
+        "SVG"
+      ],
+      "code_blocks": [],
+      "conversation_type": "debugging",
+      "sentiment": {
+        "polarity": -0.2,
+        "subjectivity": 0.5
+      },
+      "word_count": 296,
+      "char_count": 2159,
+      "paragraph_count": 4,
+      "code_block_count": 0,
+      "_meta": {
+        "source": "Claude.ai",
+        "project": "The Story Portal",
+        "build_time": "2025-12-19T10:10:50.847145Z"
+      }
+    },
+    {
+      "id": "cbab0b3d-95d3-4865-bcbe-f5e70b653a09",
+      "url": "https://claude.ai/chat/cbab0b3d-95d3-4865-bcbe-f5e70b653a09",
+      "title": "Story Portal app development continuation",
+      "updated_at": "2025-12-10T02:29:58.440882+00:00",
+      "content_hash": "aab448547bbe5ef9c950650f748e754659d42a40",
+      "keywords": [
+        "wheel",
+        "story",
+        "debugging",
+        "physics",
+        "prompt",
+        "multi",
+        "app",
+        "spinning",
+        "prompts",
+        "audio",
+        "positioned",
+        "end",
+        "back",
+        "spin",
+        "issues"
+      ],
+      "technologies": [
+        "Responsively",
+        "Chrome"
+      ],
+      "code_blocks": [],
+      "conversation_type": "debugging",
+      "sentiment": {
+        "polarity": 0.0,
+        "subjectivity": 0.5
+      },
+      "word_count": 295,
+      "char_count": 2208,
+      "paragraph_count": 4,
+      "code_block_count": 0,
+      "_meta": {
+        "source": "Claude.ai",
+        "project": "The Story Portal",
+        "build_time": "2025-12-19T10:10:50.847145Z"
+      }
+    },
+    {
+      "id": "78590d41-8188-41a5-9f11-e77775f848f9",
+      "url": "https://claude.ai/chat/78590d41-8188-41a5-9f11-e77775f848f9",
+      "title": "Building a 3D spinning prompt wheel for The Story Portal",
+      "updated_at": "2025-12-10T02:29:58.440882+00:00",
+      "content_hash": "8c2754add991e58ccfe9780726249258b0f6bf67",
+      "keywords": [
+        "wheel",
+        "ring",
+        "prompt",
+        "prompts",
+        "cylindrical",
+        "visual",
+        "frame",
+        "radius",
+        "within",
+        "positioning",
+        "ios",
+        "realistic",
+        "physics",
+        "technical",
+        "issues"
+      ],
+      "technologies": [
+        "HTML",
+        "Android",
+        "React",
+        "CSS"
+      ],
+      "code_blocks": [],
+      "conversation_type": "debugging",
+      "sentiment": {
+        "polarity": -1.0,
+        "subjectivity": 0.5
+      },
+      "word_count": 310,
+      "char_count": 2279,
+      "paragraph_count": 4,
+      "code_block_count": 0,
+      "_meta": {
+        "source": "Claude.ai",
+        "project": "The Story Portal",
+        "build_time": "2025-12-19T10:10:50.847145Z"
+      }
+    },
+    {
+      "id": "cff68f5b-eee2-49a7-9823-87d326b95643",
+      "url": "https://claude.ai/chat/cff68f5b-eee2-49a7-9823-87d326b95643",
+      "title": "Story Portal 3D wheel UI alignment and artifact sync",
+      "updated_at": "2025-12-10T02:29:58.440882+00:00",
+      "content_hash": "5e0d2d6e47a487495e02bc78916d778150c5724c",
+      "keywords": [
+        "wheel",
+        "working",
+        "artifact",
+        "preview",
+        "code",
+        "text",
+        "button",
+        "ring",
+        "html",
+        "portal",
+        "spinning",
+        "prompt",
+        "steampunk",
+        "interface",
+        "provided"
+      ],
+      "technologies": [
+        "HTML",
+        "React",
+        "CSS",
+        "Chrome"
+      ],
+      "code_blocks": [],
+      "conversation_type": "debugging",
+      "sentiment": {
+        "polarity": 0.1429,
+        "subjectivity": 0.5
+      },
+      "word_count": 312,
+      "char_count": 2148,
+      "paragraph_count": 4,
+      "code_block_count": 0,
+      "_meta": {
+        "source": "Claude.ai",
+        "project": "The Story Portal",
+        "build_time": "2025-12-19T10:10:50.847145Z"
+      }
+    },
+    {
+      "id": "9c0661b7-74f9-46b5-b736-1a027ed8100b",
+      "url": "https://claude.ai/chat/9c0661b7-74f9-46b5-b736-1a027ed8100b",
+      "title": "Device screen wheel sizing constraints",
+      "updated_at": "2025-12-10T02:29:58.440882+00:00",
+      "content_hash": "fee853ff922c75f182c138ddd18f70be024384ed",
+      "keywords": [
+        "visual",
+        "wheel",
+        "panels",
+        "effects",
+        "prompt",
+        "cylindrical",
+        "device",
+        "dynamic",
+        "text",
+        "while",
+        "sophisticated",
+        "interface",
+        "storytelling",
+        "creating",
+        "realistic"
+      ],
+      "technologies": [
+        "CSS"
+      ],
+      "code_blocks": [],
+      "conversation_type": "visual_design",
+      "sentiment": {
+        "polarity": 1.0,
+        "subjectivity": 0.5
+      },
+      "word_count": 281,
+      "char_count": 2042,
+      "paragraph_count": 4,
+      "code_block_count": 0,
+      "_meta": {
+        "source": "Claude.ai",
+        "project": "The Story Portal",
+        "build_time": "2025-12-19T10:10:50.847145Z"
+      }
+    },
+    {
+      "id": "648c0e2f-7fad-4270-8031-7594f4257960",
+      "url": "https://claude.ai/chat/648c0e2f-7fad-4270-8031-7594f4257960",
+      "title": "Ring centering issue",
+      "updated_at": "2025-12-10T02:29:58.440882+00:00",
+      "content_hash": "b9767d3a3d13887c644297c47bafa4c0b5d7ddfa",
+      "keywords": [
+        "wheel",
+        "spinning",
+        "prompt",
+        "prompts",
+        "spin",
+        "positioning",
+        "animation",
+        "creative",
+        "writing",
+        "provided",
+        "physics",
+        "visual",
+        "ring",
+        "png",
+        "panel"
+      ],
+      "technologies": [
+        "HTML",
+        "CodePen",
+        "CSS",
+        "Babel",
+        "React",
+        "base64",
+        "JavaScript",
+        "iPhone"
+      ],
+      "code_blocks": [],
+      "conversation_type": "debugging",
+      "sentiment": {
+        "polarity": -0.3333,
+        "subjectivity": 0.5
+      },
+      "word_count": 302,
+      "char_count": 2156,
+      "paragraph_count": 4,
+      "code_block_count": 0,
+      "_meta": {
+        "source": "Claude.ai",
+        "project": "The Story Portal",
+        "build_time": "2025-12-19T10:10:50.847145Z"
+      }
+    },
+    {
+      "id": "08a3d50d-4fe9-48d7-bc6e-4368299f99e2",
+      "url": "https://claude.ai/chat/08a3d50d-4fe9-48d7-bc6e-4368299f99e2",
+      "title": "Height collapse during wheel spin",
+      "updated_at": "2025-12-10T02:29:58.440882+00:00",
+      "content_hash": "9d9c4b6c485b6f3b63ed24add2b5247a592ff30f",
+      "keywords": [
+        "overlay",
+        "issue",
+        "wheel",
+        "reported",
+        "during",
+        "font",
+        "shadow",
+        "visual",
+        "height",
+        "collapse",
+        "identified",
+        "problem",
+        "panel",
+        "text",
+        "provided"
+      ],
+      "technologies": [
+        "CSS"
+      ],
+      "code_blocks": [],
+      "conversation_type": "debugging",
+      "sentiment": {
+        "polarity": -0.5,
+        "subjectivity": 0.5
+      },
+      "word_count": 251,
+      "char_count": 1783,
+      "paragraph_count": 4,
+      "code_block_count": 0,
+      "_meta": {
+        "source": "Claude.ai",
+        "project": "The Story Portal",
+        "build_time": "2025-12-19T10:10:50.847145Z"
+      }
+    },
+    {
+      "id": "ff866d2a-10e1-4ebf-8811-0ca984f3a5cc",
+      "url": "https://claude.ai/chat/ff866d2a-10e1-4ebf-8811-0ca984f3a5cc",
+      "title": "Programming task brief review",
+      "updated_at": "2025-12-10T02:29:58.440882+00:00",
+      "content_hash": "1e6f3efb258d5e1207207764b475e631613586f9",
+      "keywords": [
+        "portal",
+        "wheel",
+        "spin",
+        "devices",
+        "app",
+        "react",
+        "physics",
+        "css",
+        "mask",
+        "circular",
+        "velocity",
+        "button",
+        "fixes",
+        "across",
+        "device"
+      ],
+      "technologies": [
+        "React",
+        "Babel",
+        "CSS",
+        "html"
+      ],
+      "code_blocks": [],
+      "conversation_type": "debugging",
+      "sentiment": {
+        "polarity": 0.3333,
+        "subjectivity": 0.5
+      },
+      "word_count": 210,
+      "char_count": 1450,
+      "paragraph_count": 5,
+      "code_block_count": 0,
+      "_meta": {
+        "source": "Claude.ai",
+        "project": "The Story Portal",
+        "build_time": "2025-12-19T10:10:50.847145Z"
+      }
+    }
+  ],
+  "analytics": {
+    "total_conversations": 16,
+    "total_words": 4646,
+    "total_code_blocks": 0,
+    "avg_words_per_conversation": 290.4,
+    "top_keywords": [
+      {
+        "keyword": "wheel",
+        "count": 12
+      },
+      {
+        "keyword": "visual",
+        "count": 8
+      },
+      {
+        "keyword": "portal",
+        "count": 8
+      },
+      {
+        "keyword": "story",
+        "count": 6
+      },
+      {
+        "keyword": "prompt",
+        "count": 6
+      },
+      {
+        "keyword": "animation",
+        "count": 5
+      },
+      {
+        "keyword": "app",
+        "count": 5
+      },
+      {
+        "keyword": "button",
+        "count": 5
+      },
+      {
+        "keyword": "spin",
+        "count": 5
+      },
+      {
+        "keyword": "effects",
+        "count": 4
+      },
+      {
+        "keyword": "provided",
+        "count": 4
+      },
+      {
+        "keyword": "text",
+        "count": 4
+      },
+      {
+        "keyword": "spinning",
+        "count": 4
+      },
+      {
+        "keyword": "prompts",
+        "count": 4
+      },
+      {
+        "keyword": "physics",
+        "count": 4
+      },
+      {
+        "keyword": "electricity",
+        "count": 3
+      },
+      {
+        "keyword": "implementation",
+        "count": 3
+      },
+      {
+        "keyword": "positioning",
+        "count": 3
+      },
+      {
+        "keyword": "device",
+        "count": 3
+      },
+      {
+        "keyword": "realistic",
+        "count": 3
+      }
+    ],
+    "top_technologies": [
+      {
+        "tech": "CSS",
+        "count": 10
+      },
+      {
+        "tech": "React",
+        "count": 8
+      },
+      {
+        "tech": "CodePen",
+        "count": 5
+      },
+      {
+        "tech": "HTML",
+        "count": 5
+      },
+      {
+        "tech": "bloom",
+        "count": 3
+      },
+      {
+        "tech": "WebGL",
+        "count": 3
+      },
+      {
+        "tech": "html",
+        "count": 3
+      },
+      {
+        "tech": "SimplexNoise",
+        "count": 3
+      },
+      {
+        "tech": "Canvas",
+        "count": 3
+      },
+      {
+        "tech": "Responsively",
+        "count": 3
+      },
+      {
+        "tech": "SVG",
+        "count": 3
+      },
+      {
+        "tech": "Chrome",
+        "count": 3
+      },
+      {
+        "tech": "iPhone",
+        "count": 3
+      },
+      {
+        "tech": "Three.js",
+        "count": 2
+      },
+      {
+        "tech": "JavaScript",
+        "count": 2
+      }
+    ],
+    "conversation_types": {
+      "debugging": 13,
+      "visual_design": 3
+    },
+    "date_range": {
+      "earliest": "2025-12-10T02:29:58.440882+00:00",
+      "latest": "2025-12-16T18:10:31.301887+00:00"
+    }
+  },
+  "metadata": {
+    "source": "Claude.ai conversation history",
+    "project": "The Story Portal",
+    "build_timestamp": "2025-12-19T10:10:50.847145Z",
+    "total_conversations": 16,
+    "pipeline_version": "1.0.0"
+  }
+}

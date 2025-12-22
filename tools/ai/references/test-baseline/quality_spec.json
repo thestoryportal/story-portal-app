@@ -1,0 +1,99 @@
+{
+  "effectName": "test-effect",
+  "version": "1.0",
+  "generatedAt": "2025-12-19T15:38:25.295Z",
+  "tierA": {
+    "color": {
+      "brightest": {
+        "r": 255,
+        "g": 255,
+        "b": 255,
+        "hex": "#FFFFFF"
+      },
+      "dominant": [
+        {
+          "hex": "#F8F8F8",
+          "tolerance": 15
+        },
+        {
+          "hex": "#000000",
+          "tolerance": 15
+        },
+        {
+          "hex": "#080800",
+          "tolerance": 15
+        },
+        {
+          "hex": "#203040",
+          "tolerance": 15
+        }
+      ],
+      "average": {
+        "r": 229,
+        "g": 229,
+        "b": 228,
+        "hex": "#E5E5E4"
+      }
+    },
+    "structure": {
+      "edgeDensity": {
+        "target": 0,
+        "tolerancePercent": 25
+      }
+    },
+    "containment": {
+      "boundingBox": {
+        "x": 0,
+        "y": 0,
+        "width": 1279,
+        "height": 839
+      },
+      "centerOfMass": {
+        "x": 639,
+        "y": 421
+      }
+    }
+  },
+  "tierB": {
+    "ssim": {
+      "pass": 0.85,
+      "good": 0.9,
+      "excellent": 0.95
+    },
+    "diffPercent": {
+      "max": 15,
+      "warning": 10,
+      "ideal": 5
+    }
+  },
+  "intensity": {
+    "distribution": [
+      {
+        "name": "core",
+        "averageBrightness": 25,
+        "pixelCount": 22129
+      },
+      {
+        "name": "inner",
+        "averageBrightness": 93,
+        "pixelCount": 116364
+      },
+      {
+        "name": "outer",
+        "averageBrightness": 242,
+        "pixelCount": 216132
+      },
+      {
+        "name": "edge",
+        "averageBrightness": 249,
+        "pixelCount": 199476
+      }
+    ],
+    "requirement": "core > inner > outer > edge",
+    "coreMinBrightness": 150
+  },
+  "mask": {
+    "coveragePercent": 88.0082775297619,
+    "effectPixels": 946265
+  }
+}

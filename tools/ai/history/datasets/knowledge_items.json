@@ -1,0 +1,32 @@
+[
+  {
+    "type": "solution",
+    "description": "using a conservative 0",
+    "source_conversation": "01f1bed0-f83e-479f-8be6-da62f7f49817",
+    "source_title": "Conversation history summary"
+  },
+  {
+    "type": "solution",
+    "description": "asymmetric positioning adjustments and careful radius calculations to achieve the desired barrel wheel effect with proper containment within the decorative ring frame",
+    "source_conversation": "78590d41-8188-41a5-9f11-e77775f848f9",
+    "source_title": "Building a 3D spinning prompt wheel for The Story Portal"
+  },
+  {
+    "type": "implementation",
+    "description": "all three fixes by adjusting the text positioning, adding a 200ms delay check to prevent premature animation triggering during active user input, and updating both button text colors from the dark brown to the specified wheat color",
+    "source_conversation": "cff68f5b-eee2-49a7-9823-87d326b95643",
+    "source_title": "Story Portal 3D wheel UI alignment and artifact sync"
+  },
+  {
+    "type": "fix",
+    "description": "wheel positioning to fit perfectly inside the ring overlay and attempt to restore artifact preview functionality",
+    "source_conversation": "cff68f5b-eee2-49a7-9823-87d326b95643",
+    "source_title": "Story Portal 3D wheel UI alignment and artifact sync"
+  },
+  {
+    "type": "implementation",
+    "description": "included a \"New Topics\" button with usage restrictions (only after 3 spins and when wheel is stopped), tooltip warnings for invalid actions, and a multi-phase animation sequence when the wheel lands on a prompt",
+    "source_conversation": "648c0e2f-7fad-4270-8031-7594f4257960",
+    "source_title": "Ring centering issue"
+  }
+]

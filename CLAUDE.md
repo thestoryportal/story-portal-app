@@ -434,3 +434,89 @@ story-portal-app/
 8. **Manually edit auto-generated files** — Use the scripts
 9. **Commit without linting** — Always `pnpm lint` first
 10. **Guess at lost context** — Ask or use `/recall`
+
+---
+
+## Product Context
+
+> **Mission:** "Making empathy contagious" through spontaneous, authentic storytelling.
+
+### Core Product Documents
+
+| Document | Location | Purpose |
+|----------|----------|---------|
+| App Specification | `docs/APP_SPECIFICATION.md` | Complete product spec |
+| Product Context | `docs/PRODUCT_CONTEXT.md` | Quick reference for decisions |
+| Prompts Database | `docs/prompts.json` | Structured prompt data |
+| Audio Plan | `docs/AUDIO_RECORDING_PLAN.md` | Recording implementation |
+
+### Before Making UX Decisions
+
+Reference the product documents. Key principles:
+
+| Principle | Implication for Code |
+|-----------|---------------------|
+| Spontaneity unlocks truth | No prompt browsing/selection UI |
+| Everyone has stories | Never use language like "amazing story" |
+| Audio is intimate | No editing, filters, or post-production |
+| Ritual over efficiency | Wheel animation must feel substantial |
+| Offline-first | Core features work without network |
+| Consent is sacred | Prominent, unambiguous consent flow |
+
+### User Personas (Quick Reference)
+
+| Persona | Key Need | Design For |
+|---------|----------|------------|
+| The Connector | Facilitate group storytelling | Easy to hand phone around |
+| The Reluctant Storyteller | Permission to be imperfect | Never feel like performance |
+| The Facilitator | Tool for organizations | Professional but warm |
+
+For full personas, see `docs/APP_SPECIFICATION.md#2-user-personas`.
+
+### Feature Scope
+
+| Status | Meaning | Action |
+|--------|---------|--------|
+| MVP | Must be in first release | Build it |
+| Phase 2 | After MVP validation | Document, don't build |
+| Future | Long-term vision | Note for later |
+
+Before building a feature, verify its status in `docs/APP_SPECIFICATION.md#3-feature-requirements`.
+
+### Prompts Database
+
+Structured prompt data is in `docs/prompts.json`:
+
+```typescript
+import promptsData from '../docs/prompts.json';
+
+// Get prompts with facilitation hints
+const riskyPrompts = promptsData.prompts.filter(p => p.declaration_risk);
+
+// Get prompts by category
+const familyPrompts = promptsData.prompts.filter(p => p.category === 'family');
+```
+
+**Key fields:**
+- `declaration_risk`: If true, show `facilitation_hint` in contemplation screen
+- `category`: For future filtering/selection features
+- `facilitation_hint`: Coaching text to guide toward narrative
+
+### Stories vs. Declarations
+
+| ❌ Declaration | ✅ Story |
+|----------------|----------|
+| "My resilience" | "The night I almost gave up..." |
+| "I value honesty" | "There was this time I had to tell a hard truth..." |
+
+When implementing the contemplation screen, show `facilitation_hint` for prompts where `declaration_risk: true`.
+
+### Aesthetic Enforcement
+
+| ✅ Use | ❌ Avoid |
+|--------|---------|
+| Brass, amber, aged paper, wood | Cold blues, whites, grays |
+| Gears, patina, hand-forged metal | Sterile, minimal, flat design |
+| Substantial mechanical animations | Slick, frictionless transitions |
+| Warm analog sounds | Digital beeps and notifications |
+

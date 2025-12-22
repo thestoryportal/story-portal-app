@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "chat-history": {
+      "command": "node",
+      "args": ["~/Projects/story-portal/tools/ai/mcp-server/server.js"],
+      "env": {}
+    }
+  }
+}

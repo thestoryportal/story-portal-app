@@ -1,0 +1,158 @@
+{
+  "total_conversations": 16,
+  "total_words": 4646,
+  "total_code_blocks": 0,
+  "avg_words_per_conversation": 290.4,
+  "top_keywords": [
+    {
+      "keyword": "wheel",
+      "count": 12
+    },
+    {
+      "keyword": "visual",
+      "count": 8
+    },
+    {
+      "keyword": "portal",
+      "count": 8
+    },
+    {
+      "keyword": "story",
+      "count": 6
+    },
+    {
+      "keyword": "prompt",
+      "count": 6
+    },
+    {
+      "keyword": "animation",
+      "count": 5
+    },
+    {
+      "keyword": "app",
+      "count": 5
+    },
+    {
+      "keyword": "button",
+      "count": 5
+    },
+    {
+      "keyword": "spin",
+      "count": 5
+    },
+    {
+      "keyword": "effects",
+      "count": 4
+    },
+    {
+      "keyword": "provided",
+      "count": 4
+    },
+    {
+      "keyword": "text",
+      "count": 4
+    },
+    {
+      "keyword": "spinning",
+      "count": 4
+    },
+    {
+      "keyword": "prompts",
+      "count": 4
+    },
+    {
+      "keyword": "physics",
+      "count": 4
+    },
+    {
+      "keyword": "electricity",
+      "count": 3
+    },
+    {
+      "keyword": "implementation",
+      "count": 3
+    },
+    {
+      "keyword": "positioning",
+      "count": 3
+    },
+    {
+      "keyword": "device",
+      "count": 3
+    },
+    {
+      "keyword": "realistic",
+      "count": 3
+    }
+  ],
+  "top_technologies": [
+    {
+      "tech": "CSS",
+      "count": 10
+    },
+    {
+      "tech": "React",
+      "count": 8
+    },
+    {
+      "tech": "CodePen",
+      "count": 5
+    },
+    {
+      "tech": "HTML",
+      "count": 5
+    },
+    {
+      "tech": "bloom",
+      "count": 3
+    },
+    {
+      "tech": "WebGL",
+      "count": 3
+    },
+    {
+      "tech": "html",
+      "count": 3
+    },
+    {
+      "tech": "SimplexNoise",
+      "count": 3
+    },
+    {
+      "tech": "Canvas",
+      "count": 3
+    },
+    {
+      "tech": "Responsively",
+      "count": 3
+    },
+    {
+      "tech": "SVG",
+      "count": 3
+    },
+    {
+      "tech": "Chrome",
+      "count": 3
+    },
+    {
+      "tech": "iPhone",
+      "count": 3
+    },
+    {
+      "tech": "Three.js",
+      "count": 2
+    },
+    {
+      "tech": "JavaScript",
+      "count": 2
+    }
+  ],
+  "conversation_types": {
+    "debugging": 13,
+    "visual_design": 3
+  },
+  "date_range": {
+    "earliest": "2025-12-10T02:29:58.440882+00:00",
+    "latest": "2025-12-16T18:10:31.301887+00:00"
+  }
+}

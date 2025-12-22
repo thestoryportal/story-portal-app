@@ -1,0 +1,22 @@
+{
+  "pipeline": "Claude Conversation Processor",
+  "version": "1.0.0",
+  "build_timestamp": "2025-12-19T10:10:50.847145Z",
+  "elapsed_seconds": 0.05,
+  "outputs": {
+    "full_dataset": "claude_conversations_full.json",
+    "summary_dataset": "claude_conversations_summary.json",
+    "knowledge_graph": "knowledge_graph.json",
+    "knowledge_items": "knowledge_items.json",
+    "analytics_report": "analytics_report.json",
+    "jsonl_format": "claude_conversations.jsonl"
+  },
+  "stats": {
+    "conversations_processed": 16,
+    "total_words": 4646,
+    "total_code_blocks": 0,
+    "knowledge_items_extracted": 5,
+    "knowledge_graph_nodes": 38,
+    "knowledge_graph_edges": 83
+  }
+}

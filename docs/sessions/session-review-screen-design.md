@@ -1,6 +1,7 @@
 # Session: Review Screen Design
 
 **Platform:** Claude.ai (Browser)  
+**Project:** UX Designer (see `UX_DESIGNER_PROJECT.md` for system prompt)  
 **Type:** UX Design  
 **Priority:** Phase 1 — Critical Path  
 **Estimated Sessions:** 1  

@@ -107,11 +107,19 @@ Before committing:
 
 The `story-portal` skill provides domain knowledge for this project. When working on Story Portal, reference these skill files as needed:
 
-### Core Skills (Existing)
+### Verified Design System (PRIMARY — from codebase audit)
 
 | File | When to Read |
 |------|--------------|
-| `references/design-system.md` | Any visual/styling work |
+| `references/steampunk-design-system.md` | **PRIMARY** — All verified colors, fonts, spacing, animations with file:line citations |
+| `references/design-tokens-quick-ref.md` | Copy-paste ready values during implementation |
+
+> ⚠️ **Always use the verified design system.** Values are extracted directly from codebase. Do not invent colors, fonts, or spacing values.
+
+### Core Skills
+
+| File | When to Read |
+|------|--------------|
 | `references/wheel-mechanics.md` | 3D wheel, panels, radius calculations |
 | `references/animation-standards.md` | Animation, WebGL, effects |
 | `references/responsive-design.md` | Device testing, breakpoints |
@@ -548,9 +556,25 @@ When implementing the contemplation screen, show `facilitation_hint` for prompts
 
 ### Aesthetic Enforcement
 
+**Verified Core Colors** (from `steampunk-design-system.md`):
+| Token | Hex | Usage |
+|-------|-----|-------|
+| Background | `#0a0705` | Body background |
+| Text Primary | `#f5deb3` | Body text (wheat) |
+| Text Panel | `#f4e4c8` | Wheel panel text |
+| Accent Core | `#ffb836` | Electricity, highlights |
+| Border Bronze | `#8B6F47` | Container borders |
+
+**Verified Fonts**:
+- Display: `Carnivalee Freakshow` (wheel panels, menus)
+- UI: `Molly Sans` (buttons, body text)
+- Icons: `Material Symbols Outlined`
+
 | ✅ Use | ❌ Avoid |
 |--------|---------|
 | Brass, amber, aged paper, wood | Cold blues, whites, grays |
 | Gears, patina, hand-forged metal | Sterile, minimal, flat design |
 | Substantial mechanical animations | Slick, frictionless transitions |
 | Warm analog sounds | Digital beeps and notifications |
+
+> **See full design system:** `references/steampunk-design-system.md` for all verified values with source citations.

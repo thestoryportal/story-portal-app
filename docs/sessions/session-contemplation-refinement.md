@@ -1,6 +1,7 @@
 # Session: Contemplation Refinement Design
 
 **Platform:** Claude.ai (Browser)  
+**Project:** UX Designer (see `UX_DESIGNER_PROJECT.md` for system prompt)  
 **Type:** UX Design  
 **Priority:** Phase 2 — Core Experience  
 **Estimated Sessions:** 1  

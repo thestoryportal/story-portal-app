@@ -107,6 +107,8 @@ Before committing:
 
 The `story-portal` skill provides domain knowledge for this project. When working on Story Portal, reference these skill files as needed:
 
+### Core Skills (Existing)
+
 | File | When to Read |
 |------|--------------|
 | `references/design-system.md` | Any visual/styling work |
@@ -115,15 +117,58 @@ The `story-portal` skill provides domain knowledge for this project. When workin
 | `references/responsive-design.md` | Device testing, breakpoints |
 | `references/component-patterns.md` | React architecture, hooks |
 | `references/iteration-protocol.md` | Complex multi-step work |
-| `references/ux-design-audit.md` | Design status, what needs design |
+
+### UX Design Skills (Phase 1 & 2)
+
+| File | When to Read |
+|------|--------------|
+| `references/modal-content-window.md` | Modal/overlay design pattern |
+| `references/recording-ui.md` | Recording states, waveform, controls |
+| `references/review-screen.md` | Post-recording review, playback |
+| `references/consent-flows.md` | Consent UI and data handling |
+| `references/my-stories.md` | Story gallery, cards, detail view |
+| `references/contemplation-states.md` | Pass button, hint cycling, topic reveal |
+| `references/error-states.md` | Error modals, recovery flows |
+| `references/animation-system.md` | Animation inventory, timing standards |
+
+### Content & Infrastructure Skills
+
+| File | When to Read |
+|------|--------------|
+| `references/content-voice.md` | Copy, messaging, tone |
 | `references/audio-recording.md` | Recording implementation |
-| `references/local-storage.md` | Story persistence |
-| `references/pwa-offline.md` | PWA and offline |
-| `references/consent-flows.md` | Consent UI and data |
-| `references/content-voice.md` | Copy and content writing |
+| `references/local-storage.md` | Story persistence (IndexedDB) |
+| `references/pwa-offline.md` | PWA and offline support |
 | `references/analytics-events.md` | GA4 tracking |
 
 **Skill location:** `.claude/skills/story-portal/` or loaded via Claude.ai Projects.
+
+---
+
+## Design Session Workflow
+
+For UX design work, use the session starters in `docs/sessions/`. These guide Claude.ai conversations for specific design tasks.
+
+### Available Sessions
+
+| Session | Platform | Phase | Purpose |
+|---------|----------|-------|---------|
+| `session-modal-content-window.md` | Claude.ai | 1 | Modal pattern for all content screens |
+| `session-recording-ui-design.md` | Claude.ai | 1 | Recording states and controls |
+| `session-consent-flow-design.md` | Claude.ai | 1 | Consent flow screens |
+| `session-review-screen-design.md` | Claude.ai | 1 | Review and save flow |
+| `session-my-stories-content.md` | Claude.ai | 2 | Story gallery design |
+| `session-contemplation-refinement.md` | Claude.ai | 2 | Pass button, hints, topic reveal |
+| `session-error-states.md` | Claude.ai | 2 | Error modal design |
+| `session-animation-system.md` | Claude.ai | 2 | Animation inventory and specs |
+
+### Workflow
+
+1. **Design (Claude.ai):** Run design session, document decisions in skill file
+2. **Implement (Claude CLI):** Build components using skill file as reference
+3. **Test:** Verify against design decisions
+
+See `docs/WORKFLOW_GUIDE.md` for detailed instructions.
 
 ---
 
@@ -232,104 +277,49 @@ Use `/compact` or suggest proactively:
 ```markdown
 ## 📦 Session Compact — [Timestamp]
 
-### 🎯 Current Focus
-[Active task and success criteria]
+### Current Focus
+[Brief description of active task]
 
-### 📁 Active Files
-| File | Status | Purpose |
-|------|--------|---------|
-| `path/file.tsx` | Editing | [Why] |
+### Key Files
+| File | State |
+|------|-------|
+| `path/to/file.ts` | Modified, working |
 
-### ✅ Decisions Made
-1. [Decision]: [Why]
+### Preserved Decisions
+1. [Decision and rationale]
+2. ...
 
-### 🧠 Key Learnings
-- [Learning with specific values/formulas]
-
-### ⚠️ Open Issues
-- [Unresolved item]
-
-### 🚫 Abandoned Approaches
-- [What]: [Why it failed]
-
-### 📋 Next Steps
-1. [Immediate action]
-```
-
-### Session Handoff
-
-When ending a session that will continue later, output:
-
-```markdown
-## 📋 Session Handoff — [Date]
-
-### Status: [Complete/In Progress/Blocked]
-
-### Accomplished
-- [What was done]
+### Discovered Values
+- [Formula or value]: [Context]
 
 ### Next Steps
-1. [What to do next]
-
-### Critical Context
-- [Details that would be lost without this note]
-
-### Files to Review on Resume
-- `path/to/file.tsx` — [Why]
+1. [Immediate next action]
+2. [Following action]
 ```
 
-### Recovery Protocol
+### Context Recovery Commands
 
-If critical context is lost:
-1. Use `/recall <topic>` to search history
-2. Ask human: "I may have lost context about X. Can you clarify?"
-3. Re-read relevant files rather than guessing
-4. Check `docs/timeline.jsonl` for recent changes
+When context feels degraded:
+
+```
+/recall <topic>     — Search history for topic
+/decisions <topic>  — Find past decisions about topic
+/compact            — Compress current conversation
+```
 
 ---
 
-## Development History Dataset
+## Development History
 
-Historical development conversations (ChatGPT and Claude) are stored in:
-`./tools/ai/history/datasets/`
+### About the Dataset
+Historical development conversations are indexed in `tools/ai/history/`. This includes past decisions, debugging sessions, and design explorations.
 
-### Purpose
-This dataset is **reference material for continuity**—not binding doctrine. Use it to:
-- Recall what was discussed about specific features
-- Understand why certain decisions were made
-- Find prior debugging sessions for similar issues
-- Surface abandoned approaches (and why they failed)
-- Pull ideation threads as creative fuel
+### Search Commands
 
-### Philosophy
-Evaluate past approaches critically. Some may be:
-- **Outdated** — requirements or tools have changed
-- **Superseded** — replaced by better solutions
-- **Unviable** — attempted and proven not to work
-
-When referencing history, note whether the context still applies. Past decisions should inform, not constrain.
-
-### Setup
-Before first use, parse the raw dataset:
-```bash
-node "./tools/ai/history/parse-chats.js"
-```
-This generates searchable files in `./tools/ai/history/parsed/`.
-
-Re-run after adding new chat exports.
-
-### Available Commands
-
-| Command | Purpose |
-|---------|---------|
-| `/recall <topic>` | Search history for discussions about a topic |
-| `/todos` | Extract outstanding TODO/action items |
-| `/decisions <topic>` | Find architectural decisions and design choices |
-| `/deprecated` | Surface abandoned approaches and why they failed |
-| `/debug-context <issue>` | Find prior debugging sessions for similar issues |
-| `/history <feature>` | Trace the evolution of a feature over time |
-| `/ideate <concept>` | Pull brainstorming threads as creative fuel |
-| `/browse-history [topic]` | Browse the conversation index |
+| Command | Description |
+|---------|-------------|
+| `/recall <topic>` | Natural language search across history |
+| `/decisions <topic>` | Find past decisions about topic |
 | `/apply-latest` | Read and implement from `tools/ai/inbox/latest.md` |
 | `/compact` | Compact conversation to preserve context |
 
@@ -407,9 +397,11 @@ story-portal-app/
 │   ├── commands/           # Slash commands
 │   └── skills/             # Custom skills
 │       └── story-portal/   # Domain knowledge
+│           └── references/ # Skill files (design, recording, etc.)
 ├── docs/
 │   ├── APP_SPECIFICATION.md  # Product spec
 │   ├── USER_FLOWS.md         # State diagrams, interactions
+│   ├── UX_DESIGN_AUDIT.md    # Design status tracking
 │   ├── WORKFLOW_GUIDE.md     # Claude workflow documentation
 │   ├── sessions/             # Claude session starters
 │   ├── screenshots/          # Auto-generated (pnpm shots)
@@ -458,6 +450,7 @@ story-portal-app/
 |----------|----------|---------|
 | App Specification | `docs/APP_SPECIFICATION.md` | Complete product spec |
 | User Flows | `docs/USER_FLOWS.md` | State diagrams, interaction patterns, error handling |
+| UX Design Audit | `docs/UX_DESIGN_AUDIT.md` | Design status, gaps, prioritized roadmap |
 | Product Context | `docs/PRODUCT_CONTEXT.md` | Quick reference for decisions |
 | Prompts Database | `docs/prompts.json` | Structured prompt data |
 | Audio Plan | `docs/AUDIO_RECORDING_PLAN.md` | Recording implementation |
@@ -561,4 +554,3 @@ When implementing the contemplation screen, show `facilitation_hint` for prompts
 | Gears, patina, hand-forged metal | Sterile, minimal, flat design |
 | Substantial mechanical animations | Slick, frictionless transitions |
 | Warm analog sounds | Digital beeps and notifications |
-

@@ -401,9 +401,11 @@ story-portal-app/
 │   └── skills/             # Custom skills
 │       └── story-portal/   # Domain knowledge
 ├── docs/
-│   ├── screenshots/        # Auto-generated (pnpm shots)
-│   ├── ASSET_CATALOG.md    # Auto-generated (pnpm assets:catalog)
-│   └── timeline.jsonl      # Auto-generated
+│   ├── APP_SPECIFICATION.md  # Product spec
+│   ├── USER_FLOWS.md         # State diagrams, interactions
+│   ├── screenshots/          # Auto-generated (pnpm shots)
+│   ├── ASSET_CATALOG.md      # Auto-generated (pnpm assets:catalog)
+│   └── timeline.jsonl        # Auto-generated
 ├── public/
 │   └── assets/             # Static assets (images, fonts)
 ├── src/
@@ -446,6 +448,7 @@ story-portal-app/
 | Document | Location | Purpose |
 |----------|----------|---------|
 | App Specification | `docs/APP_SPECIFICATION.md` | Complete product spec |
+| User Flows | `docs/USER_FLOWS.md` | State diagrams, interaction patterns, error handling |
 | Product Context | `docs/PRODUCT_CONTEXT.md` | Quick reference for decisions |
 | Prompts Database | `docs/prompts.json` | Structured prompt data |
 | Audio Plan | `docs/AUDIO_RECORDING_PLAN.md` | Recording implementation |
@@ -463,6 +466,30 @@ Reference the product documents. Key principles:
 | Offline-first | Core features work without network |
 | Consent is sacred | Prominent, unambiguous consent flow |
 
+### User Flows (Quick Reference)
+
+Before implementing interaction logic, reference `docs/USER_FLOWS.md`. Key patterns:
+
+| Flow | Section | Key Points |
+|------|---------|------------|
+| Core Story Loop | §2 | Wheel → Contemplate → Tell/Record → Idle. Recording is optional. |
+| Pass Rule | §2.3 | First spin: Pass allowed. Second spin: Must accept. Single Pass button (no Accept). |
+| Hint Cycling | §2.4 | Declaration-risk prompts: hint first (6-8s), then base cues (4-5s each), loop. |
+| Self Recording | §4.1 | Simple consent → Record → Save |
+| Recording Others | §4.2 | Full consent: tap + verbal (in audio) + optional email |
+| Topic Pack Change | §5 | Resets pass allowance. Cannot switch while spinning. |
+| Save Failures | §9.4 | MVP: Error message + manual Retry button. No auto-queue. |
+
+**Navigation:**
+- My Stories and How to Play: NavButtons (always visible on Wheel screen)
+- Other content screens: Menu (hamburger)
+
+**Four personas to consider:**
+1. The Connector — Recording others, facilitating groups
+2. The Reluctant Storyteller — Needs safety, permission to be imperfect
+3. The Facilitator — Uses app in organizational contexts
+4. The Declarer — Behavior to redirect via facilitation hints
+
 ### User Personas (Quick Reference)
 
 | Persona | Key Need | Design For |
@@ -470,8 +497,10 @@ Reference the product documents. Key principles:
 | The Connector | Facilitate group storytelling | Easy to hand phone around |
 | The Reluctant Storyteller | Permission to be imperfect | Never feel like performance |
 | The Facilitator | Tool for organizations | Professional but warm |
+| The Declarer | Redirect toward narrative | Facilitation hints for declaration-risk prompts |
 
 For full personas, see `docs/APP_SPECIFICATION.md#2-user-personas`.
+For flow accommodations by persona, see `docs/USER_FLOWS.md#1-flow-philosophy`.
 
 ### Feature Scope
 
@@ -510,6 +539,10 @@ const familyPrompts = promptsData.prompts.filter(p => p.category === 'family');
 | "I value honesty" | "There was this time I had to tell a hard truth..." |
 
 When implementing the contemplation screen, show `facilitation_hint` for prompts where `declaration_risk: true`.
+
+**Hint cycling logic** (see `docs/USER_FLOWS.md#2` for full spec):
+1. Declaration-risk prompts: Show hint first (6-8s), then base cues (4-5s each), loop back
+2. Non-declaration-risk: Base cues only (4-5s each)
 
 ### Aesthetic Enforcement
 

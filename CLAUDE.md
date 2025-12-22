@@ -115,6 +115,13 @@ The `story-portal` skill provides domain knowledge for this project. When workin
 | `references/responsive-design.md` | Device testing, breakpoints |
 | `references/component-patterns.md` | React architecture, hooks |
 | `references/iteration-protocol.md` | Complex multi-step work |
+| `references/ux-design-audit.md` | Design status, what needs design |
+| `references/audio-recording.md` | Recording implementation |
+| `references/local-storage.md` | Story persistence |
+| `references/pwa-offline.md` | PWA and offline |
+| `references/consent-flows.md` | Consent UI and data |
+| `references/content-voice.md` | Copy and content writing |
+| `references/analytics-events.md` | GA4 tracking |
 
 **Skill location:** `.claude/skills/story-portal/` or loaded via Claude.ai Projects.
 
@@ -403,6 +410,8 @@ story-portal-app/
 ├── docs/
 │   ├── APP_SPECIFICATION.md  # Product spec
 │   ├── USER_FLOWS.md         # State diagrams, interactions
+│   ├── WORKFLOW_GUIDE.md     # Claude workflow documentation
+│   ├── sessions/             # Claude session starters
 │   ├── screenshots/          # Auto-generated (pnpm shots)
 │   ├── ASSET_CATALOG.md      # Auto-generated (pnpm assets:catalog)
 │   └── timeline.jsonl        # Auto-generated

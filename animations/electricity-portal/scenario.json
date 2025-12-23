@@ -18,12 +18,15 @@
     "headless": false,
     "mode": "newtopics",
     "crop": {
-      "x": 475,
-      "y": 36,
+      "x": 481,
+      "y": 40,
       "width": 465,
       "height": 465,
       "circularMask": true,
-      "_note": "Centered on portal for 1440x768 viewport, calibrated 2025-12-22"
+      "maskOffsetX": 0,
+      "maskOffsetY": 0,
+      "maskRadiusAdjust": 0,
+      "_note": "Calibrated 2025-12-23: 465x465, x=481 y=40"
     },
     "effectTiming": {
       "startMs": 975,
@@ -39,8 +42,11 @@
     "animation": "animations/electricity-portal/references/465x465/sora_reference_1.5x.apng",
     "mask": "animations/electricity-portal/references/465x465/golden_mask_overlay.png",
     "maskCapture": "animations/electricity-portal/references/465x465/golden_mask_capture.png",
-    "_maskNote": "Reference mask (235,232) r(164,159) vs Capture mask (238.5,235) r(161.5,160)",
-    "_dualMaskRationale": "Sora reference is AI-generated artwork; live capture is CSS-rendered portal. They are visually similar but not pixel-identical, hence ~3.5px offset requiring separate masks.",
+    "_maskNote": "Dual masks required due to portal size difference",
+    "_maskSpec": {
+      "overlay": { "format": "transparent center, semi-opaque black outer", "innerSize": "326x318", "use": "Sora reference" },
+      "capture": { "format": "white ellipse on black (binary)", "innerSize": "319x317", "use": "live captured frames" }
+    },
     "baseline": "animations/electricity-portal/references/465x465/quality_spec.json",
     "baselineMetrics": "animations/electricity-portal/references/465x465/baseline_metrics.json",
     "animationBaseline": "animations/electricity-portal/references/465x465/baseline_animation_metrics.json",
@@ -63,7 +69,7 @@
       "pass": 0.85,
       "good": 0.90,
       "excellent": 0.93,
-      "_ceilingNote": "Max achievable ~0.95-0.97 due to AI reference vs live app mismatch (dual mask system)"
+      "_ceilingNote": "Max achievable ~0.95-0.97 due to AI reference vs live app rendering differences"
     },
     "diffPercent": {
       "max": 15,
@@ -91,22 +97,24 @@
 
   "codeTargets": {
     "core": [
-      "src/legacy/effects/shaders.ts",
-      "src/legacy/effects/boltGenerator.ts",
-      "src/legacy/effects/useElectricityEffect.ts"
+      "src/legacy/components/ElectricityR3F.tsx"
     ],
     "supporting": [
-      "src/legacy/effects/noiseUtils.ts",
       "src/legacy/constants/config.ts"
     ],
-    "_note": "Core files are primary iteration targets. Supporting files may also need changes."
+    "_note": "R3F component is primary iteration target. Config provides color/timing constants.",
+    "_legacy": [
+      "src/legacy/effects/shaders.ts",
+      "src/legacy/effects/boltGenerator.ts",
+      "src/legacy/effects/useElectricityEffect.ts",
+      "src/legacy/effects/useElectricityEffectThree.ts"
+    ]
   },
 
   "setupStatus": {
     "viewportVerified": true,
     "cropCalibrated": true,
     "maskVerified": true,
-    "dualMaskCalibrated": true,
     "timingVerified": true,
     "videoPipelineVerified": true,
     "verifiedDate": "2025-12-22",
@@ -116,8 +124,8 @@
     "effectDuration": "~1.16s",
     "effectTimingMs": "975-2138",
     "circularMaskApplied": true,
-    "cropCoordinates": "475,36 @ 465x465",
-    "_calibrationNote": "Dual mask system: reference and capture masks differ by ~3.5px center offset"
+    "cropCoordinates": "481,40 @ 465x465",
+    "_calibrationNote": "Crop calibrated 2025-12-23: x=481 y=40 465x465, dual masks (overlay 326x318, capture 319x317)"
   },
 
   "visualSpec": {

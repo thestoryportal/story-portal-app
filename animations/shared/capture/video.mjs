@@ -26,26 +26,70 @@ function dateFolder() {
 
 function ensureDir(p) { fs.mkdirSync(p, { recursive: true }); }
 
-// Apply circular transparency mask to an image
-async function applyCircularMask(inputPath, outputPath) {
-  const image = sharp(inputPath);
-  const metadata = await image.metadata();
-  const size = metadata.width;
-  const radius = size / 2;
+// Apply golden mask from file to an image
+// Supports two mask formats:
+// 1. Binary: white circle on black (white=keep, black=hide) - use grayscale as alpha
+// 2. Alpha: transparent center, opaque edges - invert alpha channel
+async function applyGoldenMask(inputPath, outputPath, goldenMaskPath) {
+  if (!fs.existsSync(goldenMaskPath)) {
+    throw new Error(`Golden mask not found: ${goldenMaskPath}`);
+  }
 
-  // Create SVG circular mask
-  const mask = Buffer.from(
-    `<svg width="${size}" height="${size}">
-      <circle cx="${radius}" cy="${radius}" r="${radius}" fill="white"/>
-    </svg>`
-  );
+  const imageMeta = await sharp(inputPath).metadata();
 
-  await image
+  // Determine mask type by sampling alpha at center and corner
+  // Binary mask: RGB varies (white center, black edges), alpha constant (255)
+  // Alpha mask: RGB constant (black), alpha varies (0 center, >0 edges)
+  const { data: maskData, info: maskInfo } = await sharp(goldenMaskPath).raw().toBuffer({ resolveWithObject: true });
+  const centerIdx = (232 * maskInfo.width + 232) * maskInfo.channels;
+  const cornerIdx = 0;
+
+  const centerAlpha = maskInfo.channels === 4 ? maskData[centerIdx + 3] : 255;
+  const cornerAlpha = maskInfo.channels === 4 ? maskData[cornerIdx + 3] : 255;
+  const centerGray = (maskData[centerIdx] + maskData[centerIdx + 1] + maskData[centerIdx + 2]) / 3;
+  const cornerGray = (maskData[cornerIdx] + maskData[cornerIdx + 1] + maskData[cornerIdx + 2]) / 3;
+
+  // If alpha varies significantly, use alpha mask logic; otherwise use grayscale
+  const alphaVaries = Math.abs(centerAlpha - cornerAlpha) > 50;
+  const isBinaryMask = !alphaVaries && Math.abs(centerGray - cornerGray) > 100;
+
+  let alphaBuffer;
+
+  if (isBinaryMask) {
+    // Binary mask: white=keep (255), black=hide (0)
+    alphaBuffer = await sharp(goldenMaskPath)
+      .resize(imageMeta.width, imageMeta.height)
+      .grayscale()
+      .raw()
+      .toBuffer();
+  } else {
+    // Alpha mask: transparent center (alpha=0) = keep, opaque edges (alpha>0) = hide
+    alphaBuffer = await sharp(goldenMaskPath)
+      .resize(imageMeta.width, imageMeta.height)
+      .extractChannel('alpha')
+      .negate()
+      .raw()
+      .toBuffer();
+  }
+
+  // Read input as raw RGBA
+  const inputBuffer = await sharp(inputPath)
     .ensureAlpha()
-    .composite([{
-      input: mask,
-      blend: 'dest-in'
-    }])
+    .raw()
+    .toBuffer();
+
+  // Combine: replace alpha channel in input with our mask
+  const outputBuffer = Buffer.alloc(imageMeta.width * imageMeta.height * 4);
+  for (let i = 0; i < imageMeta.width * imageMeta.height; i++) {
+    outputBuffer[i * 4 + 0] = inputBuffer[i * 4 + 0]; // R
+    outputBuffer[i * 4 + 1] = inputBuffer[i * 4 + 1]; // G
+    outputBuffer[i * 4 + 2] = inputBuffer[i * 4 + 2]; // B
+    outputBuffer[i * 4 + 3] = alphaBuffer[i];          // A from mask
+  }
+
+  await sharp(outputBuffer, {
+    raw: { width: imageMeta.width, height: imageMeta.height, channels: 4 }
+  })
     .png()
     .toFile(outputPath);
 }
@@ -102,7 +146,9 @@ function parseArgs() {
     // scenario.json.effectTiming mirrors config.ts values
     effectStartMs: cap.effectTiming?.startMs || 975,
     effectEndMs: cap.effectTiming?.endMs || 2138,
-    applyCircularMask: cap.crop?.circularMask !== false,
+    applyMask: cap.crop?.circularMask !== false,
+    // Golden mask path from scenario.json - use capture mask for live frames
+    goldenMaskPath: scenario?.reference?.maskCapture || scenario?.reference?.mask || null,
   };
 
   // Second pass: apply CLI overrides
@@ -159,27 +205,13 @@ async function clickSelector(page, selectors) {
     try {
       const el = await page.$(sel);
       if (el) {
-        const clicked = await page.evaluate((selector) => {
-          const element = document.querySelector(selector);
-          if (element) {
-            const event = new MouseEvent('mousedown', {
-              bubbles: true,
-              cancelable: true,
-              view: window
-            });
-            element.dispatchEvent(event);
-            return true;
-          }
-          return false;
-        }, sel);
-
-        if (clicked) {
-          console.log(`Clicked: ${sel}`);
-          return true;
-        }
+        // Use Puppeteer's native click which properly triggers React synthetic events
+        await el.click();
+        console.log(`Clicked: ${sel}`);
+        return true;
       }
     } catch (e) {
-      console.log(`Click error: ${e.message}`);
+      console.log(`Click error for ${sel}: ${e.message}`);
     }
   }
   return false;
@@ -203,6 +235,8 @@ async function main() {
   console.log(`Output: ${outDir}`);
 
   // Launch browser
+  // CRITICAL: Use defaultViewport: null to prevent viewport mismatch on launch
+  // Then explicitly set viewport after page creation to lock dimensions
   const windowHeight = opts.viewportHeight + 80;
   const browser = await puppeteer.launch({
     headless: false,  // Must be non-headless for screencast
@@ -219,18 +253,30 @@ async function main() {
       '--high-dpi-support=1',
       '--autoplay-policy=no-user-gesture-required',
     ],
-    defaultViewport: {
-      width: opts.viewportWidth,
-      height: opts.viewportHeight,
-      deviceScaleFactor: 1,
-    }
+    defaultViewport: null,  // Let setViewport handle it to avoid resize flash
   });
 
   const page = await browser.newPage();
 
+  // Set viewport explicitly before navigation
+  await page.setViewport({
+    width: opts.viewportWidth,
+    height: opts.viewportHeight,
+    deviceScaleFactor: 1,
+  });
+
   // Navigate and wait
   await page.goto(baseUrl, { waitUntil: 'networkidle0' });
   console.log('Page loaded');
+
+  // CRITICAL: Re-set viewport after load to ensure dimensions are locked
+  // This prevents the resize-from-bottom-right issue
+  await page.setViewport({
+    width: opts.viewportWidth,
+    height: opts.viewportHeight,
+    deviceScaleFactor: 1,
+  });
+  console.log(`Viewport locked: ${opts.viewportWidth}x${opts.viewportHeight}`);
 
   // Wait for UI
   try {
@@ -356,12 +402,12 @@ async function main() {
     console.log(`  Last effect frame: ${lastEffectFrame.frameTime}ms (index ${effectFrameIndices[effectFrameIndices.length - 1]})`);
   }
 
-  if (opts.applyCircularMask) {
-    console.log('Applying circular transparency mask...');
+  if (opts.applyMask && opts.goldenMaskPath) {
+    console.log(`Applying golden mask: ${opts.goldenMaskPath}`);
     for (let i = 0; i < effectFrames.length; i++) {
       const srcPath = path.join(cropsDir, effectFrames[i]);
       const dstPath = path.join(maskedDir, `frame_${String(i).padStart(3, '0')}.png`);
-      await applyCircularMask(srcPath, dstPath);
+      await applyGoldenMask(srcPath, dstPath, opts.goldenMaskPath);
       if ((i + 1) % 20 === 0 || i === effectFrames.length - 1) {
         console.log(`  Masked ${i + 1}/${effectFrames.length} frames`);
       }
@@ -419,7 +465,7 @@ async function main() {
   console.log(`\n✅ VIDEO CAPTURE COMPLETE`);
   console.log(`Total frames captured: ${frames.length}`);
   console.log(`Effect frames used: ${effectFrames.length} (timestamp-based trimming)`);
-  console.log(`Circular mask: ${opts.applyCircularMask ? 'applied' : 'not applied'}`);
+  console.log(`Golden mask: ${opts.applyMask && opts.goldenMaskPath ? 'applied' : 'not applied'}`);
   console.log(`Output directory: ${outDir}`);
   console.log(`Animated PNG: animation.apng (${(apngSize / 1024 / 1024).toFixed(2)} MB, ${apngDuration.toFixed(2)}s @ ${actualFps.toFixed(2)}fps)`);
   console.log(`Frame timing metadata: frame_timing.json`);

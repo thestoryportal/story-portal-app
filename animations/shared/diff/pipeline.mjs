@@ -22,6 +22,7 @@ import path from 'path';
 import { execSync, spawnSync } from 'child_process';
 import { analyzeCapture } from './analyze.mjs';
 import { cropFrames } from './crop.mjs';
+import { analyzeSSIM as analyzeVideoSSIM, analyzeTemporalConsistency } from './video-analyze.mjs';
 
 const PROJECT_ROOT = path.resolve(import.meta.dirname, '../../..');
 
@@ -82,10 +83,36 @@ export async function runPipeline(options) {
     focusDir = captureDir;
   }
 
-  // Step 2: Run diff analysis
-  console.log('\n🔍 Step 2: Running diff analysis...');
+  // Step 2: Run diff analysis (frames)
+  console.log('\n🔍 Step 2: Running frame diff analysis...');
   const analysisDir = path.join(iterationDir, 'analysis');
   const analysisResult = await runAnalysis(scenario, focusDir, analysisDir);
+
+  // Step 2.5: Run video diff analysis (APNG vs reference APNG)
+  let videoAnalysis = null;
+  const capturedApng = findCapturedApng(captureDir);
+  const referenceApng = scenario.reference?.animation;
+
+  if (capturedApng && referenceApng && fs.existsSync(referenceApng)) {
+    console.log('\n🎬 Step 2.5: Running video diff analysis...');
+    const videoAnalysisDir = path.join(analysisDir, 'video');
+    fs.mkdirSync(videoAnalysisDir, { recursive: true });
+
+    videoAnalysis = await runVideoAnalysis(capturedApng, referenceApng, videoAnalysisDir);
+
+    // Merge video SSIM into analysis result for combined feedback
+    analysisResult.videoSsim = videoAnalysis?.aggregate || null;
+    analysisResult.temporalConsistency = videoAnalysis?.temporal?.consistency || null;
+
+    console.log(`  Video SSIM: ${(videoAnalysis.aggregate * 100).toFixed(1)}%`);
+    console.log(`  Temporal consistency: ${((videoAnalysis.temporal?.consistency || 0) * 100).toFixed(1)}%`);
+  }
+
+  // Step 2.6: Open APNG in Chrome for human review
+  if (capturedApng) {
+    console.log('\n🖼️  Step 2.6: Opening APNG in Chrome for review...');
+    openApngInChrome(capturedApng);
+  }
 
   // Step 3: Check convergence
   console.log('\n📊 Step 3: Checking convergence...');
@@ -105,10 +132,27 @@ export async function runPipeline(options) {
     iteration,
     timestamp,
     scenario: scenarioName,
-    scores: analysisResult.scores,
+    scores: {
+      ...analysisResult.scores,
+      videoSsim: analysisResult.videoSsim || null,
+      temporalConsistency: analysisResult.temporalConsistency || null
+    },
     verdict: analysisResult.verdict,
     convergence,
-    nextAction: convergence.action
+    nextAction: convergence.action,
+    baselineTargets: {
+      static: scenario._baselineMetrics ? {
+        brightnessCore: scenario._baselineMetrics.metrics?.intensity?.[0]?.averageBrightness,
+        brightestHex: scenario._baselineMetrics.metrics?.colors?.brightest?.hex,
+        effectCoverage: scenario._baselineMetrics.metrics?.mask?.coveragePercent
+      } : null,
+      animation: scenario._animationBaseline ? {
+        frameCount: scenario._animationBaseline.metrics?.animation?.frameCount,
+        flickerOscillations: scenario._animationBaseline.metrics?.flicker?.oscillationCount,
+        motionEnergy: scenario._animationBaseline.metrics?.motion?.averageChange,
+        colorConsistency: scenario._animationBaseline.metrics?.colorStability?.colorConsistency
+      } : null
+    }
   }, null, 2));
 
   // Update latest pointer
@@ -141,10 +185,30 @@ function loadScenario(name) {
 
   // Resolve relative paths
   if (scenario.reference) {
-    for (const key of ['withEffect', 'withoutEffect', 'mask', 'baseline']) {
+    for (const key of ['withEffect', 'withoutEffect', 'mask', 'baseline', 'baselineMetrics', 'animationBaseline', 'animation']) {
       if (scenario.reference[key]) {
         scenario.reference[key] = path.join(PROJECT_ROOT, scenario.reference[key]);
       }
+    }
+  }
+
+  // Load baseline metrics if available
+  scenario._baselineMetrics = null;
+  scenario._animationBaseline = null;
+
+  if (scenario.reference.baselineMetrics && fs.existsSync(scenario.reference.baselineMetrics)) {
+    try {
+      scenario._baselineMetrics = JSON.parse(fs.readFileSync(scenario.reference.baselineMetrics, 'utf8'));
+    } catch (e) {
+      console.warn('Could not load baseline metrics:', e.message);
+    }
+  }
+
+  if (scenario.reference.animationBaseline && fs.existsSync(scenario.reference.animationBaseline)) {
+    try {
+      scenario._animationBaseline = JSON.parse(fs.readFileSync(scenario.reference.animationBaseline, 'utf8'));
+    } catch (e) {
+      console.warn('Could not load animation baseline:', e.message);
     }
   }
 
@@ -497,6 +561,10 @@ function generateFeedback(scenario, analysisResult, convergence, iteration) {
     baselineSpec = JSON.parse(fs.readFileSync(scenario.reference.baseline, 'utf8'));
   }
 
+  // Use preloaded baseline metrics
+  const baselineMetrics = scenario._baselineMetrics;
+  const animationBaseline = scenario._animationBaseline;
+
   const markdown = `# Iteration ${iteration} Report: ${scenario.name}
 
 ## Verdict: ${verdict.quality?.toUpperCase() || 'UNKNOWN'}
@@ -509,7 +577,9 @@ ${verdict.pass ? '✅' : '❌'} ${verdict.message || 'No analysis data'}
 
 | Metric | Current | Target | Status |
 |--------|---------|--------|--------|
-| SSIM | ${(ssim * 100).toFixed(1)}% | ≥${(convergence.passThreshold * 100).toFixed(0)}% | ${ssim >= convergence.passThreshold ? '✅' : '❌'} |
+| Frame SSIM | ${(ssim * 100).toFixed(1)}% | ≥${(convergence.passThreshold * 100).toFixed(0)}% | ${ssim >= convergence.passThreshold ? '✅' : '❌'} |
+| Video SSIM | ${analysisResult.videoSsim ? (analysisResult.videoSsim * 100).toFixed(1) + '%' : 'N/A'} | ≥${(convergence.passThreshold * 100).toFixed(0)}% | ${analysisResult.videoSsim >= convergence.passThreshold ? '✅' : '❌'} |
+| Temporal | ${analysisResult.temporalConsistency ? (analysisResult.temporalConsistency * 100).toFixed(1) + '%' : 'N/A'} | ≥90% | ${analysisResult.temporalConsistency >= 0.9 ? '✅' : '⚠️'} |
 | Diff % | ${diffPercent.toFixed(1)}% | <15% | ${diffPercent < 15 ? '✅' : '❌'} |
 
 ---
@@ -538,10 +608,41 @@ ${scenario.visualSpec?.color ? `
 
 ---
 
+## Baseline Metrics (Reference Targets)
+
+### Static Reference (sora_reference_frame.png)
+${baselineMetrics ? `
+| Zone | Target Brightness |
+|------|-------------------|
+${baselineMetrics.metrics?.intensity?.map(z => `| ${z.name} | ${z.averageBrightness} |`).join('\n') || '| N/A | N/A |'}
+
+- **Brightest point:** ${baselineMetrics.metrics?.colors?.brightest?.hex || 'N/A'}
+- **Average color:** ${baselineMetrics.metrics?.colors?.average?.hex || 'N/A'}
+- **Effect coverage:** ${baselineMetrics.metrics?.mask?.coveragePercent?.toFixed(1) || 'N/A'}%
+` : 'No static baseline metrics available'}
+
+### Animation Reference (sora_reference_1.5x.apng)
+${animationBaseline ? `
+| Metric | Target Value |
+|--------|--------------|
+| Frame count | ${animationBaseline.metrics?.animation?.frameCount || 'N/A'} |
+| Brightness range | ${animationBaseline.metrics?.brightness?.min?.toFixed(0) || 'N/A'}-${animationBaseline.metrics?.brightness?.max?.toFixed(0) || 'N/A'} |
+| Motion energy | ${animationBaseline.metrics?.motion?.averageChange?.toFixed(1) || 'N/A'} avg/frame |
+| Flicker oscillations | ${animationBaseline.metrics?.flicker?.oscillationCount || 'N/A'} |
+| Color consistency | ${((animationBaseline.metrics?.colorStability?.colorConsistency || 0) * 100).toFixed(0)}% |
+
+**Interpretation:**
+- Brightness std dev: ${animationBaseline.metrics?.brightness?.stdDev?.toFixed(2) || 'N/A'} (lower = more consistent)
+- Max flicker: ${animationBaseline.metrics?.flicker?.maxFlicker?.toFixed(2) || 'N/A'} (brightness change between frames)
+- Peak frame: ${animationBaseline.metrics?.keyFrames?.peak || 'N/A'} (brightest moment)
+` : 'No animation baseline metrics available'}
+
+---
+
 ## Code Targets
 
 Files to modify:
-${scenario.codeTargets?.map(f => `- \`${f}\``).join('\n') || 'No code targets defined'}
+${formatCodeTargets(scenario.codeTargets)}
 
 ---
 
@@ -575,6 +676,31 @@ ${getSpecificGuidance(scenario, ssim)}
     ssim,
     diffPercent
   };
+}
+
+/**
+ * Format code targets from scenario.json
+ * Handles both array format and object format with core/supporting
+ */
+function formatCodeTargets(codeTargets) {
+  if (!codeTargets) return 'No code targets defined';
+
+  // Handle array format (legacy)
+  if (Array.isArray(codeTargets)) {
+    return codeTargets.map(f => `- \`${f}\``).join('\n');
+  }
+
+  // Handle object format with core/supporting
+  const lines = [];
+  if (codeTargets.core?.length) {
+    lines.push('**Core:**');
+    codeTargets.core.forEach(f => lines.push(`- \`${f}\``));
+  }
+  if (codeTargets.supporting?.length) {
+    lines.push('**Supporting:**');
+    codeTargets.supporting.forEach(f => lines.push(`- \`${f}\``));
+  }
+  return lines.length ? lines.join('\n') : 'No code targets defined';
 }
 
 /**
@@ -686,18 +812,26 @@ function updateLatestPointer(scenarioName, iterationDir) {
  */
 function printSummary(analysisResult, convergence, iterationDir) {
   const ssim = analysisResult.scores?.bestSsim || 0;
+  const videoSsim = analysisResult.videoSsim;
+  const temporal = analysisResult.temporalConsistency;
 
   console.log('\n' + '═'.repeat(60));
   console.log('  ITERATION SUMMARY');
   console.log('═'.repeat(60));
-  console.log(`  SSIM:      ${(ssim * 100).toFixed(1)}%`);
-  console.log(`  Threshold: ${(convergence.passThreshold * 100).toFixed(0)}%`);
-  console.log(`  Target:    ${(convergence.targetSsim * 100).toFixed(0)}%`);
+  console.log(`  Frame SSIM: ${(ssim * 100).toFixed(1)}%`);
+  if (videoSsim) {
+    console.log(`  Video SSIM: ${(videoSsim * 100).toFixed(1)}%`);
+  }
+  if (temporal) {
+    console.log(`  Temporal:   ${(temporal * 100).toFixed(1)}%`);
+  }
+  console.log(`  Threshold:  ${(convergence.passThreshold * 100).toFixed(0)}%`);
+  console.log(`  Target:     ${(convergence.targetSsim * 100).toFixed(0)}%`);
   console.log('─'.repeat(60));
-  console.log(`  Action:    ${convergence.action.toUpperCase()}`);
-  console.log(`  Reason:    ${convergence.reason}`);
+  console.log(`  Action:     ${convergence.action.toUpperCase()}`);
+  console.log(`  Reason:     ${convergence.reason}`);
   console.log('─'.repeat(60));
-  console.log(`  Output:    ${iterationDir}`);
+  console.log(`  Output:     ${iterationDir}`);
   console.log('═'.repeat(60) + '\n');
 }
 
@@ -708,6 +842,113 @@ function getTimestamp() {
   const d = new Date();
   const pad = n => String(n).padStart(2, '0');
   return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+}
+
+/**
+ * Find captured APNG from video capture output
+ */
+function findCapturedApng(captureDir) {
+  if (!captureDir) return null;
+
+  // Check parent directory for animation.apng (video.mjs output structure)
+  const parentDir = path.dirname(captureDir);
+
+  // Try common locations
+  const candidates = [
+    path.join(parentDir, 'animation.apng'),
+    path.join(captureDir, 'animation.apng'),
+    path.join(captureDir, '..', 'animation.apng'),
+  ];
+
+  // Also search for any APNG in parent's timeline directory
+  const timelineMatch = parentDir.match(/screenshots\/timeline\/\d{4}-\d{2}-\d{2}\/(\d{8}_\d{6}__[^/]+)/);
+  if (timelineMatch) {
+    const timelineDir = parentDir.includes(timelineMatch[1])
+      ? parentDir
+      : path.join(parentDir, '..', timelineMatch[1]);
+    candidates.push(path.join(timelineDir, 'animation.apng'));
+  }
+
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
+  }
+
+  // Search more broadly in recent capture directories
+  const screenshotsDir = path.join(PROJECT_ROOT, 'animations/electricity-portal/output/screenshots/timeline');
+  if (fs.existsSync(screenshotsDir)) {
+    const today = new Date().toISOString().split('T')[0];
+    const todayDir = path.join(screenshotsDir, today);
+
+    if (fs.existsSync(todayDir)) {
+      const captures = fs.readdirSync(todayDir)
+        .filter(d => d.includes('iter-'))
+        .sort()
+        .reverse();
+
+      for (const capture of captures.slice(0, 3)) { // Check 3 most recent
+        const apngPath = path.join(todayDir, capture, 'animation.apng');
+        if (fs.existsSync(apngPath)) {
+          return apngPath;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Run video SSIM analysis between captured and reference APNGs
+ */
+async function runVideoAnalysis(capturedPath, referencePath, outputDir) {
+  console.log(`  Captured: ${path.basename(capturedPath)}`);
+  console.log(`  Reference: ${path.basename(referencePath)}`);
+
+  try {
+    const ssim = await analyzeVideoSSIM(capturedPath, referencePath, outputDir);
+
+    // Parse per-frame scores for temporal analysis
+    const temporal = analyzeTemporalConsistency(ssim.perFrame);
+
+    // Save results
+    const results = {
+      timestamp: new Date().toISOString(),
+      captured: capturedPath,
+      reference: referencePath,
+      ssim: {
+        aggregate: ssim.aggregate,
+        min: ssim.min,
+        max: ssim.max,
+        mean: ssim.mean,
+        perFrame: ssim.perFrame
+      },
+      temporal
+    };
+
+    fs.writeFileSync(
+      path.join(outputDir, 'video_scores.json'),
+      JSON.stringify(results, null, 2)
+    );
+
+    return { ...ssim, temporal };
+  } catch (error) {
+    console.warn(`  Video analysis failed: ${error.message}`);
+    return null;
+  }
+}
+
+/**
+ * Open APNG in Chrome for human review
+ */
+function openApngInChrome(apngPath) {
+  try {
+    execSync(`open -a "Google Chrome" "${apngPath}"`, { stdio: 'inherit' });
+    console.log(`  Opened: ${apngPath}`);
+  } catch (error) {
+    console.warn(`  Could not open APNG: ${error.message}`);
+  }
 }
 
 // === CLI ===

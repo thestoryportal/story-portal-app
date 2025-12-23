@@ -238,16 +238,32 @@ async function resizeToMatch(image, width, height) {
 }
 
 /**
+ * Get mask value at pixel index
+ * Handles multiple mask formats:
+ * - Grayscale: red channel > 127 = include
+ * - Alpha-based: alpha < 127 = include (transparent area is the region of interest)
+ */
+function getMaskValue(mask, i) {
+  const r = mask.data[i];
+  const a = mask.data[i + 3];
+
+  // If red channel has values, use it (grayscale mask)
+  if (r > 10) {
+    return r > 127;
+  }
+
+  // Otherwise use alpha channel (inverted: transparent = include)
+  return a < 127;
+}
+
+/**
  * Apply mask to image (zero out pixels outside mask)
  */
 function applyMask(image, mask) {
   const result = new Uint8Array(image.data.length);
 
   for (let i = 0; i < image.data.length; i += 4) {
-    // Use red channel of mask (assuming grayscale mask)
-    const maskValue = mask.data[i];
-
-    if (maskValue > 127) {
+    if (getMaskValue(mask, i)) {
       // Keep pixel
       result[i] = image.data[i];
       result[i + 1] = image.data[i + 1];
@@ -266,12 +282,12 @@ function applyMask(image, mask) {
 }
 
 /**
- * Count non-zero pixels in mask
+ * Count pixels included by mask
  */
 function countMaskPixels(mask) {
   let count = 0;
   for (let i = 0; i < mask.data.length; i += 4) {
-    if (mask.data[i] > 127) count++;
+    if (getMaskValue(mask, i)) count++;
   }
   return count;
 }

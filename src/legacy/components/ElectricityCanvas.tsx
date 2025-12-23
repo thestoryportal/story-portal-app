@@ -1,4 +1,7 @@
 /**
+ * @deprecated Use ElectricityR3F instead.
+ * This canvas wrapper for the raw WebGL effect is superseded by R3F.
+ *
  * ElectricityCanvas Component
  *
  * Canvas wrapper for the WebGL electricity effect.

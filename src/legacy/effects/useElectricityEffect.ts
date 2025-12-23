@@ -1,4 +1,7 @@
 /**
+ * @deprecated Use useElectricityEffectThree or ElectricityR3F instead.
+ * This raw WebGL implementation is superseded by the React Three Fiber approach.
+ *
  * useElectricityEffect - WebGL-based electricity animation hook
  *
  * Manages the electricity effect with multi-pass rendering:

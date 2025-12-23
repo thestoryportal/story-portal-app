@@ -172,7 +172,7 @@ Also update video.mjs defaults if needed.
 
 Show the human:
 1. The animation.apng
-2. Comparison to reference (sora_reference_1.5x.apng)
+2. Comparison to reference (electricity_animation_effect_diff_analysis.apng)
 3. Sample frames from masked/ folder
 
 **Human confirms:**

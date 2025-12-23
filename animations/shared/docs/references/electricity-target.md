@@ -9,9 +9,24 @@
 
 The electricity effect should appear when the "New Topics" button is clicked. It creates an arc of electrical energy around the portal ring.
 
-### Reference Image
+### Reference Files
 
-`animations/electricity-portal/references/465x465/with_effect.png`
+| File | Purpose |
+|------|---------|
+| `electricity_animation_effect_static_diff_analysis.png` | Static SSIM target |
+| `electricity_animation_effect_reference_original.apng` | Original source (25MB, archived) |
+| `electricity_animation_effect_diff_analysis.apng` | **SSIM comparison target** |
+| `electricity_animation_effect_off_baseline.png` | Baseline (effect off) |
+| `electricity_animation_effect_diff_analysis_mask.png` | Mask (319×317 ellipse) |
+
+**Source:** AI-generated using Sora/Luma (2025-12-22).
+
+**Mask Spec:** White ellipse on black, center (232.5, 232.5), radii (159.5, 158.5)
+
+**Sora Alignment Parameters:**
+- Resize: 452×463
+- Offset: (5, 1) on 465×465 canvas
+- Script: `animations/output/align_sora.mjs`
 
 ---
 
@@ -118,6 +133,13 @@ Core (brightest) → Inner Glow → Outer Glow → Fade to background
 ## Code Targets
 
 ### Primary Files
+
+| File | Controls |
+|------|----------|
+| `src/legacy/components/ElectricityR3F.tsx` | **Main R3F component** (primary iteration target) |
+| `src/legacy/constants/config.ts` | Color, timing constants |
+
+### Legacy Files (Reference Only)
 
 | File | Controls |
 |------|----------|

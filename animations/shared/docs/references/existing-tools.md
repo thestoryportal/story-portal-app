@@ -276,12 +276,10 @@ node animations/shared/diff/pipeline.mjs --scenario electricity-portal
   },
 
   "reference": {
-    "withEffect": "animations/electricity-portal/references/465x465/sora_reference_frame.png",
-    "withoutEffect": "animations/electricity-portal/references/465x465/without_effect.png",
-    "animation": "animations/electricity-portal/references/465x465/sora_reference_1.5x.apng",
-    "mask": "animations/electricity-portal/references/465x465/golden_mask_overlay.png",
-    "maskCapture": "animations/electricity-portal/references/465x465/golden_mask_capture.png",
-    "_maskNote": "Dual mask: reference (235,232) r(164,159) vs capture (238.5,235) r(161.5,160)"
+    "withEffect": "animations/electricity-portal/references/465x465/electricity_animation_effect_static_diff_analysis.png",
+    "withoutEffect": "animations/electricity-portal/references/465x465/electricity_animation_effect_off_baseline.png",
+    "animation": "animations/electricity-portal/references/465x465/electricity_animation_effect_diff_analysis.apng",
+    "mask": "animations/electricity-portal/references/465x465/electricity_animation_effect_diff_analysis_mask.png"
   },
 
   "thresholds": {
@@ -335,12 +333,12 @@ node animations/shared/diff/pipeline.mjs --scenario electricity-portal
 ```
 electricity-portal/
 ├── 465x465/
-│   ├── sora_reference_frame.png        # Primary static reference (AI-generated)
-│   ├── sora_reference_1.5x.apng        # Primary animation reference (1.5x speed)
+│   ├── electricity_animation_effect_static_diff_analysis.png   # Static SSIM reference
+│   ├── electricity_animation_effect_diff_analysis.apng         # Animation SSIM reference (aligned)
+│   ├── electricity_animation_effect_reference_original.apng    # Original source (archived)
+│   ├── electricity_animation_effect_off_baseline.png           # Baseline (no effect)
+│   ├── electricity_animation_effect_diff_analysis_mask.png     # Mask (319×317 ellipse)
 │   ├── with_effect.png                 # Legacy static reference
-│   ├── without_effect.png              # Baseline (no effect)
-│   ├── golden_mask_overlay.png         # Reference mask: center (235,232), radii (164,159)
-│   ├── golden_mask_capture.png         # Capture mask: center (238.5,235), radii (161.5,160)
 │   ├── baseline_metrics.json           # Static baseline (colors, brightness)
 │   ├── baseline_animation_metrics.json # Animation baseline (flicker, motion)
 │   ├── baseline_report.md              # Static baseline report
@@ -351,10 +349,9 @@ electricity-portal/
     └── electricity-effect-animated reference-video.mp4  # Original Sora source
 ```
 
-**Dual Mask System (calibrated 2025-12-22):**
-- **Reference mask** (`golden_mask_overlay.png`): For Sora reference images — center (235, 232), radii (164, 159)
-- **Capture mask** (`golden_mask_capture.png`): For captured frames — center (238.5, 235), radii (161.5, 160)
-- **Why two masks?** Portal renders at slightly different position in live app vs reference image (~3.5px offset)
+**Mask (calibrated 2025-12-23):**
+- **File:** `electricity_animation_effect_diff_analysis_mask.png`
+- **Spec:** White ellipse on black, center (232.5, 232.5), radii (159.5, 158.5), 319×317 inner
 
 **Note:** Primary references are AI-generated from Sora/Luma (2025-12-22). Legacy references preserved for comparison.
 
@@ -365,14 +362,14 @@ Run these **once** before starting iterations:
 ```bash
 # 1. Extract STATIC baseline
 node animations/shared/diff/extract-baseline.mjs \
-  --with animations/electricity-portal/references/465x465/sora_reference_frame.png \
-  --without animations/electricity-portal/references/465x465/without_effect.png \
+  --with animations/electricity-portal/references/465x465/electricity_animation_effect_static_diff_analysis.png \
+  --without animations/electricity-portal/references/465x465/electricity_animation_effect_off_baseline.png \
   --output animations/electricity-portal/references/465x465/ \
   --name electricity
 
 # 2. Extract ANIMATION baseline
 node animations/shared/diff/extract-baseline-video.mjs \
-  --animation animations/electricity-portal/references/465x465/sora_reference_1.5x.apng \
+  --animation animations/electricity-portal/references/465x465/electricity_animation_effect_diff_analysis.apng \
   --output animations/electricity-portal/references/465x465/ \
   --name electricity
 ```

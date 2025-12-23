@@ -145,31 +145,26 @@ Continue adjusting until human approves the crop region.
 
 **Important:** Mask must match CROP dimensions (465×465), not viewport dimensions.
 
-### Dual Mask System (electricity-portal)
+### Mask (electricity-portal)
 
-The electricity-portal scenario uses **two masks** due to slight positioning differences:
+| File | Center | Radii | Inner Size |
+|------|--------|-------|------------|
+| `electricity_animation_effect_diff_analysis_mask.png` | (232.5, 232.5) | (159.5, 158.5) | 319×317 |
 
-| Mask | File | Center | Radii | Use For |
-|------|------|--------|-------|---------|
-| Reference | `golden_mask_overlay.png` | (235, 232) | (164, 159) | Sora reference images |
-| Capture | `golden_mask_capture.png` | (238.5, 235) | (161.5, 160) | Live captured frames |
-
-**Why two masks?** Portal renders at ~3.5px different position in live app vs reference.
+**Spec:** White ellipse on black (binary).
 
 ### Step 3.1: Generate Mask
 
 ```bash
 node animations/shared/diff/extract-baseline.mjs \
-  --reference animations/electricity-portal/references/465x465/sora_reference_frame.png \
+  --reference animations/electricity-portal/references/465x465/electricity_animation_effect_static_diff_analysis.png \
   --output animations/electricity-portal/references/ \
   --generate-mask
 ```
 
-**Note:** Primary reference is `sora_reference_frame.png` (AI-generated from Sora/Luma).
-
 ### Step 3.2: Human Verification
 
-Open `golden_mask_overlay.png` and verify:
+Open `electricity_animation_effect_diff_analysis_mask.png` and verify:
 
 **Checklist:**
 - [ ] WHITE area covers where the effect should appear
@@ -177,19 +172,12 @@ Open `golden_mask_overlay.png` and verify:
 - [ ] Mask dimensions match crop dimensions (465×465)
 - [ ] Ring shape correctly captures the portal effect area
 
-### Step 3.3: Calibrate Capture Mask
-
-If reference mask doesn't align with captured frames:
-1. Overlay reference mask on a captured frame
-2. Adjust center and radii until pixel-perfect
-3. Save as `golden_mask_capture.png`
-
-### Step 3.4: Repeat Until Verified
+### Step 3.3: Repeat Until Verified
 
 Continue until human confirms:
-> "Yes, the masks correctly cover the effect area for both reference and captured frames."
+> "Yes, the mask correctly covers the effect area."
 
-✅ **Phase 3 Complete** when both masks are verified.
+✅ **Phase 3 Complete** when mask is verified.
 
 ---
 
@@ -275,8 +263,8 @@ Continue adjusting until human confirms:
 
 ```bash
 node animations/shared/diff/extract-baseline.mjs \
-  --with animations/electricity-portal/references/465x465/sora_reference_frame.png \
-  --without animations/electricity-portal/references/465x465/without_effect.png \
+  --with animations/electricity-portal/references/465x465/electricity_animation_effect_static_diff_analysis.png \
+  --without animations/electricity-portal/references/465x465/electricity_animation_effect_off_baseline.png \
   --output animations/electricity-portal/references/465x465/ \
   --name electricity
 ```
@@ -285,13 +273,12 @@ node animations/shared/diff/extract-baseline.mjs \
 - `baseline_metrics.json` — Color, intensity, structure metrics
 - `baseline_report.md` — Human-readable summary
 - `quality_spec.json` — Quality thresholds
-- `golden_mask.png` — Binary scoring mask
 
 ### Step 5.2: Extract Animation Baseline
 
 ```bash
 node animations/shared/diff/extract-baseline-video.mjs \
-  --animation animations/electricity-portal/references/465x465/sora_reference_1.5x.apng \
+  --animation animations/electricity-portal/references/465x465/electricity_animation_effect_diff_analysis.apng \
   --output animations/electricity-portal/references/465x465/ \
   --name electricity
 ```

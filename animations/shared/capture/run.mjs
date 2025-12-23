@@ -299,27 +299,39 @@ async function burstScreenshots(page, outDir, frames, intervalMs, cropOpts = nul
           .raw()
           .toBuffer({ resolveWithObject: true });
 
-        // Make bright pixels transparent (threshold: RGB average > 245)
-        // Only remove near-pure-white background, preserve electricity glow
+        // Make white/light-grey background transparent, keep colored electricity
         for (let px = 0; px < rawData.length; px += 4) {
           const r = rawData[px];
           const g = rawData[px + 1];
           const b = rawData[px + 2];
-          const avg = (r + g + b) / 3;
 
-          if (avg > 245) {
-            // Near-pure-white: make fully transparent
+          // Check if this is a "grey" pixel (R, G, B all similar)
+          const max = Math.max(r, g, b);
+          const min = Math.min(r, g, b);
+          const range = max - min;
+
+          // If low color range (grey/white) and bright, make transparent
+          if (range < 30 && min > 200) {
+            // Near-white/light-grey: fully transparent
             rawData[px + 3] = 0;
-          } else if (avg > 220) {
-            // Light areas: reduce opacity based on brightness
-            const opacity = Math.round((245 - avg) / 25 * 255);
-            rawData[px + 3] = Math.min(rawData[px + 3], opacity);
+          } else if (range < 40 && min > 180) {
+            // Medium grey: partially transparent
+            const opacity = Math.round((200 - min) / 20 * 255);
+            rawData[px + 3] = Math.max(0, Math.min(255, opacity));
           }
+          // Colored pixels (electricity) stay opaque
         }
 
         const processedCanvas = await sharp(rawData, {
           raw: { width: info.width, height: info.height, channels: 4 }
         }).png().toBuffer();
+
+        // Debug: save processed canvas (first frame only)
+        if (i === 0) {
+          const processedPath = path.join(outDir, 'debug_processed.png');
+          fs.writeFileSync(processedPath, processedCanvas);
+          console.log(`Saved processed canvas to: ${processedPath}`);
+        }
 
         buffer = await sharp(buffer)
           .composite([{
@@ -516,8 +528,8 @@ async function main() {
   // Wait for React to mount canvas/effects after click
   if (opts.mode === 'newtopics' || opts.mode === 'electricity') {
     console.log('Waiting for electricity effect...');
-    // Minimal wait - just enough for React to mount the canvas
-    await sleep(100);
+    // Wait for effect to initialize and start animating
+    await sleep(800);
   } else {
     await sleep(200);
   }

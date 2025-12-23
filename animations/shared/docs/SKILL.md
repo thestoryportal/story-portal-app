@@ -82,12 +82,12 @@ animations/                         # Animation pipeline
 │   ├── context.md                  # Scenario context
 │   ├── references/                 # Reference assets
 │   │   ├── 465x465/
-│   │   │   ├── sora_reference_frame.png    # Primary static reference (AI-generated)
-│   │   │   ├── sora_reference_1.5x.apng    # Primary animation reference (1.5x speed)
+│   │   │   ├── electricity_animation_effect_static_diff_analysis.png    # Primary static reference (AI-generated)
+│   │   │   ├── electricity_animation_effect_diff_analysis.apng    # Primary animation reference (1.5x speed)
 │   │   │   ├── with_effect.png             # Legacy static reference
-│   │   │   ├── without_effect.png          # Baseline (no effect)
-│   │   │   ├── golden_mask_overlay.png     # Reference mask: center (235,232), radii (164,159)
-│   │   │   └── golden_mask_capture.png     # Capture mask: center (238.5,235), radii (161.5,160)
+│   │   │   ├── electricity_animation_effect_off_baseline.png          # Baseline (no effect)
+│   │   │   ├── electricity_animation_effect_diff_analysis_mask.png     # Reference mask: center (235,232), radii (164,159)
+│   │   │   └── electricity_animation_effect_diff_analysis_mask.png     # Capture mask: center (238.5,235), radii (161.5,160)
 │   │   ├── baseline_metrics.json
 │   │   └── quality_spec.json
 │   └── output/                     # Generated output (.gitignore)
@@ -321,11 +321,11 @@ animations/electricity-portal/output/iterations/iter_001_YYYYMMDD_HHMMSS/
    - Flag as potential failure
    - Verify effect still renders before continuing
 
-4. **Baseline comparison** — Compare against `without_effect.png` (no-effect baseline):
+4. **Baseline comparison** — Compare against `electricity_animation_effect_off_baseline.png` (no-effect baseline):
    - If SSIM to without_effect is HIGH (>85%), effect is probably missing
    - Report: "Captured frames match no-effect baseline — effect likely broken"
 
-**Note:** Primary reference is now `sora_reference_frame.png` (AI-generated from Sora/Luma).
+**Note:** Primary reference is now `electricity_animation_effect_static_diff_analysis.png` (AI-generated from Sora/Luma).
 Legacy reference `with_effect.png` preserved for historical comparison.
 
 ### 5.3 Claude Synthesis (KEY STEP)
@@ -528,14 +528,14 @@ node animations/shared/diff/analyze.mjs --frames /path/to/frames
 
 # Extract STATIC baseline from reference image
 node animations/shared/diff/extract-baseline.mjs \
-  --with animations/electricity-portal/references/465x465/sora_reference_frame.png \
-  --without animations/electricity-portal/references/465x465/without_effect.png \
+  --with animations/electricity-portal/references/465x465/electricity_animation_effect_static_diff_analysis.png \
+  --without animations/electricity-portal/references/465x465/electricity_animation_effect_off_baseline.png \
   --output animations/electricity-portal/references/465x465/ \
   --name electricity
 
 # Extract ANIMATION baseline from reference APNG
 node animations/shared/diff/extract-baseline-video.mjs \
-  --animation animations/electricity-portal/references/465x465/sora_reference_1.5x.apng \
+  --animation animations/electricity-portal/references/465x465/electricity_animation_effect_diff_analysis.apng \
   --output animations/electricity-portal/references/465x465/ \
   --name electricity
 
@@ -554,7 +554,7 @@ Extracts color profile, intensity distribution, effect region from static refere
 - `baseline_metrics.json` — Color, intensity, structure metrics
 - `baseline_report.md` — Human-readable summary
 - `quality_spec.json` — Quality thresholds
-- `golden_mask.png` — Binary scoring mask
+- `electricity_animation_effect_diff_analysis_mask.png` — Binary scoring mask
 
 ### Animation Baseline
 Extracts temporal characteristics from animated reference APNG.

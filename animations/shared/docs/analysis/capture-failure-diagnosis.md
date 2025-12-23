@@ -122,16 +122,16 @@ Check `crops/` folder — portal should be centered in each 465×465 frame.
 ```bash
 # Check all image dimensions (all should be 465×465)
 file animations/electricity-portal/output/screenshots/timeline/LATEST/crops/frame_000.png
-file animations/electricity-portal/references/465x465/sora_reference_frame.png
-file animations/electricity-portal/references/465x465/golden_mask_overlay.png
-file animations/electricity-portal/references/465x465/golden_mask_capture.png
+file animations/electricity-portal/references/465x465/electricity_animation_effect_static_diff_analysis.png
+file animations/electricity-portal/references/465x465/electricity_animation_effect_diff_analysis_mask.png
+file animations/electricity-portal/references/465x465/electricity_animation_effect_diff_analysis_mask.png
 ```
 
 **All analysis images must be comparable:**
 - Crop dimensions should be consistent (465×465)
 - Reference and mask must match
-- Use `golden_mask_overlay.png` for reference comparisons
-- Use `golden_mask_capture.png` for captured frame analysis
+- Use `electricity_animation_effect_diff_analysis_mask.png` for reference comparisons
+- Use `electricity_animation_effect_diff_analysis_mask.png` for captured frame analysis
 
 ---
 

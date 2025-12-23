@@ -7,6 +7,40 @@
 
 ## Capture Issues
 
+### Viewport resize on browser launch
+
+**Symptom**: When Puppeteer opens the browser window, the UI scales/shifts suddenly from the bottom-right corner. This destroys capture alignment - crop coordinates become invalid.
+
+**Cause**: Mismatch between `--window-size` args and `defaultViewport` settings, or the browser window resizing after page load.
+
+**Solution**:
+1. Ensure `--window-size` matches viewport dimensions + browser chrome (~80px for title bar)
+2. Add explicit `page.setViewport()` call AFTER page load
+3. Wait for any resize animations to settle before capturing
+4. Consider using `headless: 'new'` mode which has more consistent viewport behavior
+
+**Example fix**:
+```javascript
+const browser = await puppeteer.launch({
+  headless: false,
+  args: [
+    `--window-size=${width},${height + 80}`,
+    '--force-device-scale-factor=1',
+  ],
+  defaultViewport: null, // Let setViewport handle it
+});
+
+const page = await browser.newPage();
+await page.setViewport({ width, height, deviceScaleFactor: 1 });
+await page.goto(url, { waitUntil: 'networkidle0' });
+
+// CRITICAL: Re-set viewport after load to ensure dimensions are locked
+await page.setViewport({ width, height, deviceScaleFactor: 1 });
+await new Promise(r => setTimeout(r, 500)); // Let UI settle
+```
+
+---
+
 ### WebGL/Shader compile error (CRITICAL)
 
 **Symptoms:**
@@ -131,15 +165,15 @@ See: `animations/shared/docs/workflows/viewport-debug-workflow.md`
    ```bash
    # Check dimensions (all should be 465×465)
    file animations/electricity-portal/output/*/crops/frame_000.png
-   file animations/electricity-portal/references/465x465/sora_reference_frame.png
-   file animations/electricity-portal/references/465x465/golden_mask_overlay.png
+   file animations/electricity-portal/references/465x465/electricity_animation_effect_static_diff_analysis.png
+   file animations/electricity-portal/references/465x465/electricity_animation_effect_diff_analysis_mask.png
    ```
 
 2. **Wrong reference** — Comparing to wrong image
 
 3. **Mask wrong size** — Mask dimensions must match (465×465)
 
-4. **Wrong mask for context** — Use `golden_mask_overlay.png` for reference, `golden_mask_capture.png` for captured frames
+4. **Wrong mask for context** — Use `electricity_animation_effect_diff_analysis_mask.png` for reference, `electricity_animation_effect_diff_analysis_mask.png` for captured frames
 
 ---
 
@@ -339,3 +373,16 @@ If issues persist:
 - Error message (full text)
 - Steps to reproduce
 - Expected vs actual behavior
+
+---
+
+## Calibration Checklist
+
+Before running iteration pipeline, verify:
+
+- [ ] Dev server running (`pnpm dev`)
+- [ ] Viewport dimensions verified (1440×768)
+- [ ] Crop region captures full portal ring
+- [ ] Mask aligns with portal ring inner edge
+- [ ] Effect triggers reliably on click
+- [ ] Effect timing window captures peak animation

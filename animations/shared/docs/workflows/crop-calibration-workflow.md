@@ -134,10 +134,10 @@ Compare cropped capture to reference:
 ```bash
 # View side by side
 open animations/electricity-portal/output/screenshots/timeline/LATEST/crops/frame_000.png
-open animations/electricity-portal/references/465x465/sora_reference_frame.png
+open animations/electricity-portal/references/465x465/electricity_animation_effect_static_diff_analysis.png
 ```
 
-**Note:** Primary reference is `sora_reference_frame.png` (AI-generated from Sora/Luma). Both reference and captures should be 465×465 for direct comparison.
+**Note:** Primary reference is `electricity_animation_effect_static_diff_analysis.png` (AI-generated from Sora/Luma). Both reference and captures should be 465×465 for direct comparison.
 
 ---
 

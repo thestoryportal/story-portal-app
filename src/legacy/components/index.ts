@@ -1,11 +1,13 @@
 /**
  * Legacy app components
+ *
+ * Active: ElectricityR3F (React Three Fiber)
+ * Archived: ElectricityCanvas (raw WebGL) - see src/legacy/_archived/
  */
 
 // Core components
 export { SteamWisps } from './SteamWisps';
 export { WheelPanel } from './WheelPanel';
-export { ElectricityCanvas } from './ElectricityCanvas';
 export { ElectricityR3F } from './ElectricityR3F';
 export { PortalRing } from './PortalRing';
 export { WarpMotionLines } from './WarpMotionLines';

@@ -35,8 +35,8 @@ None currently.
 ## Pending Review (Human)
 
 - [x] ~~`animations/output/` folder (1.9GB)~~ — **Deleted**, restructured to per-scenario output
-- [ ] `animations/_archive/duplicate-docs/` and `backups/`
-- [ ] `src/legacy/_archived/` WebGL code — delete permanently or keep?
+- [x] ~~`animations/_archive/duplicate-docs/` and `backups/`~~ — **Deleted** (redundant)
+- [x] `src/legacy/_archived/` WebGL code — **Kept** for reference
 
 ## Next Actions
 

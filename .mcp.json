@@ -1,16 +1,24 @@
 {
   "mcpServers": {
-    "github": {
-      "type": "http",
-      "url": "https://api.githubcopilot.com/mcp/"
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"]
     },
-    "API specification": {
+    "filesystem": {
       "command": "npx",
       "args": [
         "-y",
-        "apidog-mcp-server@latest",
-        "--oas=https://petstore.swagger.io/v2/swagger.json"
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/robertrhu/Projects/story-portal"
       ]
+    },
+    "puppeteer": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-puppeteer"]
+    },
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/"
     }
   }
 }

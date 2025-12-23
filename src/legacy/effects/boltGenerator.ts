@@ -2,11 +2,57 @@
  * Bolt generation utilities for electricity effects
  *
  * Handles bolt path generation, branching, and flash arcs.
+ *
+ * DETERMINISTIC MODE: Set ELECTRICITY_CONFIG.deterministicSeed to a non-null number
+ * to enable repeatable bolt patterns for iteration pipeline comparison.
+ * Reset with resetDeterministicRandom() at effect start for identical sequences.
  */
 
 import type { ElectricityBolt, FlashArc } from '../types';
 import { ELECTRICITY_CONFIG } from '../constants';
 import { createNoise, fractalNoise, type NoiseFunction } from './noiseUtils';
+
+// === DETERMINISTIC RANDOM ===
+// Mulberry32 PRNG - fast, simple, good distribution
+let _deterministicState: number | null = null;
+
+function mulberry32(): number {
+  if (_deterministicState === null) {
+    return getRandom(); // Fallback to Math.random if not seeded
+  }
+  let t = (_deterministicState += 0x6d2b79f5);
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+}
+
+/**
+ * Get random number - uses deterministic PRNG if seeded, otherwise getRandom()
+ */
+function getRandom(): number {
+  const seed = ELECTRICITY_CONFIG.deterministicSeed;
+  if (typeof seed === 'number' && seed !== null) {
+    if (_deterministicState === null) {
+      _deterministicState = seed;
+    }
+    return mulberry32();
+  }
+  return getRandom();
+}
+
+/**
+ * Reset deterministic random state to initial seed.
+ * Call this at effect start to ensure identical bolt sequences each run.
+ */
+export function resetDeterministicRandom(): void {
+  const seed = ELECTRICITY_CONFIG.deterministicSeed;
+  if (typeof seed === 'number' && seed !== null) {
+    _deterministicState = seed;
+    console.log(`[BoltGenerator] Deterministic mode: seed=${seed}`);
+  } else {
+    _deterministicState = null;
+  }
+}
 
 export interface Point {
   x: number;
@@ -76,45 +122,45 @@ export function initializeBolts(): BoltWithBranches[] {
   // Main radial bolts from center (denser starburst)
   const numRadialBolts = cfg.numMainBolts;
   for (let i = 0; i < numRadialBolts; i++) {
-    const angle = (i / numRadialBolts) * Math.PI * 2 + (Math.random() - 0.5) * 0.15;
+    const angle = (i / numRadialBolts) * Math.PI * 2 + (getRandom() - 0.5) * 0.15;
     const length = MAX_RADIUS_BOTTOM_RIGHT; // Fixed length to reach exactly to golden mask edge
-    const seed = Math.random() * 1000;
-    const thickness = cfg.boltThicknessMin + Math.random() * (cfg.boltThicknessMax - cfg.boltThicknessMin);
-    const speed = cfg.boltSpeedMin + Math.random() * (cfg.boltSpeedMax - cfg.boltSpeedMin);
+    const seed = getRandom() * 1000;
+    const thickness = cfg.boltThicknessMin + getRandom() * (cfg.boltThicknessMax - cfg.boltThicknessMin);
+    const speed = cfg.boltSpeedMin + getRandom() * (cfg.boltSpeedMax - cfg.boltSpeedMin);
 
     // Dense branching for organic look
     const branches: Branch[] = [];
     const numBranches =
-      cfg.branchesPerBoltMin + Math.floor(Math.random() * (cfg.branchesPerBoltMax - cfg.branchesPerBoltMin));
+      cfg.branchesPerBoltMin + Math.floor(getRandom() * (cfg.branchesPerBoltMax - cfg.branchesPerBoltMin));
     for (let b = 0; b < numBranches; b++) {
       const branchT = 0.08 + (b / numBranches) * 0.78;
       const branchThickness =
-        cfg.branchThicknessMin + Math.random() * (cfg.branchThicknessMax - cfg.branchThicknessMin);
+        cfg.branchThicknessMin + getRandom() * (cfg.branchThicknessMax - cfg.branchThicknessMin);
       branches.push({
-        startT: branchT + (Math.random() - 0.5) * 0.06,
-        angle: angle + (Math.random() - 0.5) * 1.4,
-        length: 12 + Math.random() * 18, // Tighter branch range (12-30)
-        seed: Math.random() * 1000,
+        startT: branchT + (getRandom() - 0.5) * 0.06,
+        angle: angle + (getRandom() - 0.5) * 1.4,
+        length: 12 + getRandom() * 18, // Tighter branch range (12-30)
+        seed: getRandom() * 1000,
         thickness: branchThickness,
-        speed: 3.5 + Math.random() * 2.5,
+        speed: 3.5 + getRandom() * 2.5,
         subBranches:
-          Math.random() < cfg.subBranchChance
+          getRandom() < cfg.subBranchChance
             ? [
                 {
-                  startT: 0.25 + Math.random() * 0.45,
-                  angleOffset: (Math.random() - 0.5) * 0.9,
-                  length: 8 + Math.random() * 22,
-                  seed: Math.random() * 1000,
+                  startT: 0.25 + getRandom() * 0.45,
+                  angleOffset: (getRandom() - 0.5) * 0.9,
+                  length: 8 + getRandom() * 22,
+                  seed: getRandom() * 1000,
                   thickness: branchThickness * 0.6,
                 },
                 // Extra sub-branch for density
-                ...(Math.random() > 0.4
+                ...(getRandom() > 0.4
                   ? [
                       {
-                        startT: 0.5 + Math.random() * 0.3,
-                        angleOffset: (Math.random() - 0.5) * 0.7,
-                        length: 6 + Math.random() * 15,
-                        seed: Math.random() * 1000,
+                        startT: 0.5 + getRandom() * 0.3,
+                        angleOffset: (getRandom() - 0.5) * 0.7,
+                        length: 6 + getRandom() * 15,
+                        seed: getRandom() * 1000,
                         thickness: branchThickness * 0.45,
                       },
                     ]
@@ -132,14 +178,14 @@ export function initializeBolts(): BoltWithBranches[] {
       thickness,
       speed,
       branches,
-      noise: createNoise(),
-      jitterSpeed: cfg.jitterSpeedMin + Math.random() * (cfg.jitterSpeedMax - cfg.jitterSpeedMin),
+      noise: createNoise(getRandom),
+      jitterSpeed: cfg.jitterSpeedMin + getRandom() * (cfg.jitterSpeedMax - cfg.jitterSpeedMin),
       // Per-bolt opacity animation state
-      opacity: Math.random() > 0.3 ? 1.0 : 0.0, // Start some visible, some hidden
+      opacity: getRandom() > 0.3 ? 1.0 : 0.0, // Start some visible, some hidden
       targetOpacity: 1.0,
-      fadeSpeed: cfg.boltFadeInSpeed + Math.random() * 0.04,
-      nextToggleTime: Math.random() * cfg.boltOnDurationMax, // Random initial delay
-      isVisible: Math.random() > 0.3,
+      fadeSpeed: cfg.boltFadeInSpeed + getRandom() * 0.04,
+      nextToggleTime: getRandom() * cfg.boltOnDurationMax, // Random initial delay
+      isVisible: getRandom() > 0.3,
     });
   }
 
@@ -165,11 +211,11 @@ export function updateBoltOpacities(
 
       // Set next toggle time
       if (bolt.isVisible) {
-        bolt.nextToggleTime = cfg.boltOnDurationMin + Math.random() * (cfg.boltOnDurationMax - cfg.boltOnDurationMin);
-        bolt.fadeSpeed = cfg.boltFadeInSpeed + Math.random() * 0.04;
+        bolt.nextToggleTime = cfg.boltOnDurationMin + getRandom() * (cfg.boltOnDurationMax - cfg.boltOnDurationMin);
+        bolt.fadeSpeed = cfg.boltFadeInSpeed + getRandom() * 0.04;
       } else {
-        bolt.nextToggleTime = cfg.boltOffDurationMin + Math.random() * (cfg.boltOffDurationMax - cfg.boltOffDurationMin);
-        bolt.fadeSpeed = cfg.boltFadeOutSpeed + Math.random() * 0.03;
+        bolt.nextToggleTime = cfg.boltOffDurationMin + getRandom() * (cfg.boltOffDurationMax - cfg.boltOffDurationMin);
+        bolt.fadeSpeed = cfg.boltFadeOutSpeed + getRandom() * 0.03;
       }
     }
 
@@ -184,20 +230,20 @@ export function updateBoltOpacities(
  * Create a flash arc for quick bright bursts
  */
 export function createFlashArc(): FlashArc {
-  const angle = Math.random() * Math.PI * 2;
+  const angle = getRandom() * Math.PI * 2;
   const length = MAX_RADIUS_BOTTOM_RIGHT; // Fixed length to reach exactly to golden mask edge
 
   return {
-    id: Date.now() + Math.random(),
+    id: Date.now() + getRandom(),
     angle,
     length,
-    thickness: 0.6 + Math.random() * 0.8,
-    seed: Math.random() * 1000,
+    thickness: 0.6 + getRandom() * 0.8,
+    seed: getRandom() * 1000,
     speed: 5,
     opacity: 1,
     life: 0,
-    maxLife: 60 + Math.random() * 100,
-    noise: createNoise(),
+    maxLife: 60 + getRandom() * 100,
+    noise: createNoise(getRandom),
   };
 }
 

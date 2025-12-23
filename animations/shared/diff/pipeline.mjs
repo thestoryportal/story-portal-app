@@ -309,6 +309,15 @@ async function runVideoCapture(scenario, captureDir, captureConfig) {
     }
 
     console.log(`  Copied ${maskedFrames.length} masked frames to ${captureDir}`);
+
+    // Also copy animation.apng if it exists
+    const apngSource = path.join(videoCaptureDir, 'animation.apng');
+    if (fs.existsSync(apngSource)) {
+      const iterationDir = path.dirname(captureDir);
+      const apngDest = path.join(iterationDir, 'animation.apng');
+      fs.copyFileSync(apngSource, apngDest);
+      console.log(`  Copied animation.apng to ${apngDest}`);
+    }
   } else {
     // Fallback to crops directory
     const cropsDir = path.join(videoCaptureDir, 'crops');
@@ -325,6 +334,15 @@ async function runVideoCapture(scenario, captureDir, captureConfig) {
       }
 
       console.log(`  Copied ${cropFrames.length} cropped frames to ${captureDir}`);
+
+      // Also copy animation.apng if it exists
+      const apngSource = path.join(videoCaptureDir, 'animation.apng');
+      if (fs.existsSync(apngSource)) {
+        const iterationDir = path.dirname(captureDir);
+        const apngDest = path.join(iterationDir, 'animation.apng');
+        fs.copyFileSync(apngSource, apngDest);
+        console.log(`  Copied animation.apng to ${apngDest}`);
+      }
     } else {
       throw new Error(`No frames found in ${videoCaptureDir}`);
     }

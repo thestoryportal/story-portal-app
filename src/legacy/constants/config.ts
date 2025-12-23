@@ -12,6 +12,11 @@ export const DISABLE_PANEL_ANIMATION = true;
 export const ELECTRICITY_DEBUG = false;
 
 export const ELECTRICITY_CONFIG = {
+  // === DETERMINISTIC MODE (for iteration pipeline) ===
+  // Set to a number to enable repeatable bolt patterns for comparison.
+  // Set to null for random (production) behavior.
+  // When enabled, call resetDeterministicRandom() at effect start.
+  deterministicSeed: 42 as number | null, // 42 = iteration mode, null = production mode
   // === EFFECT TIMING (source of truth for capture pipeline) ===
   // These values are used by:
   //   - useWheelSelection.ts (effect duration, topic swap delay)
@@ -77,12 +82,13 @@ export const ELECTRICITY_CONFIG = {
   bloomWideWeight: 0.35, // Good wide
   rimBloomBoost: 1.4, // Good rim boost
 
-  // Colors - Golden-amber (#ffb836 core → #ff9100 falloff)
-  coreColor: [1.0, 0.72, 0.21] as [number, number, number], // #ffb836 golden core
-  midColor: [1.0, 0.57, 0.0] as [number, number, number], // #ff9100 orange mid
-  outerColor: [0.9, 0.4, 0.0] as [number, number, number], // Deep amber outer
-  plasmaInner: [1.0, 0.65, 0.15] as [number, number, number], // Bright golden fog center
-  plasmaOuter: [0.8, 0.35, 0.0] as [number, number, number], // Deep amber fog edge
+  // Colors - Deep amber/orange (matching Sora reference)
+  // Pushed more orange, less yellow-green
+  coreColor: [1.0, 0.58, 0.12] as [number, number, number], // Deeper orange core
+  midColor: [1.0, 0.45, 0.0] as [number, number, number], // Rich orange mid
+  outerColor: [0.95, 0.32, 0.0] as [number, number, number], // Deep amber outer
+  plasmaInner: [1.0, 0.52, 0.08] as [number, number, number], // Orange fog center
+  plasmaOuter: [0.85, 0.28, 0.0] as [number, number, number], // Deep amber fog edge
 
   // Glass reflection layer
   glassOpacity: 0.12, // Subtle glass overlay

@@ -26,6 +26,7 @@ import {
   generateAnimatedPath,
   generateBranchPath,
   generateFlashPath,
+  resetDeterministicRandom,
   type BoltWithBranches,
   type Point,
 } from './boltGenerator';
@@ -84,6 +85,8 @@ export function useElectricityEffect({ enabled, canvasRef }: UseElectricityEffec
 
     // Initialize bolts on first run
     if (!state.initialized) {
+      // Reset PRNG for deterministic captures (iteration pipeline)
+      resetDeterministicRandom();
       state.bolts = initializeBolts();
       state.time = 0;
       state.startTime = Date.now();

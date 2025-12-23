@@ -5,15 +5,17 @@
  */
 
 export type NoiseFunction = (x: number, y: number) => number;
+export type RandomFunction = () => number;
 
 /**
  * Create a SimplexNoise function for organic displacement
+ * @param random - Optional random function for deterministic mode. Defaults to Math.random.
  */
-export function createNoise(): NoiseFunction {
+export function createNoise(random: RandomFunction = Math.random): NoiseFunction {
   const p = new Uint8Array(256);
   for (let i = 0; i < 256; i++) p[i] = i;
   for (let i = 255; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(random() * (i + 1));
     [p[i], p[j]] = [p[j], p[i]];
   }
   const perm = new Uint8Array(512);

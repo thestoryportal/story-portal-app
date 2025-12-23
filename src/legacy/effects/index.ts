@@ -6,3 +6,4 @@ export * from './noiseUtils';
 export * from './shaders';
 export * from './boltGenerator';
 export * from './useElectricityEffect';
+export * from './useElectricityEffectThree';

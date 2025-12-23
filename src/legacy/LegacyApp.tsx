@@ -5,7 +5,7 @@
  */
 
 import './styles/index.css';
-import { useState, useRef, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 
 // Types
 import type { Sparkle } from './types';
@@ -16,14 +16,13 @@ import { useWheelSelection } from './hooks/useWheelSelection';
 import { useMenuState } from './hooks/useMenuState';
 import { useSteamEffect } from './hooks/useSteamEffect';
 
-// Effects
-import { useElectricityEffect } from './effects';
+// Effects (R3F component handles its own rendering)
 
 // Components
 import {
   SteamWisps,
   WheelPanel,
-  ElectricityCanvas,
+  ElectricityR3F,
   PortalRing,
   WarpMotionLines,
   AnimatedPanel,
@@ -76,7 +75,6 @@ export default function LegacyApp() {
 
   // Electricity effect state
   const [showElectricity, setShowElectricity] = useState(false);
-  const electricCanvasRef = useRef<HTMLCanvasElement>(null);
 
   // Record button tooltip
   const [showRecordTooltip, setShowRecordTooltip] = useState(false);
@@ -138,12 +136,6 @@ export default function LegacyApp() {
 
   // Steam effect hook
   const { steamWisps } = useSteamEffect();
-
-  // Electricity effect
-  useElectricityEffect({
-    enabled: showElectricity,
-    canvasRef: electricCanvasRef,
-  });
 
   // Record button handlers
   const handleRecordClick = useCallback(() => {
@@ -290,7 +282,7 @@ export default function LegacyApp() {
           <PortalRing />
 
           {/* Electricity Canvas */}
-          <ElectricityCanvas ref={electricCanvasRef} visible={showElectricity} />
+          <ElectricityR3F visible={showElectricity} />
 
           {/* Reassembled Panel */}
           <ReassembledPanel

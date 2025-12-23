@@ -6,6 +6,7 @@
 export { SteamWisps } from './SteamWisps';
 export { WheelPanel } from './WheelPanel';
 export { ElectricityCanvas } from './ElectricityCanvas';
+export { ElectricityR3F } from './ElectricityR3F';
 export { PortalRing } from './PortalRing';
 export { WarpMotionLines } from './WarpMotionLines';
 export { DisintegrationParticles } from './DisintegrationParticles';

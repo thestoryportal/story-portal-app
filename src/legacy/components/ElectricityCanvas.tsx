@@ -26,7 +26,7 @@ export const ElectricityCanvas = forwardRef<HTMLCanvasElement, ElectricityCanvas
           width: 'calc(min(100%, 100vh - 40px) * 0.78)',
           height: 'calc(min(100%, 100vh - 40px) * 0.78)',
           borderRadius: '50%',
-          zIndex: 35,
+          zIndex: 27, // Below PortalRing (30), above wheel (25)
           pointerEvents: 'none',
           backgroundColor: debug ? 'rgba(255, 0, 255, 0.3)' : 'transparent',
           border: debug ? '4px solid magenta' : 'none',

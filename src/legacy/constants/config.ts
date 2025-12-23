@@ -95,6 +95,32 @@ export const ELECTRICITY_CONFIG = {
   glassReflectionStrength: 0.08, // Reflection highlight
   glassBlur: 0.5, // Slight blur for depth
 
+  // === R3F LightningStrike Parameters ===
+  // These control the three-stdlib LightningStrike geometry
+  lightningRadius0: 0.04, // Bolt thickness at source (center)
+  lightningRadius1: 0.01, // Bolt thickness at destination (edge)
+  lightningMinRadius: 0.005, // Minimum radius before termination
+  lightningMaxIterations: 7, // Recursion depth for segments
+  lightningRoughness: 0.9, // 0-1: how jagged/erratic the path (higher = more jagged)
+  lightningStraightness: 0.65, // 0-1: how linear vs meandering (higher = straighter)
+  lightningRamificationMin: 4, // Minimum branch count per bolt
+  lightningRamificationMax: 8, // Maximum branch count per bolt
+  lightningRecursionProbability: 0.6, // Chance of sub-branches
+  lightningMaxSubrayRecursion: 2, // Max depth for sub-branches
+  lightningTimeScaleMin: 0.8, // Animation speed variation (min)
+  lightningTimeScaleMax: 1.2, // Animation speed variation (max)
+  lightningSubrayPeriod: 2.0, // Sub-ray animation period
+  lightningSubrayDutyCycle: 0.5, // Sub-ray on/off ratio
+
+  // R3F Bloom post-processing
+  r3fBloomIntensity: 1.8, // Overall bloom strength
+  r3fBloomLuminanceThreshold: 0.1, // Min brightness to bloom
+  r3fBloomLuminanceSmoothing: 0.9, // Smoothing factor
+  r3fBloomRadius: 0.6, // Blur radius
+
+  // R3F Portal dimensions
+  r3fPortalRadius: 1.8, // World units for bolt reach
+
   // Compositing - WARM FILL with orange color
   globalIntensity: 1.4, // Iteration 1: Increased from 1.0 for brighter effect
   toneMapExposure: 3.2, // Iteration 4: Increased from 2.4 for brighter HDR

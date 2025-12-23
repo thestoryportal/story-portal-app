@@ -29,6 +29,11 @@ export const boltFragmentShader = `
     float coreFactor = smoothstep(0.3, 0.9, v_alpha);
     vec3 innerMix = mix(u_midColor, u_coreColor, coreFactor);
     vec3 finalColor = mix(u_outerColor, innerMix, v_alpha);
+
+    // Push toward orange - reduce green in bolt output
+    finalColor.g *= 0.7;
+    finalColor.b *= 0.3;
+
     gl_FragColor = vec4(finalColor * u_intensity * 1.2, v_alpha * u_intensity);
   }
 `;
@@ -162,11 +167,17 @@ export const plasmaFragmentShader = `
     float colorMix = smoothstep(0.0, u_portalRadius * 0.7, dist);
     vec3 plasmaColor = mix(u_innerColor, u_outerColor, colorMix);
 
-    // Combine all factors
-    float alpha = (radialDensity * u_density + centerGlow) * swirl * portalMask * u_intensity;
-    alpha = clamp(alpha * 0.5, 0.0, 0.6); // Cap alpha for subtlety
+    // Push plasma toward orange
+    plasmaColor.g *= 0.65;
+    plasmaColor.b *= 0.2;
 
-    gl_FragColor = vec4(plasmaColor * (1.0 + centerGlow * 0.5), alpha);
+    // Combine all factors - GOOD alpha for warm fill
+    float alpha = (radialDensity * u_density + centerGlow) * swirl * portalMask * u_intensity;
+    alpha = clamp(alpha * 0.70, 0.0, 0.75); // Good alpha for fill
+
+    // Good color saturation
+    vec3 boostedColor = plasmaColor * (1.1 + centerGlow * 0.6);
+    gl_FragColor = vec4(boostedColor, alpha);
   }
 `;
 
@@ -207,8 +218,8 @@ export const compositeFragmentShader = `
     vec2 pos = v_texCoord - u_center;
     float dist = length(pos);
 
-    // Circular mask with soft edge - tighter containment
-    float portalMask = 1.0 - smoothstep(u_portalRadius * 0.80, u_portalRadius * 0.95, dist);
+    // Circular mask with soft edge - EXTENDED to fill portal
+    float portalMask = 1.0 - smoothstep(u_portalRadius * 0.88, u_portalRadius * 1.02, dist);
 
     // Rim factor for bloom boost near edge (light contained by metal edge)
     float rimFactor = smoothstep(u_portalRadius * 0.55, u_portalRadius * 0.85, dist);
@@ -226,20 +237,38 @@ export const compositeFragmentShader = `
                       bloomMed * u_bloomMedWeight +
                       bloomWide * u_bloomWideWeight) * rimBoost;
 
-    // Layer compositing: plasma base + bolts + bloom (additive)
-    vec3 hdrColor = plasmaColor.rgb * plasmaColor.a;
-    hdrColor += boltColor.rgb;
-    hdrColor += totalBloom.rgb * 1.9;
+    // NO base fill - let bolts stand out against dark background
+    // (Removed baseFill to match reference's dark areas between bolts)
+
+    // Layer compositing - reduced multipliers to preserve color saturation
+    vec3 hdrColor = vec3(0.0);
+    hdrColor += plasmaColor.rgb * plasmaColor.a * 0.7; // Plasma fill
+    hdrColor += boltColor.rgb * 1.6; // Bolts (reduced from 2.5)
+    hdrColor += totalBloom.rgb * 0.9; // Bloom (reduced from 1.5)
 
     // Warm center ambient glow with 2Hz pulse
     float centerFactor = (1.0 - smoothstep(0.0, 0.42, dist)) * u_centerGlow * u_intensity * u_centerPulse;
     hdrColor += u_ambientColor * centerFactor;
 
-    // Apply exposure for HDR feel
+    // ORANGE COLOR GRADING - apply BEFORE exposure to preserve saturation
+    // Golden-amber tint matching Sora reference
+    vec3 orangeTint = vec3(1.0, 0.40, 0.05); // Strong orange
+    hdrColor = hdrColor * orangeTint; // Direct multiply for strong effect
+
+    // Reduce green channel aggressively
+    hdrColor.g *= 0.55;
+    hdrColor.b *= 0.15;
+
+    // Now apply exposure (after color grading)
     hdrColor *= u_exposure;
 
     // ACES tone mapping for filmic look
     vec3 toneMapped = ACESFilm(hdrColor);
+
+    // POST-TONEMAP: Force deep orange by computing luminance and remapping to orange
+    float finalLum = dot(toneMapped, vec3(0.299, 0.587, 0.114));
+    vec3 deepOrange = vec3(1.0, 0.45, 0.05) * finalLum * 1.8; // Orange based on brightness
+    toneMapped = mix(toneMapped, deepOrange, 0.6); // Strong blend toward orange
 
     // === GLASS REFLECTION LAYER ===
     // Subtle semi-transparent glass overlay - appears inside the porthole
@@ -256,9 +285,9 @@ export const compositeFragmentShader = `
     // Apply glass layer over lightning
     toneMapped = mix(toneMapped, toneMapped + glassColor * reflection, portalMask * u_glassOpacity);
 
-    // Slight desaturation through glass for depth
+    // Minimal desaturation through glass - preserve orange
     float luminance = dot(toneMapped, vec3(0.299, 0.587, 0.114));
-    toneMapped = mix(toneMapped, vec3(luminance) * vec3(1.0, 0.98, 0.95), u_glassOpacity * 0.15);
+    toneMapped = mix(toneMapped, vec3(luminance) * vec3(1.0, 0.95, 0.85), u_glassOpacity * 0.05);
 
     // Calculate alpha from all layers
     float alpha = max(plasmaColor.a, max(boltColor.a, totalBloom.a * 0.85));

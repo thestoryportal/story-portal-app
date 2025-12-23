@@ -2,9 +2,40 @@
 
 ## Overview
 
-The animation iteration pipeline enables automated capture, analysis, and comparison of visual effects for quality tuning.
+The animation iteration pipeline enables automated capture, analysis, and comparison of visual effects for quality tuning using a **two-phase approach**.
 
 **Full Documentation:** `animations/shared/docs/SKILL.md`
+
+---
+
+## Two-Phase Iteration Strategy
+
+| Phase | Goal | Capture Mode | Compare Against | Target |
+|-------|------|--------------|-----------------|--------|
+| **Phase 1** | Peak Visual Quality | Peak-only (~1.5s) | Sora reference + baselines | SSIM ≥ 0.90 |
+| **Phase 2** | Envelope Implementation | Full animation (~3.5s) | Temporal envelope spec | Visual match |
+
+**Why two phases?**
+- Sora reference shows constant peak intensity throughout
+- Our spec requires build → peak → decay envelope
+- Phase 1: Match Sora at constant intensity (apples-to-apples SSIM comparison)
+- Phase 2: Add envelope while preserving Phase 1 visual quality
+
+**Critical Rule:** Phase 1 parameters are LOCKED before Phase 2 begins.
+
+### Phase 1: Peak Visual Quality
+- Capture at peak intensity only (skip build phase)
+- All frames should show constant peak intensity
+- Both static and animation baselines are fully applicable
+- Exit: SSIM ≥ 0.90 AND human approval → Lock parameters
+
+### Phase 2: Envelope Implementation
+- Capture full animation (build → peak → decay)
+- Only modify envelope-related parameters
+- Validate against temporal spec, not Sora SSIM
+- Exit: Envelope matches spec AND no Phase 1 regression
+
+---
 
 ## Directory Structure
 
@@ -12,12 +43,17 @@ The animation iteration pipeline enables automated capture, analysis, and compar
 animations/
 ├── shared/                         # Shared tooling
 │   ├── capture/
-│   │   ├── run.mjs                 # Primary Puppeteer capture
+│   │   ├── video.mjs               # PRIMARY - Puppeteer CDP screencast
+│   │   ├── run.mjs                 # DEPRECATED - burst screenshots
 │   │   └── pick_artifact.mjs       # Artifact selector
 │   ├── diff/
 │   │   ├── pipeline.mjs            # Main iteration loop
-│   │   ├── analyze.mjs             # SSIM analysis
-│   │   └── crop.mjs                # Frame cropping
+│   │   ├── analyze.mjs             # Frame SSIM analysis
+│   │   ├── video-analyze.mjs       # Video SSIM analysis (APNG comparison)
+│   │   ├── crop.mjs                # Frame cropping
+│   │   ├── extract-baseline.mjs    # Static baseline extraction
+│   │   ├── extract-baseline-video.mjs  # Animation baseline extraction
+│   │   └── run-analysis.mjs        # Standalone analysis runner
 │   ├── rules/                      # Pipeline guidelines
 │   ├── docs/                       # Full documentation
 │   │   ├── SKILL.md                # Main skill doc
@@ -39,7 +75,34 @@ animations/
 └── new-topics/
 ```
 
-## 4 Setup Phases (Human Verified)
+## Calibrated Values (electricity-portal)
+
+Verified and calibrated on 2025-12-22:
+
+| Parameter | Value | Notes |
+|-----------|-------|-------|
+| **Viewport** | 1440×768 | deviceScaleFactor: 1 |
+| **Crop** | (475, 36) @ 465×465 | Portal center for viewport |
+| **Effect Timing** | 975ms–2138ms | ~1.16s duration |
+| **Cropping Method** | sharp extract | Preserves exact 465×465 (ffmpeg requires even dims) |
+
+### Dual Mask System
+
+Reference and captured frames use different masks due to slight positioning differences:
+
+| Mask | Center | Radii (X, Y) | File |
+|------|--------|--------------|------|
+| **Reference** | (235, 232) | (164, 159) | `golden_mask_overlay.png` |
+| **Capture** | (238.5, 235) | (161.5, 160) | `golden_mask_capture.png` |
+
+**Why two masks?**
+- Portal renders at slightly different position in live app vs reference image
+- Difference is ~3.5px center offset
+- Both masks are pixel-perfect for their respective use cases
+
+---
+
+## 5 Setup Phases (Human Verified)
 
 Before running the iteration loop, complete these setup phases:
 
@@ -49,23 +112,40 @@ Before running the iteration loop, complete these setup phases:
 | 2. Crop Calibration | Center effect region | "Is portal centered?" |
 | 3. Golden Mask | Define scoring area | "Does mask cover effect?" |
 | 4. Timing Verification | Capture at peak | "Is effect visible?" |
+| 5. Baseline Extraction | Extract reference metrics | "Do baseline files exist?" |
 
 **Full setup guide:** `animations/shared/docs/sessions/session-setup.md`
 
 ## Key Commands
 
 ```bash
-# Run full iteration pipeline
-node animations/shared/diff/pipeline.mjs --scenario electricity-portal
+# Run Phase 1 iteration (peak-only capture)
+node animations/shared/diff/pipeline.mjs --scenario electricity-portal --phase 1 --iteration N
 
-# Capture only
-node animations/shared/capture/run.mjs --mode smoke --label test
+# Run Phase 2 iteration (full envelope capture)
+node animations/shared/diff/pipeline.mjs --scenario electricity-portal --phase 2 --iteration N
+
+# Capture only (using video.mjs)
+node animations/shared/capture/video.mjs --scenario electricity-portal --label test --duration 2000
 
 # Analyze existing frames
 node animations/shared/diff/run-analysis.mjs --latest
 
-# Pick best artifact from capture
-node animations/shared/capture/pick_artifact.mjs
+# Extract STATIC baseline (before first iteration)
+node animations/shared/diff/extract-baseline.mjs \
+  --with animations/electricity-portal/references/465x465/sora_reference_frame.png \
+  --without animations/electricity-portal/references/465x465/without_effect.png \
+  --output animations/electricity-portal/references/465x465/ \
+  --name electricity
+
+# Extract ANIMATION baseline (before first iteration)
+node animations/shared/diff/extract-baseline-video.mjs \
+  --animation animations/electricity-portal/references/465x465/sora_reference_1.5x.apng \
+  --output animations/electricity-portal/references/465x465/ \
+  --name electricity
+
+# Check current phase status
+cat animations/electricity-portal/scenario.json | jq '.currentPhase'
 ```
 
 ## npm Scripts
@@ -81,6 +161,72 @@ node animations/shared/capture/pick_artifact.mjs
 | `pnpm diff:analyze` | Run analysis |
 | `pnpm iterate:electricity` | Full electricity iteration |
 
+## Dual Diff Analysis Stack
+
+The pipeline runs two complementary SSIM analyses:
+
+### Frame SSIM (Primary)
+- **Tool:** `analyze.mjs`
+- **Method:** Compares each captured PNG frame to a reference PNG
+- **Output:** Best frame SSIM, mean SSIM, diff heatmap
+- **Use:** Spatial accuracy, bolt structure matching
+
+### Video SSIM (Secondary)
+- **Tool:** `video-analyze.mjs`
+- **Method:** FFmpeg SSIM filter comparing APNG animations
+- **Output:** Per-frame SSIM scores, aggregate SSIM, temporal consistency
+- **Use:** Animation timing, color matching, overall video quality
+
+### Interpreting Dual Scores
+
+| Frame SSIM | Video SSIM | Diagnosis |
+|------------|------------|-----------|
+| High | High | Effect matches well |
+| High | Low | Spatial OK, timing/color off |
+| Low | High | Good animation, spatial structure differs |
+| Low | Low | Major differences, needs work |
+
+## Baseline Metrics
+
+Before starting iterations, extract baseline metrics from reference images:
+
+### Static Baseline (baseline_metrics.json)
+Extracted from `sora_reference_frame.png`:
+- Core brightness
+- Effect coverage %
+- Color palette (brightest hex values)
+- Intensity distribution
+
+### Animation Baseline (baseline_animation_metrics.json)
+Extracted from `sora_reference_1.5x.apng`:
+- Frame count, FPS
+- Brightness range (min/max/mean)
+- Flicker oscillation count
+- Motion energy (frame-to-frame change)
+- Color consistency %
+- Key frames (peak, representative)
+
+### Using Baselines in Iteration
+The pipeline loads both baseline files and includes their targets in the iteration feedback, enabling comparison against reference characteristics.
+
+**Note:** Both baselines are fully applicable in Phase 1 (constant intensity vs constant intensity). In Phase 2, baselines are used for Phase 1 preservation checks only.
+
+## Parameter Categories
+
+### Phase 1 Locked (DO NOT modify after Phase 1)
+| File | Parameters |
+|------|------------|
+| `shaders.ts` | orangeTint, u_intensity, bloom weights, exposure, tonemapping |
+| `boltGenerator.ts` | BOLT_WIDTH, BRANCH_PROBABILITY, SEGMENT_LENGTH, JITTER |
+| `config.ts` | plasmaDensity, bloom weights, toneMapExposure, centerGlowStrength |
+
+### Phase 2 Tunable (envelope only)
+| File | Parameters |
+|------|------------|
+| `useElectricityEffect.ts` | intensityEnvelope, envelopeTiming, fadeIn/fadeOut |
+| `boltGenerator.ts` | spawnRateMultiplier, intensityMultiplier (over time) |
+| `config.ts` | buildDurationMs, peakDurationMs, decayDurationMs, envelopeCurve |
+
 ## Scoring Thresholds
 
 | Score | Rating | Action |
@@ -92,22 +238,44 @@ node animations/shared/capture/pick_artifact.mjs
 
 ## Exit Conditions
 
+### Phase 1 Exit
 | Condition | Action |
 |-----------|--------|
-| Score >= 0.95 | Auto-complete, report success |
-| MAX_ITERATIONS reached | Checkpoint with human |
-| Score plateau (3 iterations, delta < 0.01) | Checkpoint with human |
+| Mean SSIM >= 0.95 | Excellent — may complete early |
+| Mean SSIM >= 0.90 AND human approves | **PHASE 1 COMPLETE** → Lock parameters |
+| Plateau (3 iterations <1% change) | Stop, human decides |
 | Tool failure | Stop, report error |
 | Human interrupt | Stop immediately |
 
+### Phase 2 Exit
+| Condition | Action |
+|-----------|--------|
+| Envelope matches spec | **PHASE 2 COMPLETE** |
+| Phase 1 regression detected | STOP — investigate |
+| Human approves | Complete |
+
+### Phase Transition
+| Condition | Action |
+|-----------|--------|
+| Phase 1 → Phase 2 | **MANDATORY:** Lock Phase 1 parameters |
+
 ## Human Checkpoints
 
-NEVER proceed without human verification:
+**Setup Phase:**
 - Viewport verified?
 - Crop calibrated?
 - Mask verified?
 - Timing verified?
-- Each iteration approved?
+- Baselines extracted?
+
+**Phase 1:**
+- All frames at peak intensity?
+- SSIM improving?
+- Ready to lock parameters?
+
+**Phase 2:**
+- Envelope matches spec?
+- Phase 1 quality preserved?
 
 ## Related Documentation
 

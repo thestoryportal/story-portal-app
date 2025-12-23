@@ -7,6 +7,24 @@
 
 ## Capture Issues
 
+### WebGL/Shader compile error (CRITICAL)
+
+**Symptoms:**
+- Pipeline fails fast with WebGL error
+- Console shows shader compile error
+- Effect completely invisible
+
+**Cause:** GLSL syntax error (e.g., duplicate variable declaration)
+
+**Solution:**
+1. Pipeline now auto-detects WebGL errors and fails fast
+2. Check the error message for which shader failed
+3. Common issues:
+   - Duplicate variable names (e.g., `float luminance` declared twice)
+   - Missing semicolons
+   - Type mismatches
+4. Fix the shader code, then retry pipeline
+
 ### Effect not visible in captured frames
 
 **Symptoms:**
@@ -16,26 +34,32 @@
 
 **Possible causes:**
 
-1. **Timing issue** — Capture window misses the effect
+1. **Shader broken** — Check console for WebGL errors
    ```bash
-   # Try capturing immediately after click
-   --settleMs 0 --burstFrames 120
+   # Pipeline should catch this automatically now
+   # If not, check browser console manually
    ```
 
-2. **WebGL not compositing** — Canvas not included in screenshot
+2. **Timing issue** — Capture window misses the effect
+   ```bash
+   # Adjust effect timing window
+   node animations/shared/capture/video.mjs --effectStartMs 500 --effectEndMs 3000
+   ```
+
+3. **WebGL not compositing** — Canvas not included in screenshot
    ```javascript
    // Enable WebGL extraction
    "extractWebGL": true,
    "compositeWebGL": true
    ```
 
-3. **Click not triggering** — Wrong selector
+4. **Click not triggering** — Wrong selector
    ```bash
    # Verify selector in browser console
    document.querySelector("[data-testid='btn-new-topics']")
    ```
 
-4. **Effect disabled in code** — Check for debug flags
+5. **Effect disabled in code** — Check for debug flags
 
 ---
 
@@ -105,14 +129,17 @@ See: `animations/shared/docs/workflows/viewport-debug-workflow.md`
 
 1. **Dimension mismatch** — Crop size ≠ reference size
    ```bash
-   # Check dimensions
+   # Check dimensions (all should be 465×465)
    file animations/electricity-portal/output/*/crops/frame_000.png
-   file animations/electricity-portal/references/465x465/with_effect.png
+   file animations/electricity-portal/references/465x465/sora_reference_frame.png
+   file animations/electricity-portal/references/465x465/golden_mask_overlay.png
    ```
 
 2. **Wrong reference** — Comparing to wrong image
 
-3. **Mask wrong size** — Mask dimensions must match
+3. **Mask wrong size** — Mask dimensions must match (465×465)
+
+4. **Wrong mask for context** — Use `golden_mask_overlay.png` for reference, `golden_mask_capture.png` for captured frames
 
 ---
 
@@ -272,17 +299,18 @@ DEBUG=* node animations/shared/diff/pipeline.mjs --scenario electricity-portal
 ### Run with visible browser
 
 ```bash
-node animations/shared/capture/run.mjs --scenario electricity-portal --headless false
+# video.mjs runs non-headless by default
+node animations/shared/capture/video.mjs --scenario electricity-portal
 ```
 
-### Step-by-step capture
+### Quick capture test
 
 ```bash
-# Capture single frame
-node animations/shared/capture/run.mjs \
+# Short duration capture for debugging
+node animations/shared/capture/video.mjs \
   --scenario electricity-portal \
-  --burstFrames 1 \
-  --headless false
+  --duration 2000 \
+  --label debug
 ```
 
 ### Inspect intermediate outputs

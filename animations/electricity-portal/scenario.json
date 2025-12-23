@@ -18,26 +18,43 @@
     "headless": false,
     "mode": "newtopics",
     "crop": {
-      "x": 485,
-      "y": 41,
+      "x": 475,
+      "y": 36,
       "width": 465,
       "height": 465,
       "circularMask": true,
-      "_note": "Centered on portal at (717,273) for 1440x768 viewport"
+      "_note": "Centered on portal for 1440x768 viewport, calibrated 2025-12-22"
     },
     "effectTiming": {
-      "startMs": 600,
-      "endMs": 2450,
-      "_note": "Time-based effect window (~1.85s duration, ~94 frames at 50fps)"
+      "startMs": 975,
+      "endMs": 2138,
+      "_sourceOfTruth": "src/legacy/constants/config.ts → ELECTRICITY_CONFIG.captureWindowStartMs/EndMs",
+      "_note": "Time-based effect window (~1.16s duration), calibrated 2025-12-22. Keep in sync with config.ts."
     }
   },
 
   "reference": {
-    "withEffect": "animations/electricity-portal/references/465x465/with_effect.png",
+    "withEffect": "animations/electricity-portal/references/465x465/sora_reference_frame.png",
     "withoutEffect": "animations/electricity-portal/references/465x465/without_effect.png",
-    "animation": "animations/electricity-portal/references/465x465/reference_animation.apng",
-    "mask": "animations/electricity-portal/references/465x465/golden_mask.png",
-    "baseline": "animations/electricity-portal/references/465x465/quality_spec.json"
+    "animation": "animations/electricity-portal/references/465x465/sora_reference_1.5x.apng",
+    "mask": "animations/electricity-portal/references/465x465/golden_mask_overlay.png",
+    "maskCapture": "animations/electricity-portal/references/465x465/golden_mask_capture.png",
+    "_maskNote": "Reference mask (235,232) r(164,159) vs Capture mask (238.5,235) r(161.5,160)",
+    "_dualMaskRationale": "Sora reference is AI-generated artwork; live capture is CSS-rendered portal. They are visually similar but not pixel-identical, hence ~3.5px offset requiring separate masks.",
+    "baseline": "animations/electricity-portal/references/465x465/quality_spec.json",
+    "baselineMetrics": "animations/electricity-portal/references/465x465/baseline_metrics.json",
+    "animationBaseline": "animations/electricity-portal/references/465x465/baseline_animation_metrics.json",
+    "_legacy": {
+      "withEffect": "animations/electricity-portal/references/465x465/with_effect.png",
+      "animation": "animations/electricity-portal/references/465x465/reference_animation.apng",
+      "_note": "Original hand-crafted reference preserved for comparison"
+    },
+    "_soraSource": {
+      "original": "animations/electricity-portal/references/focus/electricity-effect-animated reference-video.mp4",
+      "generatedDate": "2025-12-22",
+      "speedup": "1.5x",
+      "_note": "AI-generated reference from Sora/Luma using prompt from visual spec"
+    }
   },
 
   "thresholds": {
@@ -45,20 +62,24 @@
       "fail": 0.70,
       "pass": 0.85,
       "good": 0.90,
-      "excellent": 0.95
+      "excellent": 0.93,
+      "_ceilingNote": "Max achievable ~0.95-0.97 due to AI reference vs live app mismatch (dual mask system)"
     },
     "diffPercent": {
       "max": 15,
       "warning": 10,
       "ideal": 5
     },
-    "maxIterations": 20
+    "pauseEveryN": 7,
+    "_maxIterationsNote": "No absolute cap. Pause every 7 iterations for human checkpoint."
   },
 
   "convergence": {
-    "minImprovement": 0.01,
+    "plateauThreshold": 0.01,
     "plateauIterations": 3,
-    "targetSsim": 0.90
+    "plateauAction": "MANDATORY_ESCALATION",
+    "targetSsim": 0.90,
+    "_note": "3 iterations with <1% net change triggers immediate stop"
   },
 
   "feedback": {
@@ -68,23 +89,35 @@
     "maxFramesToShow": 6
   },
 
-  "codeTargets": [
-    "src/legacy/effects/boltGenerator.ts",
-    "src/legacy/effects/useElectricityEffect.ts"
-  ],
+  "codeTargets": {
+    "core": [
+      "src/legacy/effects/shaders.ts",
+      "src/legacy/effects/boltGenerator.ts",
+      "src/legacy/effects/useElectricityEffect.ts"
+    ],
+    "supporting": [
+      "src/legacy/effects/noiseUtils.ts",
+      "src/legacy/constants/config.ts"
+    ],
+    "_note": "Core files are primary iteration targets. Supporting files may also need changes."
+  },
 
   "setupStatus": {
     "viewportVerified": true,
     "cropCalibrated": true,
     "maskVerified": true,
+    "dualMaskCalibrated": true,
     "timingVerified": true,
     "videoPipelineVerified": true,
     "verifiedDate": "2025-12-22",
     "captureFormat": "jpeg",
     "captureMode": "video-screencast",
-    "effectDuration": "~1.85s",
-    "effectTimingMs": "600-2450",
-    "circularMaskApplied": true
+    "croppingMethod": "sharp-extract",
+    "effectDuration": "~1.16s",
+    "effectTimingMs": "975-2138",
+    "circularMaskApplied": true,
+    "cropCoordinates": "475,36 @ 465x465",
+    "_calibrationNote": "Dual mask system: reference and capture masks differ by ~3.5px center offset"
   },
 
   "visualSpec": {
@@ -100,5 +133,116 @@
       "Pulsing/flickering animation",
       "No visible background through effect"
     ]
+  },
+
+  "temporalEnvelope": {
+    "description": "Intensity curve from button press to effect end",
+    "phases": {
+      "build": {
+        "durationMs": "800-1200",
+        "behavior": "Bolts energize from inner rim of portal ring inward toward center",
+        "intensityCurve": "ease-in (slow start, accelerating)"
+      },
+      "peak": {
+        "durationMs": "1000-1500",
+        "behavior": "Full intensity, maximum bolt activity and glow",
+        "intensityCurve": "sustained with natural flicker"
+      },
+      "decay": {
+        "durationMs": "500-800",
+        "behavior": "Intensity decreases, bolts fade out",
+        "intensityCurve": "ease-out (decelerating to zero)"
+      }
+    },
+    "totalDurationMs": "2500-3500",
+    "_referenceNote": "Sora reference shows constant peak intensity throughout. Use Sora for VISUAL quality at peak. Use this spec for TEMPORAL envelope shape."
+  },
+
+  "twoPhaseApproach": {
+    "description": "Iterate in two distinct phases: peak visuals first, then envelope",
+
+    "phase1": {
+      "name": "Peak Visual Quality",
+      "goal": "Match Sora reference at constant peak intensity",
+      "captureMode": "peak-only",
+      "captureDurationMs": 1500,
+      "captureSettleMs": 1000,
+      "captureNote": "Skip build phase, capture only during peak intensity window",
+      "compareAgainst": "Both static and animation baselines (fully applicable)",
+      "targetSsim": 0.90,
+      "exitCriteria": "SSIM >= 0.90 AND human approval",
+      "outputLock": "Lock all Phase 1 parameters before proceeding to Phase 2"
+    },
+
+    "phase2": {
+      "name": "Envelope Implementation",
+      "goal": "Add build and decay while preserving Phase 1 visual quality",
+      "captureMode": "full-envelope",
+      "captureDurationMs": 3500,
+      "captureSettleMs": 0,
+      "captureNote": "Capture full animation including build, peak, and decay",
+      "compareAgainst": "Temporal envelope spec (not SSIM to Sora)",
+      "validation": "Visual inspection against temporalEnvelope spec",
+      "constraint": "Phase 1 locked parameters MUST NOT be modified"
+    }
+  },
+
+  "parameterCategories": {
+    "phase1Locked": {
+      "description": "Parameters locked after Phase 1 completion - DO NOT MODIFY in Phase 2",
+      "shaders.ts": [
+        "orangeTint (vec3 color values)",
+        "u_intensity (base intensity)",
+        "u_bloomTightWeight",
+        "u_bloomMedWeight",
+        "u_bloomWideWeight",
+        "u_exposure",
+        "ACES tonemapping coefficients"
+      ],
+      "boltGenerator.ts": [
+        "BOLT_WIDTH",
+        "BRANCH_PROBABILITY",
+        "SEGMENT_LENGTH",
+        "JITTER",
+        "MAX_BRANCHES",
+        "bolt path generation algorithms"
+      ],
+      "config.ts": [
+        "plasmaDensity",
+        "bloomTightWeight",
+        "bloomMedWeight",
+        "bloomWideWeight",
+        "toneMapExposure",
+        "centerGlowStrength"
+      ]
+    },
+    "phase2Tunable": {
+      "description": "Parameters for envelope implementation - modify only in Phase 2",
+      "useElectricityEffect.ts": [
+        "intensityEnvelope (build/peak/decay curve)",
+        "envelopeTiming (phase durations)",
+        "fadeInDuration",
+        "fadeOutDuration"
+      ],
+      "boltGenerator.ts": [
+        "spawnRateMultiplier (over time)",
+        "intensityMultiplier (over time)"
+      ],
+      "config.ts": [
+        "buildDurationMs",
+        "peakDurationMs",
+        "decayDurationMs",
+        "envelopeCurve (easing function)"
+      ]
+    }
+  },
+
+  "currentPhase": {
+    "phase": 1,
+    "status": "not_started",
+    "iteration": 0,
+    "bestSsim": null,
+    "phase1CompletedDate": null,
+    "lockedParameters": null
   }
 }

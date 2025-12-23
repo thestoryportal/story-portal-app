@@ -22,14 +22,14 @@ curl -s http://localhost:5173 | grep -q "vite" && echo "✓ Dev server running" 
 ### Step 1.1: Capture Raw Viewport
 
 ```bash
-# Capture full viewport without any cropping
-node animations/shared/capture/run.mjs \
-  --mode viewport-test \
-  --no-crop \
-  --headless true \
-  --viewport 1920x1080 \
-  --deviceScaleFactor 1
+# Capture full viewport using video.mjs
+node animations/shared/capture/video.mjs \
+  --scenario electricity-portal \
+  --label viewport-test \
+  --duration 1000
 ```
+
+> **Note:** Video capture runs at 1440×768 viewport by default. Check output frames for full UI visibility.
 
 ### Step 1.2: Human Verification
 
@@ -84,12 +84,14 @@ cat animations/electricity-portal/scenario.json | jq '.capture.viewport = {"widt
 ### Step 2.1: Capture with Overlay
 
 ```bash
-# Capture full frame with crop region overlay
-node animations/shared/capture/run.mjs \
-  --mode calibration \
-  --overlay-crop \
-  --scenario electricity-portal
+# Capture video and check crop alignment in output
+node animations/shared/capture/video.mjs \
+  --scenario electricity-portal \
+  --label crop-check \
+  --duration 2000
 ```
+
+Check the `crops/` folder to verify portal is centered in the 465×465 crop region.
 
 This should produce an image showing:
 - Full viewport
@@ -118,11 +120,13 @@ jq '.crop = {"x": NEW_X, "y": NEW_Y, "width": 550, "height": 550, "circularMask"
 ### Step 2.4: Verify Cropped Output
 
 ```bash
-# Capture and crop
-node animations/shared/capture/run.mjs \
-  --mode crop-test \
-  --scenario electricity-portal
+# Capture video with current crop settings
+node animations/shared/capture/video.mjs \
+  --scenario electricity-portal \
+  --label crop-verify
 ```
+
+Check `crops/` folder — portal should be centered in each 465×465 frame.
 
 **Human verifies:**
 > "Does this cropped image correctly frame the effect area? Is it centered?"
@@ -139,44 +143,53 @@ Continue adjusting until human approves the crop region.
 
 **Goal:** Create mask that defines the scoring region.
 
-**Important:** Mask must match CROP dimensions (e.g., 550×550), not viewport dimensions.
+**Important:** Mask must match CROP dimensions (465×465), not viewport dimensions.
+
+### Dual Mask System (electricity-portal)
+
+The electricity-portal scenario uses **two masks** due to slight positioning differences:
+
+| Mask | File | Center | Radii | Use For |
+|------|------|--------|-------|---------|
+| Reference | `golden_mask_overlay.png` | (235, 232) | (164, 159) | Sora reference images |
+| Capture | `golden_mask_capture.png` | (238.5, 235) | (161.5, 160) | Live captured frames |
+
+**Why two masks?** Portal renders at ~3.5px different position in live app vs reference.
 
 ### Step 3.1: Generate Mask
 
 ```bash
 node animations/shared/diff/extract-baseline.mjs \
-  --reference animations/electricity-portal/references/465x465/with_effect.png \
+  --reference animations/electricity-portal/references/465x465/sora_reference_frame.png \
   --output animations/electricity-portal/references/ \
   --generate-mask
 ```
 
+**Note:** Primary reference is `sora_reference_frame.png` (AI-generated from Sora/Luma).
+
 ### Step 3.2: Human Verification
 
-Open `golden_mask.png` and verify:
+Open `golden_mask_overlay.png` and verify:
 
 **Checklist:**
 - [ ] WHITE area covers where the effect should appear
 - [ ] BLACK area covers background/non-effect regions
-- [ ] Mask dimensions match crop dimensions
+- [ ] Mask dimensions match crop dimensions (465×465)
 - [ ] Ring shape correctly captures the portal effect area
 
-### Step 3.3: If Mask Incorrect
+### Step 3.3: Calibrate Capture Mask
 
-Manually edit or regenerate with different threshold:
-
-```bash
-node animations/shared/diff/extract-baseline.mjs \
-  --reference animations/electricity-portal/references/465x465/with_effect.png \
-  --threshold 0.15 \
-  --output animations/electricity-portal/references/
-```
+If reference mask doesn't align with captured frames:
+1. Overlay reference mask on a captured frame
+2. Adjust center and radii until pixel-perfect
+3. Save as `golden_mask_capture.png`
 
 ### Step 3.4: Repeat Until Verified
 
 Continue until human confirms:
-> "Yes, the mask correctly covers the effect area."
+> "Yes, the masks correctly cover the effect area for both reference and captured frames."
 
-✅ **Phase 3 Complete** when mask is verified.
+✅ **Phase 3 Complete** when both masks are verified.
 
 ---
 
@@ -187,11 +200,10 @@ Continue until human confirms:
 ### Step 4.1: Non-Headless Trigger Test
 
 ```bash
-# Run in visible browser mode
-node animations/shared/capture/run.mjs \
+# Run video capture (opens visible browser by default)
+node animations/shared/capture/video.mjs \
   --scenario electricity-portal \
-  --headless false \
-  --burstFrames 5
+  --label timing-test
 ```
 
 **Human observes the browser:**
@@ -199,24 +211,21 @@ node animations/shared/capture/run.mjs \
 - [ ] How long does the effect last (estimate in ms)?
 - [ ] Does the effect start immediately or after a delay?
 
-### Step 4.2: Capture Burst
+### Step 4.2: Capture Video
 
 ```bash
-# Capture burst for analysis
-node animations/shared/capture/run.mjs \
+# Capture full animation
+node animations/shared/capture/video.mjs \
   --scenario electricity-portal \
-  --burstFrames 60 \
-  --burstIntervalMs 25
+  --duration 4000
 ```
 
-### Step 4.3: Generate Animation
+### Step 4.3: Check Animation Output
 
-```bash
-# Create GIF from captured frames
-ffmpeg -framerate 40 -i 'animations/electricity-portal/output/screenshots/timeline/LATEST/crops/frame_%03d.png' \
-  -vf "scale=550:-1:flags=lanczos" \
-  animations/electricity-portal/output/screenshots/timeline/LATEST/animation.gif
-```
+The video capture automatically generates `animation.apng` with:
+- Frames trimmed to effect window (975ms–2138ms)
+- Circular transparency mask applied
+- Output in `masked/` folder
 
 ### Step 4.4: Human Verification
 
@@ -230,17 +239,18 @@ Open the animated GIF and verify:
 
 ### Step 4.5: Adjust Timing If Needed
 
-**Effect not captured / captured too late:**
-```javascript
-// Reduce settleMs (start capturing sooner after click)
-"settleMs": 0  // Try 0, then increase if needed
+**Effect not in captured window:**
+```bash
+# Adjust effect timing parameters
+node animations/shared/capture/video.mjs \
+  --effectStartMs 800 \
+  --effectEndMs 2500
 ```
 
-**Effect appears briefly then disappears:**
-```javascript
-// Increase burstFrames or reduce interval
-"burstFrames": 120,
-"burstIntervalMs": 16  // ~60fps
+**Need more frames:**
+```bash
+# Increase recording duration
+node animations/shared/capture/video.mjs --duration 5000
 ```
 
 ### Step 4.6: Repeat Until Verified
@@ -248,7 +258,60 @@ Open the animated GIF and verify:
 Continue adjusting until human confirms:
 > "Yes, the captured animation shows the effect clearly."
 
+**Current calibrated values (electricity-portal):**
+- effectStartMs: 975
+- effectEndMs: 2138
+- duration: 4000
+
 ✅ **Phase 4 Complete** when timing is verified.
+
+---
+
+## Phase 5: Baseline Extraction
+
+**Goal:** Extract baseline metrics from reference images for iteration comparison.
+
+### Step 5.1: Extract Static Baseline
+
+```bash
+node animations/shared/diff/extract-baseline.mjs \
+  --with animations/electricity-portal/references/465x465/sora_reference_frame.png \
+  --without animations/electricity-portal/references/465x465/without_effect.png \
+  --output animations/electricity-portal/references/465x465/ \
+  --name electricity
+```
+
+**Outputs:**
+- `baseline_metrics.json` — Color, intensity, structure metrics
+- `baseline_report.md` — Human-readable summary
+- `quality_spec.json` — Quality thresholds
+- `golden_mask.png` — Binary scoring mask
+
+### Step 5.2: Extract Animation Baseline
+
+```bash
+node animations/shared/diff/extract-baseline-video.mjs \
+  --animation animations/electricity-portal/references/465x465/sora_reference_1.5x.apng \
+  --output animations/electricity-portal/references/465x465/ \
+  --name electricity
+```
+
+**Outputs:**
+- `baseline_animation_metrics.json` — Per-frame and temporal metrics
+- `baseline_animation_report.md` — Human-readable summary
+- `brightness_curve.csv` — Frame-by-frame brightness data
+
+### Step 5.3: Verify Baselines
+
+```bash
+ls -la animations/electricity-portal/references/465x465/baseline*.json
+```
+
+Both files should exist:
+- `baseline_metrics.json`
+- `baseline_animation_metrics.json`
+
+✅ **Phase 5 Complete** when both baseline files exist.
 
 ---
 
@@ -262,6 +325,7 @@ jq '.setupStatus = {
   "cropCalibrated": true,
   "maskVerified": true,
   "timingVerified": true,
+  "baselinesExtracted": true,
   "verifiedDate": "'"$(date -Iseconds)"'"
 }' animations/electricity-portal/scenario.json > temp.json && mv temp.json animations/electricity-portal/scenario.json
 ```
@@ -275,12 +339,17 @@ git commit -m "chore: complete animation pipeline setup verification"
 
 ---
 
-## Next: Begin Iterations
+## Next: Begin Phase 1 Iteration
 
-Now that setup is complete, proceed to iteration:
+Now that setup is complete, proceed to Phase 1 iteration (Peak Visual Quality):
 
 ```
-"Setup is verified. Let's begin iterating on the electricity effect."
+"Setup is verified. Let's begin Phase 1 iteration on the electricity effect.
+Goal: Match Sora reference at peak intensity."
 ```
+
+**Reminder:** The iteration uses a two-phase approach:
+- **Phase 1:** Peak-only capture, match Sora reference at constant intensity
+- **Phase 2:** Full envelope capture, implement build/peak/decay
 
 See: `animations/shared/docs/sessions/session-iteration.md`

@@ -21,14 +21,14 @@
 ### Step 1: Capture Raw Viewport
 
 ```bash
-# Capture without any cropping or processing
-node animations/shared/capture/run.mjs \
-  --mode raw-viewport \
-  --no-crop \
-  --headless true \
-  --viewport 1920x1080 \
-  --deviceScaleFactor 1
+# Capture using video.mjs (runs non-headless by default)
+node animations/shared/capture/video.mjs \
+  --scenario electricity-portal \
+  --label viewport-test \
+  --duration 1000
 ```
+
+Check `frames/` folder in output for raw viewport images.
 
 ### Step 2: Compare to Browser
 
@@ -108,11 +108,13 @@ If app has responsive breakpoints:
 After applying fix, capture again and verify:
 
 ```bash
-node animations/shared/capture/run.mjs \
-  --mode viewport-verify \
-  --no-crop \
-  --scenario electricity-portal
+node animations/shared/capture/video.mjs \
+  --scenario electricity-portal \
+  --label viewport-verify \
+  --duration 1000
 ```
+
+Check `frames/` folder for raw viewport images.
 
 **Human must confirm:**
 > "Is the entire UI visible and correctly sized?" (yes/no)
@@ -151,12 +153,13 @@ WebGL canvas may need special handling:
 
 ### Different results headless vs non-headless
 
-Some Chrome flags affect rendering. Try:
+video.mjs runs non-headless by default. If you need to test headless:
 
 ```bash
-node animations/shared/capture/run.mjs \
-  --headless false \
-  --scenario electricity-portal
+# video.mjs is already non-headless by default
+node animations/shared/capture/video.mjs \
+  --scenario electricity-portal \
+  --label headless-test
 ```
 
-If non-headless works but headless doesn't, check the Chrome flags in run.mjs.
+If non-headless works but headless doesn't, check the Chrome flags in video.mjs.

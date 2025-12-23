@@ -10,20 +10,20 @@
 
 The crop region defines what portion of the viewport is analyzed. For the electricity effect, this should be a square centered on the portal ring.
 
-**Target:** 550×550 pixel crop centered on portal
+**Target:** 465×465 pixel crop centered on portal (matches reference dimensions)
 
 ---
 
 ## Step 1: Capture Full Viewport
 
 ```bash
-node animations/shared/capture/run.mjs \
-  --mode calibration \
-  --no-crop \
-  --scenario electricity-portal
+node animations/shared/capture/video.mjs \
+  --scenario electricity-portal \
+  --label crop-calibration \
+  --duration 1000
 ```
 
-Note the output directory (printed to console).
+Check `frames/` folder in output for raw viewport images.
 
 ---
 
@@ -45,21 +45,23 @@ Open the full viewport image. Find the portal ring center.
 
 ## Step 3: Calculate Crop Region
 
-For a 550×550 crop centered on point (centerX, centerY):
+For a 465×465 crop centered on point (centerX, centerY):
 
 ```
-cropX = centerX - 275
-cropY = centerY - 275
-cropWidth = 550
-cropHeight = 550
+cropX = centerX - 232.5
+cropY = centerY - 232.5
+cropWidth = 465
+cropHeight = 465
 ```
 
-**Example:**
-If portal center is at (960, 540) in a 1920×1080 viewport:
+**Example (calibrated for 1440×768 viewport):**
+Portal center at (707.5, 268.5):
 ```
-cropX = 960 - 275 = 685
-cropY = 540 - 275 = 265
+cropX = 707.5 - 232.5 = 475
+cropY = 268.5 - 232.5 = 36
 ```
+
+**Current calibrated values:** (475, 36) @ 465×465
 
 ---
 
@@ -67,39 +69,37 @@ cropY = 540 - 275 = 265
 
 ```bash
 # Edit animations/electricity-portal/scenario.json
-jq '.crop = {
-  "x": 685,
-  "y": 265,
-  "width": 550,
-  "height": 550,
+jq '.capture.crop = {
+  "x": 475,
+  "y": 36,
+  "width": 465,
+  "height": 465,
   "circularMask": true
 }' animations/electricity-portal/scenario.json > temp.json && mv temp.json animations/electricity-portal/scenario.json
 ```
 
 ---
 
-## Step 5: Capture with Overlay
+## Step 5: Capture and Check Crops
 
 ```bash
-node animations/shared/capture/run.mjs \
-  --mode calibration \
-  --overlay-crop \
-  --scenario electricity-portal
+node animations/shared/capture/video.mjs \
+  --scenario electricity-portal \
+  --label crop-verify \
+  --duration 2000
 ```
 
-This should produce an image showing:
-- Full viewport
-- Red/yellow rectangle showing the crop region
+Check the `crops/` folder in output — portal should be centered in each 465×465 frame.
 
 ---
 
 ## Step 6: Human Verification
 
 **Checklist:**
-- [ ] Is the portal ring centered in the crop box?
-- [ ] Is the entire ring visible within the box?
+- [ ] Is the portal ring centered in the cropped images?
+- [ ] Is the entire ring visible?
 - [ ] Is there some margin around the ring for glow effects?
-- [ ] Is the crop box the expected size (550×550)?
+- [ ] Is the crop the expected size (465×465)?
 
 **If NOT centered:**
 - Adjust cropX to move left (decrease) or right (increase)
@@ -111,17 +111,18 @@ This should produce an image showing:
 ## Step 7: Test Actual Crop
 
 ```bash
-node animations/shared/capture/run.mjs \
-  --mode crop-test \
-  --scenario electricity-portal
+node animations/shared/capture/video.mjs \
+  --scenario electricity-portal \
+  --label crop-test \
+  --duration 2000
 ```
 
-Open the cropped output and verify:
+Open a cropped image from `crops/` folder and verify:
 
 **Checklist:**
 - [ ] Portal ring is centered
 - [ ] Full ring visible (not cut off)
-- [ ] Image is 550×550 pixels
+- [ ] Image is 465×465 pixels
 - [ ] Matches the reference image framing
 
 ---
@@ -133,10 +134,10 @@ Compare cropped capture to reference:
 ```bash
 # View side by side
 open animations/electricity-portal/output/screenshots/timeline/LATEST/crops/frame_000.png
-open animations/electricity-portal/references/465x465/with_effect.png
+open animations/electricity-portal/references/465x465/sora_reference_frame.png
 ```
 
-**Note:** Reference is 465×465, captures are 550×550. They should show the same area but at different sizes. The analysis tools will handle resizing.
+**Note:** Primary reference is `sora_reference_frame.png` (AI-generated from Sora/Luma). Both reference and captures should be 465×465 for direct comparison.
 
 ---
 

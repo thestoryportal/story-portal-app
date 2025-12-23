@@ -6,7 +6,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import type { AnimationPhase, Particle } from '../types';
-import { ALL_PROMPTS } from '../constants';
+import { ALL_PROMPTS, ELECTRICITY_CONFIG } from '../constants';
 import { shuffleArray } from '../utils';
 
 export interface UseWheelSelectionOptions {
@@ -124,12 +124,12 @@ export function useWheelSelection(options: UseWheelSelectionOptions = {}): UseWh
 
       // Reset tracking for new set
       recentLandingsRef.current = [];
-    }, 1000); // Swap happens at 1000ms into the effect
+    }, ELECTRICITY_CONFIG.topicSwapDelayMs);
 
-    // End electricity effect after full animation (3 seconds)
+    // End electricity effect after full animation
     setTimeout(() => {
       onElectricityEnd?.();
-    }, 3000);
+    }, ELECTRICITY_CONFIG.effectDurationMs);
   }, [prompts, onElectricityStart, onElectricityEnd]);
 
   // Select a prompt by index

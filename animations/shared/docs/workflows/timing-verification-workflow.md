@@ -1,7 +1,7 @@
 # Timing Verification Workflow
 
-**Purpose:** Ensure capture window catches the effect at peak visibility  
-**Prerequisite:** Crop calibration complete (Phase 2), Mask verified (Phase 3)  
+**Purpose:** Ensure capture window catches the effect at peak visibility
+**Prerequisite:** Crop calibration complete (Phase 2), Mask verified (Phase 3)
 **Location:** `animations/shared/docs/workflows/timing-verification-workflow.md`
 
 ---
@@ -13,7 +13,7 @@ The electricity effect is triggered by clicking "New Topics". The effect:
 2. Peaks in intensity
 3. Fades out over time
 
-We need to capture during peak intensity.
+We need to capture during peak intensity using video.mjs.
 
 ---
 
@@ -21,25 +21,25 @@ We need to capture during peak intensity.
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `settleMs` | Delay after click before capture starts | 0 |
-| `burstFrames` | Number of frames to capture | 60 |
-| `burstIntervalMs` | Time between frames | 25 (40 fps) |
+| `duration` | Total recording duration (ms) | 4000 |
+| `effectStartMs` | When effect starts after trigger | 975 |
+| `effectEndMs` | When effect ends after trigger | 2138 |
+| `settleMs` | Wait before trigger | 500 |
 
-**Capture window = burstFrames × burstIntervalMs**
+**Effect window = effectEndMs - effectStartMs**
 
-Example: 60 frames × 25ms = 1500ms capture window
+Calibrated: 2138 - 975 = 1163ms (~1.16s)
 
 ---
 
 ## Step 1: Visual Trigger Test
 
-Run non-headless to observe the effect:
+Run video capture (non-headless by default) to observe the effect:
 
 ```bash
-node animations/shared/capture/run.mjs \
+node animations/shared/capture/video.mjs \
   --scenario electricity-portal \
-  --headless false \
-  --burstFrames 5
+  --label timing-test
 ```
 
 **Human observes:**
@@ -57,51 +57,43 @@ Total duration: ~___ms
 
 ---
 
-## Step 2: Burst Capture
+## Step 2: Capture Video
 
 ```bash
-node animations/shared/capture/run.mjs \
+node animations/shared/capture/video.mjs \
   --scenario electricity-portal \
-  --headless true \
-  --burstFrames 60 \
-  --burstIntervalMs 25
+  --duration 4000
 ```
 
 ---
 
-## Step 3: Manual Frame Inspection
-
-Check individual frames for effect visibility:
+## Step 3: Check Output Folders
 
 ```bash
-# View first frame
-open animations/electricity-portal/output/screenshots/timeline/LATEST/crops/frame_000.png
+# View raw frames (before cropping)
+ls animations/electricity-portal/output/screenshots/timeline/LATEST/frames/
 
-# View frame 30 (middle)
-open animations/electricity-portal/output/screenshots/timeline/LATEST/crops/frame_030.png
+# View cropped frames (465×465)
+ls animations/electricity-portal/output/screenshots/timeline/LATEST/crops/
 
-# View last frame
-open animations/electricity-portal/output/screenshots/timeline/LATEST/crops/frame_059.png
+# View trimmed + masked frames
+ls animations/electricity-portal/output/screenshots/timeline/LATEST/masked/
+
+# View final animation
+open animations/electricity-portal/output/screenshots/timeline/LATEST/animation.apng
 ```
 
 **Questions:**
-- Which frame shows the strongest effect?
-- Are there frames with no effect visible?
-- Is the effect visible throughout or only in some frames?
+- Is effect visible in the masked frames?
+- Does animation.apng show the effect clearly?
+- Is timing correct (effect visible throughout)?
 
 ---
 
-## Step 4: Generate Animation
+## Step 4: Verify Animation
 
-```bash
-# Create GIF for review
-ffmpeg -framerate 40 -i 'animations/electricity-portal/output/screenshots/timeline/LATEST/crops/frame_%03d.png' \
-  -vf "scale=550:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" \
-  animations/electricity-portal/output/screenshots/timeline/LATEST/animation.gif
-```
-
-Open the GIF and verify:
-- [ ] Effect is visible in the animation
+Open `animation.apng` and verify:
+- [ ] Effect is visible throughout
 - [ ] Animation shows movement (not static)
 - [ ] Effect appears at expected intensity
 
@@ -109,99 +101,95 @@ Open the GIF and verify:
 
 ## Step 5: Adjust Timing If Needed
 
-### Effect not captured (all frames static)
+### Effect not in captured window
 
-**Possible causes:**
-1. Capture started before effect triggered
-2. Effect already faded before capture started
-3. Click didn't actually trigger the effect
-
-**Try:**
+**Try wider timing window:**
 ```bash
-# Reduce settleMs to 0 (capture immediately after click)
-node animations/shared/capture/run.mjs \
-  --scenario electricity-portal \
-  --settleMs 0 \
-  --burstFrames 120
+node animations/shared/capture/video.mjs \
+  --effectStartMs 500 \
+  --effectEndMs 3000
 ```
 
-### Effect only in first few frames
+### Effect only in early frames
 
-The effect is starting but capture window is too late.
-
-**Try:**
+Increase effectStartMs:
 ```bash
-# Start capture immediately
---settleMs 0
+--effectStartMs 1200
 ```
 
-### Effect only in last few frames
+### Effect only in late frames
 
-Capture is starting too early.
-
-**Try:**
+Decrease effectStartMs:
 ```bash
-# Add delay before capture
---settleMs 100  # Wait 100ms after click
+--effectStartMs 600
 ```
 
-### Effect is choppy/low frame count
+### Need more recording time
 
-Increase frame rate:
-
+Increase duration:
 ```bash
---burstFrames 120 \
---burstIntervalMs 16  # ~60fps
-```
-
-### Effect too brief to capture well
-
-Capture faster:
-
-```bash
---burstFrames 60 \
---burstIntervalMs 8  # 125fps
+--duration 5000
 ```
 
 ---
 
 ## Step 6: Verify Optimal Timing
 
-After adjustments, run capture again and verify:
+After adjustments, run capture again:
 
 ```bash
-node animations/shared/capture/run.mjs \
-  --scenario electricity-portal \
-  --headless true
+node animations/shared/capture/video.mjs \
+  --scenario electricity-portal
 ```
 
-Generate animation and verify:
-- [ ] Effect visible throughout animation
-- [ ] Peak intensity captured (compare to reference)
-- [ ] Smooth animation (enough frames)
+Verify animation.apng:
+- [ ] Effect visible throughout
+- [ ] Peak intensity captured
+- [ ] Smooth animation
 
 ---
 
 ## Step 7: Update Scenario Config
 
-Save verified timing parameters:
+Save verified timing parameters in scenario.json:
 
-```bash
-jq '.capture.settleMs = 0 | .capture.burstFrames = 60 | .capture.burstIntervalMs = 25' \
-  animations/electricity-portal/scenario.json > temp.json && mv temp.json animations/electricity-portal/scenario.json
+```json
+{
+  "capture": {
+    "effectTiming": {
+      "startMs": 975,
+      "endMs": 2138
+    }
+  }
+}
 ```
+
+Also update video.mjs defaults if needed.
 
 ---
 
 ## Step 8: Final Human Verification
 
 Show the human:
-1. The animated GIF
-2. Comparison to reference image
-3. Best frame from the capture
+1. The animation.apng
+2. Comparison to reference (sora_reference_1.5x.apng)
+3. Sample frames from masked/ folder
 
 **Human confirms:**
 > "Yes, the captured animation shows the electricity effect clearly."
+
+---
+
+## Current Calibrated Values (electricity-portal)
+
+| Parameter | Value |
+|-----------|-------|
+| effectStartMs | 975 |
+| effectEndMs | 2138 |
+| duration | 4000 |
+| settleMs | 500 |
+| viewport | 1440×768 |
+| crop | (475, 36) @ 465×465 |
 
 ---
 
@@ -209,14 +197,11 @@ Show the human:
 
 ### Click not triggering effect
 
-Check the selector:
+Check the selector in video.mjs:
 ```javascript
-{
-  "trigger": {
-    "type": "click",
-    "selector": "[data-testid='btn-new-topics']"
-  }
-}
+const selectors = {
+  "newtopics": ['[data-testid="btn-new-topics"]', ".new-topics-btn"],
+};
 ```
 
 Verify selector exists:
@@ -227,41 +212,11 @@ document.querySelector("[data-testid='btn-new-topics']")
 
 ### Effect visible in browser but not in capture
 
-WebGL canvas may not be compositing properly:
+This usually means timing is off. Try wider effect window.
 
-```javascript
-{
-  "capture": {
-    "extractWebGL": true,
-    "compositeWebGL": true,
-    "forceWebGLPreserve": true
-  }
-}
-```
+### Animation too short
 
-### Timing different in headless vs non-headless
-
-Headless Chrome may run faster/slower:
-
-```javascript
-{
-  "capture": {
-    "headless": "new",  // Try new headless mode
-    "slowMo": 50  // Add slight slowdown if needed
-  }
-}
-```
-
----
-
-## Saving Verified Configuration
-
-```bash
-jq '.setupStatus.timingVerified = true' animations/electricity-portal/scenario.json > temp.json && mv temp.json animations/electricity-portal/scenario.json
-
-git add animations/electricity-portal/scenario.json
-git commit -m "chore: verify timing for electricity-portal capture"
-```
+Captured frames are trimmed to effectStartMs–effectEndMs. Widen the window if needed.
 
 ---
 

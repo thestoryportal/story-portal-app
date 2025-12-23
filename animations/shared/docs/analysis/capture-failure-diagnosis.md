@@ -12,11 +12,11 @@ When captures don't show the expected effect, work through this checklist:
 ### 1. Is the effect actually triggering?
 
 ```bash
-# Run non-headless and watch
-node animations/shared/capture/run.mjs \
+# Run video capture (non-headless by default) and watch
+node animations/shared/capture/video.mjs \
   --scenario electricity-portal \
-  --headless false \
-  --burstFrames 5
+  --label trigger-test \
+  --duration 3000
 ```
 
 **Observe:**
@@ -34,18 +34,18 @@ node animations/shared/capture/run.mjs \
 ### 2. Is the capture timed correctly?
 
 ```bash
-# Capture with zero delay
-node animations/shared/capture/run.mjs \
+# Capture with wider timing window
+node animations/shared/capture/video.mjs \
   --scenario electricity-portal \
-  --settleMs 0 \
-  --burstFrames 120 \
-  --burstIntervalMs 16
+  --effectStartMs 500 \
+  --effectEndMs 3000 \
+  --duration 4000
 ```
 
-**Check frames:**
+**Check `masked/` frames:**
 - Is effect visible in any frames?
-- If only in early frames: reduce settleMs
-- If only in late frames: increase settleMs
+- If only in early frames: increase effectStartMs
+- If only in late frames: decrease effectStartMs
 - If never: effect may not be triggering
 
 ---
@@ -74,11 +74,13 @@ cat animations/electricity-portal/scenario.json | jq '.capture.extractWebGL'
 ### 4. Is viewport/scaling correct?
 
 ```bash
-# Capture raw viewport
-node animations/shared/capture/run.mjs \
+# Capture and check frames/ folder for full viewport
+node animations/shared/capture/video.mjs \
   --scenario electricity-portal \
-  --no-crop
+  --label viewport-check
 ```
+
+Check `frames/` folder (raw captures before cropping) to verify full UI is visible.
 
 **Check captured image:**
 - Is entire UI visible?
@@ -100,11 +102,13 @@ node animations/shared/capture/run.mjs \
 ### 5. Is crop region correct?
 
 ```bash
-# Capture with crop overlay
-node animations/shared/capture/run.mjs \
+# Capture and check crops/ folder
+node animations/shared/capture/video.mjs \
   --scenario electricity-portal \
-  --overlay-crop
+  --label crop-check
 ```
+
+Check `crops/` folder — portal should be centered in each 465×465 frame.
 
 **Check overlay:**
 - Is crop box centered on portal?
@@ -116,16 +120,18 @@ node animations/shared/capture/run.mjs \
 ### 6. Are dimensions matching?
 
 ```bash
-# Check all image dimensions
+# Check all image dimensions (all should be 465×465)
 file animations/electricity-portal/output/screenshots/timeline/LATEST/crops/frame_000.png
-file animations/electricity-portal/references/465x465/with_effect.png
-file animations/electricity-portal/references/465x465/golden_mask.png
+file animations/electricity-portal/references/465x465/sora_reference_frame.png
+file animations/electricity-portal/references/465x465/golden_mask_overlay.png
+file animations/electricity-portal/references/465x465/golden_mask_capture.png
 ```
 
 **All analysis images must be comparable:**
-- Crop dimensions should be consistent
+- Crop dimensions should be consistent (465×465)
 - Reference and mask must match
-- Analysis tools may resize, but mismatch can cause issues
+- Use `golden_mask_overlay.png` for reference comparisons
+- Use `golden_mask_capture.png` for captured frame analysis
 
 ---
 
@@ -243,11 +249,11 @@ If after working through this checklist the issue persists:
    - Try with different Chrome version
 
 3. **Examine the capture code:**
-   - `animations/shared/capture/run.mjs`
+   - `animations/shared/capture/video.mjs`
    - Check for recent changes
    - Add console.log statements
 
-4. **Consider alternative capture methods:**
-   - Try playwright_interval_capture.mjs
-   - Try ffmpeg_capture.mjs
-   - Try manual screenshot + crop
+4. **Verify calibrated values:**
+   - Crop: (475, 36) @ 465×465
+   - Effect timing: 975ms–2138ms
+   - Viewport: 1440×768

@@ -12,12 +12,24 @@ export const DISABLE_PANEL_ANIMATION = true;
 export const ELECTRICITY_DEBUG = false;
 
 export const ELECTRICITY_CONFIG = {
+  // === EFFECT TIMING (source of truth for capture pipeline) ===
+  // These values are used by:
+  //   - useWheelSelection.ts (effect duration, topic swap delay)
+  //   - scenario.json (capture window timing)
+  //   - video.mjs (capture window defaults)
+  // If you change these, the capture pipeline will stay in sync.
+  effectDurationMs: 3000,         // Total effect duration after "New Topics" click
+  topicSwapDelayMs: 1000,         // When wheel topics actually swap
+  captureWindowStartMs: 975,      // Capture starts (late build phase, approaching peak)
+  captureWindowEndMs: 2138,       // Capture ends (into calm phase)
+  // Capture window rationale: 975-2138ms captures end of BUILD, full PEAK, start of CALM
+
   // Bolt structure - 12-20 arcs radiating from center
   numMainBolts: 18, // Dense radial bolt count
-  boltThicknessMin: 0.5, // Main bolt thickness range
-  boltThicknessMax: 0.9,
-  branchThicknessMin: 0.25, // Branch thickness (thinner)
-  branchThicknessMax: 0.45,
+  boltThicknessMin: 0.8, // THICKER main bolts for chunky look
+  boltThicknessMax: 1.4,
+  branchThicknessMin: 0.4, // THICKER branches
+  branchThicknessMax: 0.7,
   branchesPerBoltMin: 6, // Irregular branching
   branchesPerBoltMax: 12,
   subBranchChance: 0.65, // Sub-branch probability
@@ -50,20 +62,20 @@ export const ELECTRICITY_CONFIG = {
   centerPulseFrequency: 2.0, // Hz - pulses per second
   centerPulseAmount: 0.2, // Pulse intensity variation
 
-  // Plasma volumetric layer
-  plasmaDensity: 0.5, // Overall plasma opacity
+  // Plasma volumetric layer - INCREASED to fill portal like reference
+  plasmaDensity: 0.55, // More fill to cover portal
   plasmaSwirlSpeed: 0.15, // Noise animation speed
-  plasmaCenterBrightness: 0.8, // Extra glow at center
-  plasmaNoiseScale: 2.2, // Noise frequency
+  plasmaCenterBrightness: 1.0, // Good center glow
+  plasmaNoiseScale: 2.0, // Balanced frequency
 
-  // Multi-scale bloom with rim emphasis
-  bloomTightRadius: 2.5, // Sharp inner glow
-  bloomMedRadius: 6.0, // Medium spread
-  bloomWideRadius: 12.0, // Wide atmospheric halo
-  bloomTightWeight: 0.5,
-  bloomMedWeight: 0.32,
-  bloomWideWeight: 0.18,
-  rimBloomBoost: 1.4, // Extra bloom near ring edge
+  // Multi-scale bloom - INCREASED for warm fill
+  bloomTightRadius: 4.0, // Good tight glow
+  bloomMedRadius: 9.0, // More spread
+  bloomWideRadius: 15.0, // More wide
+  bloomTightWeight: 0.9, // Iteration 5: Reduced from 1.3 to reveal bolt structure
+  bloomMedWeight: 0.35, // Iteration 6: Reduced from 0.55 to sharpen bolts
+  bloomWideWeight: 0.35, // Good wide
+  rimBloomBoost: 1.4, // Good rim boost
 
   // Colors - Golden-amber (#ffb836 core → #ff9100 falloff)
   coreColor: [1.0, 0.72, 0.21] as [number, number, number], // #ffb836 golden core
@@ -77,11 +89,11 @@ export const ELECTRICITY_CONFIG = {
   glassReflectionStrength: 0.08, // Reflection highlight
   glassBlur: 0.5, // Slight blur for depth
 
-  // Compositing
-  globalIntensity: 1.0,
-  toneMapExposure: 1.5, // HDR exposure multiplier
-  portalRadius: 0.47, // Slightly tighter containment
-  centerGlowStrength: 0.35, // Warm center ambient
+  // Compositing - WARM FILL with orange color
+  globalIntensity: 1.4, // Iteration 1: Increased from 1.0 for brighter effect
+  toneMapExposure: 3.2, // Iteration 4: Increased from 2.4 for brighter HDR
+  portalRadius: 0.50, // Standard portal radius
+  centerGlowStrength: 0.55, // Iteration 3: Reduced from 0.95 - was washing out bolt structure
 } as const;
 
 export type ElectricityConfigType = typeof ELECTRICITY_CONFIG;

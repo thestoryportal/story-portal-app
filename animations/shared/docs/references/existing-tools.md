@@ -7,59 +7,53 @@
 
 ## Capture Tools
 
-### animations/shared/capture/run.mjs
+### animations/shared/capture/video.mjs (PRIMARY)
 
-**Primary capture tool.** Puppeteer-based with CDP screenshot API and WebGL extraction.
+**Primary capture tool.** Puppeteer CDP screencast for smooth animation capture.
+
+> **Why Puppeteer?** Puppeteer renders WebGL electricity effects correctly while Playwright does not.
+> **Why screencast?** CDP screencast captures at higher framerate than burst screenshots.
 
 ```bash
-node animations/shared/capture/run.mjs [options]
+node animations/shared/capture/video.mjs [options]
 ```
 
 **Options:**
 
 | Option | Description | Default |
 |--------|-------------|---------|
-| `--scenario` | Scenario name (loads from scenarios/) | Required |
-| `--mode` | Capture mode | `burst` |
-| `--headless` | Run headless | `true` |
-| `--viewport` | Viewport size | From scenario |
-| `--deviceScaleFactor` | DPI scale | From scenario |
-| `--burstFrames` | Number of frames | 60 |
-| `--burstIntervalMs` | Frame interval | 25 |
-| `--settleMs` | Delay after trigger | 0 |
-| `--no-crop` | Skip cropping | false |
-| `--overlay-crop` | Show crop region | false |
+| `--scenario` | Scenario name | `electricity-portal` |
+| `--label` | Output label | `video` |
+| `--mode` | Trigger mode | `newtopics` |
+| `--duration` | Recording duration (ms) | 4000 |
+| `--settleMs` | Wait before trigger | 500 |
+| `--fps` | Output framerate | 30 |
+| `--effectStartMs` | Effect start time | 975 |
+| `--effectEndMs` | Effect end time | 2138 |
+| `--no-mask` | Skip circular mask | false |
 
 **Outputs:**
 ```
-animations/electricity-portal/output/screenshots/timeline/YYYY-MM-DD/HHMMSS__scenario-name/
-├── crops/
-│   ├── frame_000.png
-│   ├── frame_001.png
-│   └── ...
-├── meta.json
-└── frame_timing.json
+animations/electricity-portal/output/screenshots/timeline/YYYY-MM-DD/HHMMSS__label/
+├── frames/           # Raw JPEG frames from screencast
+├── crops/            # Cropped PNG frames (465×465)
+├── masked/           # Trimmed + circular mask applied
+└── animation.apng    # Final animated PNG
 ```
+
+**Key Features:**
+- Uses sharp for cropping (preserves exact 465×465 dimensions)
+- Applies circular transparency mask
+- Trims to effect timing window (975ms–2138ms)
+- Generates APNG at actual capture framerate
 
 ---
 
-### animations/shared/capture/click_burst.mjs
+### animations/shared/capture/run.mjs (DEPRECATED)
 
-Click an element then capture burst of frames.
+> **⚠️ DEPRECATED:** Use `video.mjs` instead. Burst screenshots have been replaced by CDP screencast for smoother animation capture.
 
-```bash
-node animations/shared/capture/click_burst.mjs --selector "[data-testid='btn']" --frames 60
-```
-
----
-
-### animations/shared/capture/sequence_burst.mjs
-
-Multi-step sequence with bursts at each step.
-
-```bash
-node animations/shared/capture/sequence_burst.mjs --config sequence.json
-```
+Legacy burst screenshot tool. Kept for reference only.
 
 ---
 
@@ -79,6 +73,10 @@ node animations/shared/capture/pick_artifact.mjs
 
 **Main iteration orchestrator.** Runs capture → analyze → evaluate → feedback loop.
 
+Supports the **two-phase iteration approach**:
+- **Phase 1:** Peak-only capture for visual quality matching
+- **Phase 2:** Full envelope capture for temporal implementation
+
 ```bash
 node animations/shared/diff/pipeline.mjs [options]
 ```
@@ -88,15 +86,23 @@ node animations/shared/diff/pipeline.mjs [options]
 | Option | Description | Default |
 |--------|-------------|---------|
 | `--scenario` | Scenario name | Required |
+| `--phase` | Iteration phase (1 or 2) | 1 |
 | `--iteration` | Iteration number | Auto-increment |
 | `--frames` | Use existing frames dir | Capture new |
 | `--skip-capture` | Skip capture step | false |
 
+**Phase-Specific Behavior:**
+
+| Phase | settleMs | duration | Purpose |
+|-------|----------|----------|---------|
+| 1 | 1000 | 1500 | Skip build phase, capture peak only |
+| 2 | 0 | 3500 | Capture full envelope (build→peak→decay) |
+
 **Outputs:**
 ```
-animations/electricity-portal/output/iterations/scenario-name/iter_NNN_YYYYMMDD_HHMMSS/
+animations/electricity-portal/output/iterations/phase1/iter_NNN_YYYYMMDD_HHMMSS/
 ├── frames/
-├── animation.gif
+├── animation.apng
 ├── meta.json
 ├── analysis/
 │   ├── best_frame.png
@@ -156,7 +162,7 @@ node animations/shared/diff/crop.mjs [options]
 
 ### animations/shared/diff/extract-baseline.mjs
 
-Extract baseline metrics from reference image.
+Extract baseline metrics from static reference image.
 
 ```bash
 node animations/shared/diff/extract-baseline.mjs [options]
@@ -166,16 +172,39 @@ node animations/shared/diff/extract-baseline.mjs [options]
 
 | Option | Description | Default |
 |--------|-------------|---------|
-| `--reference` | Reference image path | Required |
-| `--output` | Output directory | Same as reference |
-| `--generate-mask` | Generate golden mask | false |
-| `--threshold` | Mask threshold | 0.1 |
+| `--with` | Reference image WITH effect | Required |
+| `--without` | Reference image WITHOUT effect | Optional |
+| `--output` | Output directory | Required |
+| `--name` | Effect name | "effect" |
 
 **Outputs:**
 - `baseline_metrics.json` — Color, intensity measurements
 - `baseline_report.md` — Human-readable summary
 - `quality_spec.json` — Derived quality thresholds
-- `golden_mask.png` — Binary scoring mask (if --generate-mask)
+- `golden_mask.png` — Binary scoring mask
+
+---
+
+### animations/shared/diff/extract-baseline-video.mjs
+
+Extract baseline metrics from animated reference (APNG).
+
+```bash
+node animations/shared/diff/extract-baseline-video.mjs [options]
+```
+
+**Options:**
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--animation` | Animated reference (APNG) | Required |
+| `--output` | Output directory | Required |
+| `--name` | Effect name | "effect" |
+
+**Outputs:**
+- `baseline_animation_metrics.json` — Temporal and per-frame metrics
+- `baseline_animation_report.md` — Human-readable summary
+- `brightness_curve.csv` — Frame-by-frame brightness data
 
 ---
 
@@ -220,35 +249,41 @@ node animations/shared/diff/pipeline.mjs --scenario electricity-portal
 ```json
 {
   "name": "electricity-portal",
-  "description": "Portal electricity effect iteration",
-  
+  "description": "Electricity arc effect inside the portal ring",
+
   "capture": {
-    "viewport": { "width": 1920, "height": 1080 },
+    "viewport": { "width": 1440, "height": 768 },
     "deviceScaleFactor": 1,
-    "burstFrames": 60,
-    "burstIntervalMs": 25,
-    "settleMs": 0
+    "duration": 3500,
+    "fps": 30,
+    "captureMode": "video",
+    "settleMs": 500,
+    "headless": false,
+    "mode": "newtopics",
+    "crop": {
+      "x": 475,
+      "y": 36,
+      "width": 465,
+      "height": 465,
+      "circularMask": true,
+      "_note": "Centered on portal for 1440x768 viewport, calibrated 2025-12-22"
+    },
+    "effectTiming": {
+      "startMs": 975,
+      "endMs": 2138,
+      "_note": "Time-based effect window (~1.16s duration)"
+    }
   },
-  
-  "crop": {
-    "x": 685,
-    "y": 265,
-    "width": 550,
-    "height": 550,
-    "circularMask": true
-  },
-  
-  "trigger": {
-    "type": "click",
-    "selector": "[data-testid='btn-new-topics']"
-  },
-  
-  "references": {
-    "withEffect": "animations/electricity-portal/references/465x465/with_effect.png",
+
+  "reference": {
+    "withEffect": "animations/electricity-portal/references/465x465/sora_reference_frame.png",
     "withoutEffect": "animations/electricity-portal/references/465x465/without_effect.png",
-    "mask": "animations/electricity-portal/references/465x465/golden_mask.png"
+    "animation": "animations/electricity-portal/references/465x465/sora_reference_1.5x.apng",
+    "mask": "animations/electricity-portal/references/465x465/golden_mask_overlay.png",
+    "maskCapture": "animations/electricity-portal/references/465x465/golden_mask_capture.png",
+    "_maskNote": "Dual mask: reference (235,232) r(164,159) vs capture (238.5,235) r(161.5,160)"
   },
-  
+
   "thresholds": {
     "ssim": {
       "fail": 0.70,
@@ -257,28 +292,39 @@ node animations/shared/diff/pipeline.mjs --scenario electricity-portal
       "excellent": 0.95
     }
   },
-  
+
   "convergence": {
     "targetSsim": 0.90,
-    "maxIterations": 20,
     "plateauIterations": 3,
     "minImprovement": 0.01
   },
-  
-  "codeTargets": [
-    "src/legacy/effects/shaders.ts",
-    "src/legacy/effects/boltGenerator.ts",
-    "src/legacy/effects/useElectricityEffect.ts"
-  ],
-  
+
   "setupStatus": {
-    "viewportVerified": false,
-    "cropCalibrated": false,
-    "maskVerified": false,
-    "timingVerified": false
+    "viewportVerified": true,
+    "cropCalibrated": true,
+    "maskVerified": true,
+    "dualMaskCalibrated": true,
+    "timingVerified": true,
+    "verifiedDate": "2025-12-22",
+    "croppingMethod": "sharp-extract",
+    "effectTimingMs": "975-2138",
+    "cropCoordinates": "475,36 @ 465x465"
   }
 }
 ```
+
+> **Note:** Full scenario.json includes additional fields for two-phase iteration, parameter categories, and current phase tracking. See `animations/electricity-portal/scenario.json` for complete configuration.
+
+### Two-Phase Configuration Fields
+
+| Field | Description |
+|-------|-------------|
+| `twoPhaseApproach.phase1` | Peak-only capture settings (settleMs=1000, duration=1500) |
+| `twoPhaseApproach.phase2` | Full envelope capture settings (settleMs=0, duration=3500) |
+| `parameterCategories.phase1Locked` | Parameters locked after Phase 1 completion |
+| `parameterCategories.phase2Tunable` | Parameters allowed to modify in Phase 2 |
+| `currentPhase.phase` | Current phase (1 or 2) |
+| `currentPhase.status` | Phase status: not_started, in_progress, complete |
 
 ---
 
@@ -289,13 +335,58 @@ node animations/shared/diff/pipeline.mjs --scenario electricity-portal
 ```
 electricity-portal/
 ├── 465x465/
-│   ├── with_effect.png      # Target reference (effect at peak)
-│   ├── without_effect.png   # Baseline (no effect)
-│   └── golden_mask.png      # Scoring mask
-├── baseline_metrics.json    # Extracted metrics
-├── baseline_report.md       # Human-readable
-└── quality_spec.json        # Thresholds
+│   ├── sora_reference_frame.png        # Primary static reference (AI-generated)
+│   ├── sora_reference_1.5x.apng        # Primary animation reference (1.5x speed)
+│   ├── with_effect.png                 # Legacy static reference
+│   ├── without_effect.png              # Baseline (no effect)
+│   ├── golden_mask_overlay.png         # Reference mask: center (235,232), radii (164,159)
+│   ├── golden_mask_capture.png         # Capture mask: center (238.5,235), radii (161.5,160)
+│   ├── baseline_metrics.json           # Static baseline (colors, brightness)
+│   ├── baseline_animation_metrics.json # Animation baseline (flicker, motion)
+│   ├── baseline_report.md              # Static baseline report
+│   ├── baseline_animation_report.md    # Animation baseline report
+│   ├── brightness_curve.csv            # Frame-by-frame brightness data
+│   └── quality_spec.json               # Quality thresholds
+└── focus/
+    └── electricity-effect-animated reference-video.mp4  # Original Sora source
 ```
+
+**Dual Mask System (calibrated 2025-12-22):**
+- **Reference mask** (`golden_mask_overlay.png`): For Sora reference images — center (235, 232), radii (164, 159)
+- **Capture mask** (`golden_mask_capture.png`): For captured frames — center (238.5, 235), radii (161.5, 160)
+- **Why two masks?** Portal renders at slightly different position in live app vs reference image (~3.5px offset)
+
+**Note:** Primary references are AI-generated from Sora/Luma (2025-12-22). Legacy references preserved for comparison.
+
+### Baseline Extraction Workflow
+
+Run these **once** before starting iterations:
+
+```bash
+# 1. Extract STATIC baseline
+node animations/shared/diff/extract-baseline.mjs \
+  --with animations/electricity-portal/references/465x465/sora_reference_frame.png \
+  --without animations/electricity-portal/references/465x465/without_effect.png \
+  --output animations/electricity-portal/references/465x465/ \
+  --name electricity
+
+# 2. Extract ANIMATION baseline
+node animations/shared/diff/extract-baseline-video.mjs \
+  --animation animations/electricity-portal/references/465x465/sora_reference_1.5x.apng \
+  --output animations/electricity-portal/references/465x465/ \
+  --name electricity
+```
+
+**Static Baseline Outputs:**
+- `baseline_metrics.json` — Color, intensity, structure metrics
+- `baseline_report.md` — Human-readable summary
+- `quality_spec.json` — Quality thresholds
+- `golden_mask.png` — Binary scoring mask
+
+**Animation Baseline Outputs:**
+- `baseline_animation_metrics.json` — Temporal and per-frame metrics
+- `baseline_animation_report.md` — Human-readable summary
+- `brightness_curve.csv` — Frame-by-frame brightness data
 
 ---
 
@@ -318,17 +409,24 @@ timeline/
 
 ### animations/electricity-portal/output/iterations/
 
-Iteration outputs per scenario:
+Iteration outputs organized by phase:
 
 ```
 iterations/
-├── electricity-portal/
+├── phase1/                             # Peak Visual Quality
 │   ├── iter_001_20251222_143052/
 │   ├── iter_002_20251222_145230/
 │   └── LATEST.txt
-└── hamburger/
-    └── ...
+├── phase2/                             # Envelope Implementation
+│   ├── iter_001_20251222_160000/
+│   └── LATEST.txt
+└── PHASE_STATUS.json                   # Current phase and locked params
 ```
+
+**PHASE_STATUS.json** tracks:
+- Current phase (1 or 2)
+- Phase 1 completion status and final SSIM
+- Locked parameters (after Phase 1 completes)
 
 ### animations/electricity-portal/output/calibration/
 

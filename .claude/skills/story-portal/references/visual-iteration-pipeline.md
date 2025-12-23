@@ -102,6 +102,50 @@ Reference and captured frames use different masks due to slight positioning diff
 
 ---
 
+## Configuration Architecture
+
+All capture calibration values follow a centralized architecture to prevent drift:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        SOURCE OF TRUTH                          │
+├─────────────────────────────────────────────────────────────────┤
+│  scenario.json                 config.ts                        │
+│  ├─ capture.viewport           ├─ ELECTRICITY_CONFIG            │
+│  ├─ capture.crop                   ├─ effectDurationMs          │
+│  ├─ capture.effectTiming           ├─ captureWindowStartMs      │
+│  └─ capture.settleMs               └─ captureWindowEndMs        │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓ reads
+┌─────────────────────────────────────────────────────────────────┐
+│                        CAPTURE TOOLS                            │
+├─────────────────────────────────────────────────────────────────┤
+│  video.mjs          → loads scenario.json, CLI overrides        │
+│  pipeline.mjs       → loads scenario.json, passes to tools      │
+│  benchmark-formats.mjs → loads scenario.json                    │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Value Inheritance Chain
+
+1. **scenario.json** — Primary source for viewport, crop, timing window
+2. **config.ts** — Authoritative source for effect timing (used by app code)
+3. **Tools** — Load from scenario.json, fallback to hardcoded defaults
+4. **CLI args** — Override any value for ad-hoc testing
+
+### Changing Calibration Values
+
+| To Change | Edit | Notes |
+|-----------|------|-------|
+| Viewport size | `scenario.json → capture.viewport` | Tools read automatically |
+| Crop region | `scenario.json → capture.crop` | x, y, width, height |
+| Effect timing | `config.ts → ELECTRICITY_CONFIG` | Update scenario.json to match |
+| Capture duration | `scenario.json → capture.duration` | |
+
+**Important:** Effect timing is defined in `config.ts` because the React app uses it. The `scenario.json` mirrors these values for capture tools. Keep them in sync.
+
+---
+
 ## 5 Setup Phases (Human Verified)
 
 Before running the iteration loop, complete these setup phases:

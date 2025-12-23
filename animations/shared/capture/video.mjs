@@ -50,44 +50,89 @@ async function applyCircularMask(inputPath, outputPath) {
     .toFile(outputPath);
 }
 
+// Load scenario.json configuration
+// SOURCE OF TRUTH: animations/{scenario}/scenario.json
+// CLI args override scenario values
+function loadScenarioConfig(scenarioName) {
+  const scenarioPath = path.join(process.cwd(), 'animations', scenarioName, 'scenario.json');
+  if (!fs.existsSync(scenarioPath)) {
+    console.warn(`Warning: scenario.json not found at ${scenarioPath}, using fallback defaults`);
+    return null;
+  }
+  try {
+    return JSON.parse(fs.readFileSync(scenarioPath, 'utf-8'));
+  } catch (e) {
+    console.warn(`Warning: Failed to parse scenario.json: ${e.message}`);
+    return null;
+  }
+}
+
 // CLI args
 function parseArgs() {
   const args = process.argv.slice(2);
+
+  // First pass: get scenario name
+  let scenarioName = "electricity-portal";
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === "--scenario" && args[i+1]) {
+      scenarioName = args[i+1];
+      break;
+    }
+  }
+
+  // Load scenario.json as source of truth
+  const scenario = loadScenarioConfig(scenarioName);
+  const cap = scenario?.capture || {};
+
+  // Build options: scenario.json values → fallback defaults → CLI overrides
   const opts = {
-    scenario: "electricity-portal",
+    scenario: scenarioName,
     label: "video",
-    mode: "newtopics",
-    duration: 4000,      // Recording duration in ms
-    settleMs: 500,       // Wait before trigger
-    viewportWidth: 1440,
-    viewportHeight: 768,
-    fps: 30,             // Output framerate for extracted frames
-    cropX: 475,
-    cropY: 36,
-    cropWidth: 465,
-    cropHeight: 465,
-    // Effect timing - SOURCE OF TRUTH: src/legacy/constants/config.ts → ELECTRICITY_CONFIG
-    // Keep these in sync with captureWindowStartMs/captureWindowEndMs in config.ts
-    effectStartMs: 975,     // ELECTRICITY_CONFIG.captureWindowStartMs
-    effectEndMs: 2138,      // ELECTRICITY_CONFIG.captureWindowEndMs
-    applyCircularMask: true, // Apply transparent circular mask
+    mode: cap.mode || "newtopics",
+    duration: cap.duration || 4000,
+    settleMs: cap.settleMs || 500,
+    viewportWidth: cap.viewport?.width || 1440,
+    viewportHeight: cap.viewport?.height || 768,
+    fps: cap.videoFps || cap.fps || 30,
+    cropX: cap.crop?.x || 475,
+    cropY: cap.crop?.y || 36,
+    cropWidth: cap.crop?.width || 465,
+    cropHeight: cap.crop?.height || 465,
+    // Effect timing from scenario.json → config.ts is the ultimate source
+    // scenario.json.effectTiming mirrors config.ts values
+    effectStartMs: cap.effectTiming?.startMs || 975,
+    effectEndMs: cap.effectTiming?.endMs || 2138,
+    applyCircularMask: cap.crop?.circularMask !== false,
   };
 
+  // Second pass: apply CLI overrides
   for (let i = 0; i < args.length; i++) {
     const a = args[i];
     const n = args[i+1];
     switch (a) {
-      case "--scenario": opts.scenario = n; i++; break;
+      case "--scenario": i++; break; // Already processed
       case "--label": opts.label = n; i++; break;
       case "--mode": opts.mode = n; i++; break;
       case "--duration": opts.duration = parseInt(n, 10); i++; break;
       case "--settleMs": opts.settleMs = parseInt(n, 10); i++; break;
       case "--fps": opts.fps = parseInt(n, 10); i++; break;
+      case "--viewportWidth": opts.viewportWidth = parseInt(n, 10); i++; break;
+      case "--viewportHeight": opts.viewportHeight = parseInt(n, 10); i++; break;
+      case "--cropX": opts.cropX = parseInt(n, 10); i++; break;
+      case "--cropY": opts.cropY = parseInt(n, 10); i++; break;
+      case "--cropWidth": opts.cropWidth = parseInt(n, 10); i++; break;
+      case "--cropHeight": opts.cropHeight = parseInt(n, 10); i++; break;
       case "--effectStartMs": opts.effectStartMs = parseInt(n, 10); i++; break;
       case "--effectEndMs": opts.effectEndMs = parseInt(n, 10); i++; break;
       case "--no-mask": opts.applyCircularMask = false; break;
     }
   }
+
+  // Log config source for transparency
+  if (scenario) {
+    console.log(`Config loaded from: animations/${scenarioName}/scenario.json`);
+  }
+
   return opts;
 }
 

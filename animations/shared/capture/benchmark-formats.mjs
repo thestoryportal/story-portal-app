@@ -24,6 +24,20 @@ function nowStamp() {
   return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
 }
 
+// Load scenario.json configuration
+// SOURCE OF TRUTH: animations/{scenario}/scenario.json
+function loadScenarioConfig(scenarioName) {
+  const scenarioPath = path.join(process.cwd(), 'animations', scenarioName, 'scenario.json');
+  if (!fs.existsSync(scenarioPath)) {
+    return null;
+  }
+  try {
+    return JSON.parse(fs.readFileSync(scenarioPath, 'utf-8'));
+  } catch {
+    return null;
+  }
+}
+
 async function detectViteBaseUrl() {
   for (let port = 5173; port <= 5185; port++) {
     const url = `http://localhost:${port}`;
@@ -40,19 +54,32 @@ async function detectViteBaseUrl() {
   throw new Error("No Vite dev server detected. Start with: pnpm dev");
 }
 
-// Test configuration
+// Load config from scenario.json (source of truth)
+// Falls back to defaults if scenario.json not found
+const scenarioName = process.argv.includes('--scenario')
+  ? process.argv[process.argv.indexOf('--scenario') + 1]
+  : 'electricity-portal';
+
+const scenario = loadScenarioConfig(scenarioName);
+const cap = scenario?.capture || {};
+
+// Test configuration - scenario values with fallback defaults
 const CONFIG = {
-  duration: 4000,
-  settleMs: 500,
-  viewportWidth: 1440,
-  viewportHeight: 768,
-  triggerSelector: '.new-topics-btn',
+  duration: cap.duration || 4000,
+  settleMs: cap.settleMs || 500,
+  viewportWidth: cap.viewport?.width || 1440,
+  viewportHeight: cap.viewport?.height || 768,
+  triggerSelector: '[data-testid="btn-new-topics"], .new-topics-btn',
   variants: [
     { format: 'jpeg', quality: 90,  label: 'jpeg-q90' },
     { format: 'jpeg', quality: 100, label: 'jpeg-q100' },
     { format: 'png',  quality: 100, label: 'png' },
   ]
 };
+
+if (scenario) {
+  console.log(`Config loaded from: animations/${scenarioName}/scenario.json`);
+}
 
 async function runCapture(baseUrl, variant, outputDir) {
   const variantDir = path.join(outputDir, variant.label);

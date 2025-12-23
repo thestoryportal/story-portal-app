@@ -1,6 +1,6 @@
-# Baseline Analysis Report: effect
+# Baseline Analysis Report: electricity
 
-**Generated:** 2025-12-22T18:03:05.605Z
+**Generated:** 2025-12-22T23:47:03.566Z
 
 ---
 
@@ -13,21 +13,21 @@
 ## Color Profile
 
 ### Brightest Point
-- **Hex:** #FEFFEE
-- **RGB:** (254, 255, 238)
+- **Hex:** #FFFFFF
+- **RGB:** (255, 255, 255)
 
 ### Average Color
-- **Hex:** #68481C
+- **Hex:** #533A17
 
 ### Dominant Colors (Target Palette)
 | Rank | Hex | RGB | Coverage |
 |------|-----|-----|----------|
-| 1 | #382008 | (56, 32, 8) | 2.33% |
-| 2 | #302008 | (48, 32, 8) | 2.15% |
-| 3 | #402808 | (64, 40, 8) | 1.81% |
-| 4 | #201000 | (32, 16, 0) | 1.49% |
-| 5 | #482808 | (72, 40, 8) | 1.43% |
-| 6 | #483010 | (72, 48, 16) | 1.43% |
+| 1 | #000000 | (0, 0, 0) | 20.08% |
+| 2 | #382008 | (56, 32, 8) | 1.61% |
+| 3 | #302008 | (48, 32, 8) | 1.53% |
+| 4 | #302810 | (48, 40, 16) | 1.28% |
+| 5 | #483010 | (72, 48, 16) | 1.10% |
+| 6 | #281808 | (40, 24, 8) | 0.95% |
 
 ---
 
@@ -35,26 +35,26 @@
 
 
 
-- **Effect Pixels:** 79,615
-- **Coverage:** 36.8% of frame
+- **Effect Pixels:** 78,862
+- **Coverage:** 36.5% of frame
 
 ### Bounding Box
 - **Position:** (0, 0)
-- **Size:** 464 x 464
+- **Size:** 464 x 460
 
 ### Center of Mass
-- **Position:** (230, 228)
+- **Position:** (234, 227)
 
 ### Brightness
-- **Average in effect region:** 97.0
-- **Bright pixel count (>200):** 2,899
+- **Average in effect region:** 99.3
+- **Bright pixel count (>200):** 3,385
 
 ---
 
 ## Structural Analysis
 
-- **Edge pixel count:** 1,536
-- **Edge density:** 0.710%
+- **Edge pixel count:** 0
+- **Edge density:** 0.000%
 - **Note:** Higher edge density indicates more branching/detail in the effect
 
 ---
@@ -63,8 +63,8 @@
 
 | Zone | Avg Brightness | Pixels |
 |------|----------------|--------|
-| core | 168 | 6,772 |
-| inner | 108 | 35,684 |
+| core | 170 | 6,772 |
+| inner | 106 | 35,684 |
 | outer | 59 | 66,264 |
 | edge | 44 | 61,048 |
 
@@ -90,8 +90,8 @@
 ```
 SSIM target: ≥0.85 (within masked region)
 Color delta: Dominant colors within 15% of baseline
-Brightness: Core (168) > Inner > Outer > Edge
-Edge density: Within ±25% of 0.710%
+Brightness: Core (170) > Inner > Outer > Edge
+Edge density: Within ±25% of 0.000%
 ```
 
 ### Iteration Checklist

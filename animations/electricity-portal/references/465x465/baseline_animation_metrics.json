@@ -1,0 +1,924 @@
+{
+  "timestamp": "2025-12-22T23:50:40.245Z",
+  "effectName": "electricity",
+  "source": "/Users/robertrhu/Projects/story-portal/animations/electricity-portal/references/465x465/sora_reference_1.5x.apng",
+  "metrics": {
+    "animation": {
+      "frameCount": 87,
+      "width": 465,
+      "height": 465,
+      "duration": null,
+      "fps": 23.99808015358771,
+      "codec": "apng"
+    },
+    "frames": [
+      {
+        "frame": 0,
+        "brightness": 55.80462172891039,
+        "intensity": 4.633269693126029,
+        "dominantColor": {
+          "r": 85,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 1,
+        "brightness": 55.70790457470971,
+        "intensity": 4.619184904127662,
+        "dominantColor": {
+          "r": 85,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 2,
+        "brightness": 55.4077604347331,
+        "intensity": 4.600486341383763,
+        "dominantColor": {
+          "r": 84,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 3,
+        "brightness": 55.60243265117378,
+        "intensity": 4.614019134796833,
+        "dominantColor": {
+          "r": 85,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 4,
+        "brightness": 55.374162716307325,
+        "intensity": 4.594721690273268,
+        "dominantColor": {
+          "r": 84,
+          "g": 57,
+          "b": 24
+        }
+      },
+      {
+        "frame": 5,
+        "brightness": 55.48298454541958,
+        "intensity": 4.613009433583564,
+        "dominantColor": {
+          "r": 85,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 6,
+        "brightness": 55.231026322890344,
+        "intensity": 4.601923508945792,
+        "dominantColor": {
+          "r": 84,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 7,
+        "brightness": 54.9459467375813,
+        "intensity": 4.579691702573966,
+        "dominantColor": {
+          "r": 84,
+          "g": 57,
+          "b": 24
+        }
+      },
+      {
+        "frame": 8,
+        "brightness": 55.18296527536936,
+        "intensity": 4.591681003136964,
+        "dominantColor": {
+          "r": 84,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 9,
+        "brightness": 54.76720083246631,
+        "intensity": 4.557630974281706,
+        "dominantColor": {
+          "r": 83,
+          "g": 57,
+          "b": 24
+        }
+      },
+      {
+        "frame": 10,
+        "brightness": 54.60469572590466,
+        "intensity": 4.552505972808212,
+        "dominantColor": {
+          "r": 83,
+          "g": 57,
+          "b": 24
+        }
+      },
+      {
+        "frame": 11,
+        "brightness": 55.06022584499316,
+        "intensity": 4.579564807926434,
+        "dominantColor": {
+          "r": 84,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 12,
+        "brightness": 55.10236404979527,
+        "intensity": 4.575230783962888,
+        "dominantColor": {
+          "r": 84,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 13,
+        "brightness": 55.06118163949551,
+        "intensity": 4.563353462585313,
+        "dominantColor": {
+          "r": 84,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 14,
+        "brightness": 54.84631595174889,
+        "intensity": 4.54501218492916,
+        "dominantColor": {
+          "r": 83,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 15,
+        "brightness": 55.07475237985106,
+        "intensity": 4.567835330829815,
+        "dominantColor": {
+          "r": 84,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 16,
+        "brightness": 54.86262766408533,
+        "intensity": 4.560695496969106,
+        "dominantColor": {
+          "r": 84,
+          "g": 58,
+          "b": 23
+        }
+      },
+      {
+        "frame": 17,
+        "brightness": 54.31657918063818,
+        "intensity": 4.513208473700415,
+        "dominantColor": {
+          "r": 83,
+          "g": 57,
+          "b": 23
+        }
+      },
+      {
+        "frame": 18,
+        "brightness": 53.969921763594776,
+        "intensity": 4.492082355833255,
+        "dominantColor": {
+          "r": 82,
+          "g": 57,
+          "b": 23
+        }
+      },
+      {
+        "frame": 19,
+        "brightness": 55.35410953096781,
+        "intensity": 4.600899505692931,
+        "dominantColor": {
+          "r": 84,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 20,
+        "brightness": 55.51283308282405,
+        "intensity": 4.592985587762535,
+        "dominantColor": {
+          "r": 84,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 21,
+        "brightness": 55.428223686746676,
+        "intensity": 4.6049329171145335,
+        "dominantColor": {
+          "r": 85,
+          "g": 59,
+          "b": 23
+        }
+      },
+      {
+        "frame": 22,
+        "brightness": 54.704787451343975,
+        "intensity": 4.555344571429539,
+        "dominantColor": {
+          "r": 83,
+          "g": 58,
+          "b": 23
+        }
+      },
+      {
+        "frame": 23,
+        "brightness": 54.7679007207016,
+        "intensity": 4.559746708534866,
+        "dominantColor": {
+          "r": 83,
+          "g": 58,
+          "b": 23
+        }
+      },
+      {
+        "frame": 24,
+        "brightness": 55.169957220489394,
+        "intensity": 4.578984497919458,
+        "dominantColor": {
+          "r": 84,
+          "g": 58,
+          "b": 23
+        }
+      },
+      {
+        "frame": 25,
+        "brightness": 55.551926619647936,
+        "intensity": 4.600524653634523,
+        "dominantColor": {
+          "r": 84,
+          "g": 59,
+          "b": 24
+        }
+      },
+      {
+        "frame": 26,
+        "brightness": 55.45902493544575,
+        "intensity": 4.592454865830739,
+        "dominantColor": {
+          "r": 84,
+          "g": 59,
+          "b": 23
+        }
+      },
+      {
+        "frame": 27,
+        "brightness": 55.18664045939932,
+        "intensity": 4.596501417693188,
+        "dominantColor": {
+          "r": 84,
+          "g": 58,
+          "b": 23
+        }
+      },
+      {
+        "frame": 28,
+        "brightness": 54.77586310556211,
+        "intensity": 4.548590522316463,
+        "dominantColor": {
+          "r": 84,
+          "g": 58,
+          "b": 23
+        }
+      },
+      {
+        "frame": 29,
+        "brightness": 55.120292904768576,
+        "intensity": 4.569987888635107,
+        "dominantColor": {
+          "r": 84,
+          "g": 58,
+          "b": 23
+        }
+      },
+      {
+        "frame": 30,
+        "brightness": 54.92848190542348,
+        "intensity": 4.562611608055546,
+        "dominantColor": {
+          "r": 84,
+          "g": 58,
+          "b": 23
+        }
+      },
+      {
+        "frame": 31,
+        "brightness": 54.734888811809675,
+        "intensity": 4.534430571466857,
+        "dominantColor": {
+          "r": 83,
+          "g": 57,
+          "b": 23
+        }
+      },
+      {
+        "frame": 32,
+        "brightness": 54.48202566770882,
+        "intensity": 4.532792970245706,
+        "dominantColor": {
+          "r": 83,
+          "g": 57,
+          "b": 23
+        }
+      },
+      {
+        "frame": 33,
+        "brightness": 54.206818514665976,
+        "intensity": 4.515782033840381,
+        "dominantColor": {
+          "r": 82,
+          "g": 57,
+          "b": 23
+        }
+      },
+      {
+        "frame": 34,
+        "brightness": 54.03586695957197,
+        "intensity": 4.51153720468333,
+        "dominantColor": {
+          "r": 82,
+          "g": 57,
+          "b": 23
+        }
+      },
+      {
+        "frame": 35,
+        "brightness": 55.44277026245847,
+        "intensity": 4.624001739356531,
+        "dominantColor": {
+          "r": 84,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 36,
+        "brightness": 55.309153273982275,
+        "intensity": 4.600512064410727,
+        "dominantColor": {
+          "r": 84,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 37,
+        "brightness": 55.04225536670876,
+        "intensity": 4.5942832512966705,
+        "dominantColor": {
+          "r": 84,
+          "g": 58,
+          "b": 23
+        }
+      },
+      {
+        "frame": 38,
+        "brightness": 54.58108760164937,
+        "intensity": 4.559348819757853,
+        "dominantColor": {
+          "r": 83,
+          "g": 57,
+          "b": 23
+        }
+      },
+      {
+        "frame": 39,
+        "brightness": 55.01205534358601,
+        "intensity": 4.600881283333527,
+        "dominantColor": {
+          "r": 84,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 40,
+        "brightness": 55.320419316298064,
+        "intensity": 4.608763003468427,
+        "dominantColor": {
+          "r": 84,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 41,
+        "brightness": 55.6806027671799,
+        "intensity": 4.635013218289427,
+        "dominantColor": {
+          "r": 84,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 42,
+        "brightness": 55.76382163641287,
+        "intensity": 4.645221603418232,
+        "dominantColor": {
+          "r": 85,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 43,
+        "brightness": 54.9887755809929,
+        "intensity": 4.6053586168840495,
+        "dominantColor": {
+          "r": 84,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 44,
+        "brightness": 55.21658149304435,
+        "intensity": 4.625985537528202,
+        "dominantColor": {
+          "r": 84,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 45,
+        "brightness": 55.67526419239178,
+        "intensity": 4.646338338432999,
+        "dominantColor": {
+          "r": 85,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 46,
+        "brightness": 55.811620611245296,
+        "intensity": 4.661457195786307,
+        "dominantColor": {
+          "r": 85,
+          "g": 59,
+          "b": 24
+        }
+      },
+      {
+        "frame": 47,
+        "brightness": 55.26640459398041,
+        "intensity": 4.618004272459387,
+        "dominantColor": {
+          "r": 84,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 48,
+        "brightness": 55.09348749373802,
+        "intensity": 4.622185938143729,
+        "dominantColor": {
+          "r": 84,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 49,
+        "brightness": 54.90903302886642,
+        "intensity": 4.596640388096407,
+        "dominantColor": {
+          "r": 84,
+          "g": 57,
+          "b": 23
+        }
+      },
+      {
+        "frame": 50,
+        "brightness": 55.49057077889568,
+        "intensity": 4.659744604328198,
+        "dominantColor": {
+          "r": 85,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 51,
+        "brightness": 55.712080780053185,
+        "intensity": 4.666078331887587,
+        "dominantColor": {
+          "r": 85,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 52,
+        "brightness": 55.69808455698297,
+        "intensity": 4.6427877767923516,
+        "dominantColor": {
+          "r": 85,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 53,
+        "brightness": 55.49742783366138,
+        "intensity": 4.647221464729971,
+        "dominantColor": {
+          "r": 85,
+          "g": 58,
+          "b": 23
+        }
+      },
+      {
+        "frame": 54,
+        "brightness": 54.89873048907407,
+        "intensity": 4.599689174919077,
+        "dominantColor": {
+          "r": 84,
+          "g": 57,
+          "b": 23
+        }
+      },
+      {
+        "frame": 55,
+        "brightness": 54.77512005241488,
+        "intensity": 4.585752247690079,
+        "dominantColor": {
+          "r": 84,
+          "g": 57,
+          "b": 23
+        }
+      },
+      {
+        "frame": 56,
+        "brightness": 55.42095964851462,
+        "intensity": 4.625302841836916,
+        "dominantColor": {
+          "r": 84,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 57,
+        "brightness": 55.6668007862185,
+        "intensity": 4.636772188939383,
+        "dominantColor": {
+          "r": 85,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 58,
+        "brightness": 55.62825914363904,
+        "intensity": 4.634222206950453,
+        "dominantColor": {
+          "r": 84,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 59,
+        "brightness": 54.93465448799432,
+        "intensity": 4.599301393108915,
+        "dominantColor": {
+          "r": 84,
+          "g": 58,
+          "b": 23
+        }
+      },
+      {
+        "frame": 60,
+        "brightness": 54.67198674220624,
+        "intensity": 4.57752327947716,
+        "dominantColor": {
+          "r": 83,
+          "g": 57,
+          "b": 23
+        }
+      },
+      {
+        "frame": 61,
+        "brightness": 55.32138898524,
+        "intensity": 4.619027542007124,
+        "dominantColor": {
+          "r": 84,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 62,
+        "brightness": 55.305738621036184,
+        "intensity": 4.611945715781558,
+        "dominantColor": {
+          "r": 84,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 63,
+        "brightness": 55.07030485219992,
+        "intensity": 4.589857061697738,
+        "dominantColor": {
+          "r": 84,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 64,
+        "brightness": 54.81425675415282,
+        "intensity": 4.588854876917442,
+        "dominantColor": {
+          "r": 84,
+          "g": 57,
+          "b": 23
+        }
+      },
+      {
+        "frame": 65,
+        "brightness": 54.24227232435297,
+        "intensity": 4.543574047288621,
+        "dominantColor": {
+          "r": 83,
+          "g": 57,
+          "b": 23
+        }
+      },
+      {
+        "frame": 66,
+        "brightness": 54.41719967626376,
+        "intensity": 4.564886770216163,
+        "dominantColor": {
+          "r": 83,
+          "g": 57,
+          "b": 23
+        }
+      },
+      {
+        "frame": 67,
+        "brightness": 54.97298493082051,
+        "intensity": 4.596209106880043,
+        "dominantColor": {
+          "r": 83,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 68,
+        "brightness": 55.239827340347325,
+        "intensity": 4.606996335310318,
+        "dominantColor": {
+          "r": 84,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 69,
+        "brightness": 54.82348171272235,
+        "intensity": 4.591813676732093,
+        "dominantColor": {
+          "r": 84,
+          "g": 58,
+          "b": 23
+        }
+      },
+      {
+        "frame": 70,
+        "brightness": 54.52222145142012,
+        "intensity": 4.569945808785689,
+        "dominantColor": {
+          "r": 83,
+          "g": 57,
+          "b": 23
+        }
+      },
+      {
+        "frame": 71,
+        "brightness": 54.13272902454927,
+        "intensity": 4.535956049119421,
+        "dominantColor": {
+          "r": 83,
+          "g": 57,
+          "b": 23
+        }
+      },
+      {
+        "frame": 72,
+        "brightness": 55.30414614406263,
+        "intensity": 4.61636085281267,
+        "dominantColor": {
+          "r": 84,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 73,
+        "brightness": 55.70372220295223,
+        "intensity": 4.640039106441363,
+        "dominantColor": {
+          "r": 85,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 74,
+        "brightness": 55.792782209889815,
+        "intensity": 4.642892690700252,
+        "dominantColor": {
+          "r": 85,
+          "g": 59,
+          "b": 24
+        }
+      },
+      {
+        "frame": 75,
+        "brightness": 54.46647242455952,
+        "intensity": 4.563848581903003,
+        "dominantColor": {
+          "r": 83,
+          "g": 57,
+          "b": 23
+        }
+      },
+      {
+        "frame": 76,
+        "brightness": 54.11334027055298,
+        "intensity": 4.533889376656674,
+        "dominantColor": {
+          "r": 82,
+          "g": 57,
+          "b": 23
+        }
+      },
+      {
+        "frame": 77,
+        "brightness": 54.860147223185685,
+        "intensity": 4.590636572198737,
+        "dominantColor": {
+          "r": 83,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 78,
+        "brightness": 54.78928276872065,
+        "intensity": 4.5778602488886335,
+        "dominantColor": {
+          "r": 83,
+          "g": 57,
+          "b": 24
+        }
+      },
+      {
+        "frame": 79,
+        "brightness": 55.091682275407315,
+        "intensity": 4.59478365774281,
+        "dominantColor": {
+          "r": 83,
+          "g": 58,
+          "b": 24
+        }
+      },
+      {
+        "frame": 80,
+        "brightness": 54.75938181678144,
+        "intensity": 4.581343084030521,
+        "dominantColor": {
+          "r": 83,
+          "g": 57,
+          "b": 23
+        }
+      },
+      {
+        "frame": 81,
+        "brightness": 54.07185262265431,
+        "intensity": 4.528096520439633,
+        "dominantColor": {
+          "r": 82,
+          "g": 57,
+          "b": 23
+        }
+      },
+      {
+        "frame": 82,
+        "brightness": 54.080476355648514,
+        "intensity": 4.5286754813833285,
+        "dominantColor": {
+          "r": 83,
+          "g": 57,
+          "b": 23
+        }
+      },
+      {
+        "frame": 83,
+        "brightness": 54.10239950668734,
+        "intensity": 4.530519406031168,
+        "dominantColor": {
+          "r": 83,
+          "g": 57,
+          "b": 23
+        }
+      },
+      {
+        "frame": 84,
+        "brightness": 54.10407985508986,
+        "intensity": 4.5304242919694255,
+        "dominantColor": {
+          "r": 83,
+          "g": 57,
+          "b": 23
+        }
+      },
+      {
+        "frame": 85,
+        "brightness": 54.09710718002164,
+        "intensity": 4.53009664727302,
+        "dominantColor": {
+          "r": 83,
+          "g": 57,
+          "b": 23
+        }
+      },
+      {
+        "frame": 86,
+        "brightness": 54.0980830153783,
+        "intensity": 4.529967107314404,
+        "dominantColor": {
+          "r": 83,
+          "g": 57,
+          "b": 23
+        }
+      }
+    ],
+    "brightness": {
+      "min": 53.969921763594776,
+      "max": 55.811620611245296,
+      "mean": 55.00724920693831,
+      "stdDev": 0.506516331555589,
+      "range": 1.8416988476505196,
+      "peakFrame": 46,
+      "troughFrame": 18
+    },
+    "motion": {
+      "averageChange": 4.582405547623441,
+      "maxChange": 6.667360388483618,
+      "minChange": 0.004762014876478995,
+      "stdDev": 1.2938000178686673,
+      "totalMotion": 394.086877095616,
+      "highMotionFrames": 0,
+      "lowMotionFrames": 4
+    },
+    "flicker": {
+      "averageFlicker": 0.33374413495843114,
+      "maxFlicker": 1.406903302886498,
+      "flickerIntensity": 0.2917807919914519,
+      "oscillationCount": 39
+    },
+    "colorStability": {
+      "averageShift": 0.8903370101025813,
+      "maxShift": 3,
+      "colorConsistency": 0.9972650895598812
+    },
+    "keyFrames": {
+      "peak": 46,
+      "representative": 39,
+      "highMotion": 67,
+      "first": 0,
+      "last": 86
+    }
+  },
+  "artifacts": {}
+}

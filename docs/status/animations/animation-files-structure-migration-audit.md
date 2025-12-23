@@ -1,7 +1,10 @@
 # Animation Pipeline Audit Report
 
+> ⚠️ **HISTORICAL DOCUMENT** — Migration completed 2025-12-23. File references below reflect the OLD structure. See `animations/electricity-portal/context.md` for current reference files.
+
 **Generated:** 2025-12-22
 **Purpose:** Document all animation-related files for migration to consolidated `Animations/` directory
+**Status:** ✅ Migration Complete — Files moved to `animations/` (lowercase), reference images renamed with `electricity_animation_effect_*` prefix
 
 ---
 

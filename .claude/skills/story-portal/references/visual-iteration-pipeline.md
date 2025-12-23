@@ -86,19 +86,13 @@ Verified and calibrated on 2025-12-22:
 | **Effect Timing** | 975ms–2138ms | ~1.16s duration |
 | **Cropping Method** | sharp extract | Preserves exact 465×465 (ffmpeg requires even dims) |
 
-### Dual Mask System
+### Mask
 
-Reference and captured frames use different masks due to slight positioning differences:
+| File | Center | Radii (X, Y) |
+|------|--------|--------------|
+| `electricity_animation_effect_diff_analysis_mask.png` | (232.5, 232.5) | (159.5, 158.5) |
 
-| Mask | Center | Radii (X, Y) | File |
-|------|--------|--------------|------|
-| **Reference** | (235, 232) | (164, 159) | `golden_mask_overlay.png` |
-| **Capture** | (238.5, 235) | (161.5, 160) | `golden_mask_capture.png` |
-
-**Why two masks?**
-- Portal renders at slightly different position in live app vs reference image
-- Difference is ~3.5px center offset
-- Both masks are pixel-perfect for their respective use cases
+**Spec:** White ellipse on black (binary), 319×317 inner ellipse on 465×465 canvas.
 
 ---
 
@@ -177,14 +171,14 @@ node animations/shared/diff/run-analysis.mjs --latest
 
 # Extract STATIC baseline (before first iteration)
 node animations/shared/diff/extract-baseline.mjs \
-  --with animations/electricity-portal/references/465x465/sora_reference_frame.png \
-  --without animations/electricity-portal/references/465x465/without_effect.png \
+  --with animations/electricity-portal/references/465x465/electricity_animation_effect_static_diff_analysis.png \
+  --without animations/electricity-portal/references/465x465/electricity_animation_effect_off_baseline.png \
   --output animations/electricity-portal/references/465x465/ \
   --name electricity
 
 # Extract ANIMATION baseline (before first iteration)
 node animations/shared/diff/extract-baseline-video.mjs \
-  --animation animations/electricity-portal/references/465x465/sora_reference_1.5x.apng \
+  --animation animations/electricity-portal/references/465x465/electricity_animation_effect_diff_analysis.apng \
   --output animations/electricity-portal/references/465x465/ \
   --name electricity
 
@@ -235,14 +229,14 @@ The pipeline runs two complementary SSIM analyses:
 Before starting iterations, extract baseline metrics from reference images:
 
 ### Static Baseline (baseline_metrics.json)
-Extracted from `sora_reference_frame.png`:
+Extracted from `electricity_animation_effect_static_diff_analysis.png`:
 - Core brightness
 - Effect coverage %
 - Color palette (brightest hex values)
 - Intensity distribution
 
 ### Animation Baseline (baseline_animation_metrics.json)
-Extracted from `sora_reference_1.5x.apng`:
+Extracted from `electricity_animation_effect_diff_analysis.apng`:
 - Frame count, FPS
 - Brightness range (min/max/mean)
 - Flicker oscillation count

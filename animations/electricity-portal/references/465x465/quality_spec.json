@@ -1,16 +1,20 @@
 {
-  "effectName": "effect",
+  "effectName": "electricity",
   "version": "1.0",
-  "generatedAt": "2025-12-22T18:03:05.605Z",
+  "generatedAt": "2025-12-22T23:47:03.566Z",
   "tierA": {
     "color": {
       "brightest": {
-        "r": 254,
+        "r": 255,
         "g": 255,
-        "b": 238,
-        "hex": "#FEFFEE"
+        "b": 255,
+        "hex": "#FFFFFF"
       },
       "dominant": [
+        {
+          "hex": "#000000",
+          "tolerance": 15
+        },
         {
           "hex": "#382008",
           "tolerance": 15
@@ -20,24 +24,20 @@
           "tolerance": 15
         },
         {
-          "hex": "#402808",
-          "tolerance": 15
-        },
-        {
-          "hex": "#201000",
+          "hex": "#302810",
           "tolerance": 15
         }
       ],
       "average": {
-        "r": 104,
-        "g": 72,
-        "b": 28,
-        "hex": "#68481C"
+        "r": 83,
+        "g": 58,
+        "b": 23,
+        "hex": "#533A17"
       }
     },
     "structure": {
       "edgeDensity": {
-        "target": 0.007103711411723898,
+        "target": 0,
         "tolerancePercent": 25
       }
     },
@@ -46,11 +46,11 @@
         "x": 0,
         "y": 0,
         "width": 464,
-        "height": 464
+        "height": 460
       },
       "centerOfMass": {
-        "x": 230,
-        "y": 228
+        "x": 234,
+        "y": 227
       }
     }
   },
@@ -70,12 +70,12 @@
     "distribution": [
       {
         "name": "core",
-        "averageBrightness": 168,
+        "averageBrightness": 170,
         "pixelCount": 6772
       },
       {
         "name": "inner",
-        "averageBrightness": 108,
+        "averageBrightness": 106,
         "pixelCount": 35684
       },
       {
@@ -93,7 +93,7 @@
     "coreMinBrightness": 150
   },
   "mask": {
-    "coveragePercent": 36.82044166955718,
-    "effectPixels": 79615
+    "coveragePercent": 36.47219331714649,
+    "effectPixels": 78862
   }
 }

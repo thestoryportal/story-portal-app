@@ -1,8 +1,8 @@
 # AAA Video Game Quality Animations - Development Context
 
 > **Purpose**: Persistent context document for electricity/portal animation development.
-> **Last Updated**: 2025-12-19
-> **Status**: Planning → Implementation Ready
+> **Last Updated**: 2025-12-23
+> **Status**: Iteration Pipeline Ready
 
 ---
 
@@ -108,6 +108,55 @@ src/components/effects/
 2. **Performance**: Target devices and frame rate budget?
 3. **Activation**: Always on vs triggered on spin?
 4. **Fallback**: Graceful degradation strategy?
+
+---
+
+## Reference Assets
+
+### Reference Files
+
+| File | Purpose |
+|------|---------|
+| `electricity_animation_effect_static_diff_analysis.png` | Static SSIM reference (465×465) |
+| `electricity_animation_effect_reference_original.apng` | Original animation source (25MB, archived) |
+| `electricity_animation_effect_diff_analysis.apng` | Aligned animation for SSIM comparison |
+| `electricity_animation_effect_off_baseline.png` | Baseline (effect off) for mask generation |
+| `electricity_animation_effect_diff_analysis_mask.png` | Mask (319×317 ellipse) |
+
+**Source:** AI-generated using Sora/Luma from visual specification prompt (2025-12-22).
+
+**Mask Spec:** White ellipse on black, center (232.5, 232.5), radii (159.5, 158.5)
+
+### Sora Alignment (Calibrated 2025-12-23)
+
+The Sora reference frames are resized to fit within the mask:
+
+| Parameter | Value |
+|-----------|-------|
+| Resize | 452×463 |
+| Offset X | 5px |
+| Offset Y | 1px |
+| Canvas | 465×465 |
+| Output | `electricity_animation_effect_diff_analysis.apng` |
+
+**Alignment Script:** (archived)
+
+### Legacy References (Preserved)
+
+| File | Purpose |
+|------|---------|
+| `with_effect.png` | Original hand-crafted static reference |
+| `reference_animation.apng` | Original animation reference |
+
+### Generation Context
+
+The Sora reference was generated using this visual specification:
+- Golden/amber plasma electricity effect inside steampunk portal ring
+- 8-14 jagged radial lightning tendrils
+- Bright white-gold cores (#FFF5C8) fading to amber (#FFD27A) to deep amber (#FF9A2A)
+- Multi-layer bloom with tight core + diffuse outer glow
+- Pulsing/flickering animation at 50-80ms per frame
+- Effect contained within 465×465 circular portal area
 
 ---
 

@@ -37,15 +37,23 @@
   },
 
   "reference": {
-    "withEffect": "animations/electricity-portal/references/465x465/sora_reference_frame.png",
-    "withoutEffect": "animations/electricity-portal/references/465x465/without_effect.png",
-    "animation": "animations/electricity-portal/references/465x465/sora_reference_1.5x.apng",
-    "mask": "animations/electricity-portal/references/465x465/golden_mask_overlay.png",
-    "maskCapture": "animations/electricity-portal/references/465x465/golden_mask_capture.png",
-    "_maskNote": "Dual masks required due to portal size difference",
+    "withEffect": "animations/electricity-portal/references/465x465/electricity_animation_effect_static_diff_analysis.png",
+    "withoutEffect": "animations/electricity-portal/references/465x465/electricity_animation_effect_off_baseline.png",
+    "animationOriginal": "animations/electricity-portal/references/465x465/electricity_animation_effect_reference_original.apng",
+    "animation": "animations/electricity-portal/references/465x465/electricity_animation_effect_diff_analysis.apng",
+    "mask": "animations/electricity-portal/references/465x465/electricity_animation_effect_diff_analysis_mask.png",
     "_maskSpec": {
-      "overlay": { "format": "transparent center, semi-opaque black outer", "innerSize": "326x318", "use": "Sora reference" },
-      "capture": { "format": "white ellipse on black (binary)", "innerSize": "319x317", "use": "live captured frames" }
+      "format": "white ellipse on black (binary)",
+      "innerSize": "319x317",
+      "center": { "x": 232.5, "y": 232.5 },
+      "radii": { "rx": 159.5, "ry": 158.5 }
+    },
+    "_alignment": {
+      "resizeTo": { "width": 452, "height": 463 },
+      "offsetOnCanvas": { "x": 5, "y": 1 },
+      "canvasSize": 465,
+      "calibratedDate": "2025-12-23",
+      "_note": "Original reference resized to create diff_analysis version"
     },
     "baseline": "animations/electricity-portal/references/465x465/quality_spec.json",
     "baselineMetrics": "animations/electricity-portal/references/465x465/baseline_metrics.json",
@@ -117,7 +125,8 @@
     "maskVerified": true,
     "timingVerified": true,
     "videoPipelineVerified": true,
-    "verifiedDate": "2025-12-22",
+    "referenceAlignmentComplete": true,
+    "verifiedDate": "2025-12-23",
     "captureFormat": "jpeg",
     "captureMode": "video-screencast",
     "croppingMethod": "sharp-extract",
@@ -125,7 +134,8 @@
     "effectTimingMs": "975-2138",
     "circularMaskApplied": true,
     "cropCoordinates": "481,40 @ 465x465",
-    "_calibrationNote": "Crop calibrated 2025-12-23: x=481 y=40 465x465, dual masks (overlay 326x318, capture 319x317)"
+    "soraAlignmentParams": "452x463, offset (5,1) on 465x465 canvas",
+    "_calibrationNote": "Fully calibrated 2025-12-23: crop x=481 y=40 465x465, single mask (capture 319x317), Sora reference aligned 452x463 offset (5,1)"
   },
 
   "visualSpec": {

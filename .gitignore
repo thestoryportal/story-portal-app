@@ -32,5 +32,8 @@ dist-ssr
 animations/*/output/*
 !animations/*/output/.gitkeep
 
+# Legacy shared output folder (deprecated - use per-scenario output)
+animations/output/
+
 # Archive directory (deprecated scripts, backups)
 animations/_archive/

@@ -439,10 +439,12 @@ async function main() {
   const opts = parseArgs();
   const baseUrl = await detectViteBaseUrl();
 
-  // Use per-scenario output directory if scenario is specified
-  const outputBase = opts.scenario
-    ? `animations/${opts.scenario}/output/screenshots/timeline`
-    : "animations/output/screenshots/timeline";
+  // Use per-scenario output directory (scenario required for structured output)
+  if (!opts.scenario) {
+    console.warn('Warning: No --scenario specified. Output will go to electricity-portal by default.');
+    opts.scenario = 'electricity-portal';
+  }
+  const outputBase = `animations/${opts.scenario}/output/screenshots/timeline`;
   const timelineRoot = path.join(process.cwd(), outputBase, dateFolder());
   const outDir = path.join(timelineRoot, `${nowStamp()}__${opts.label}`);
   ensureDir(outDir);

@@ -119,9 +119,11 @@ async function createOutputFolder(label) {
     .slice(0, 15); // YYYYMMDD_HHMMSS
 
   const folderName = `${timeStr}__${label}`;
+  // Output to per-scenario directory (default: electricity-portal)
+  const scenario = process.env.SCENARIO || 'electricity-portal';
   const outputDir = path.join(
     PROJECT_ROOT,
-    "animations/output/screenshots/timeline",
+    `animations/${scenario}/output/screenshots/timeline`,
     dateStr,
     folderName
   );

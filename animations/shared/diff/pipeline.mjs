@@ -48,10 +48,12 @@ export async function runPipeline(options) {
 
   // Create output directory for this iteration
   const timestamp = getTimestamp();
+  // Output to per-scenario directory: animations/{scenario}/output/iterations/
   const iterationDir = outputDir || path.join(
     PROJECT_ROOT,
-    'animations/output/iterations',
+    'animations',
     scenarioName,
+    'output/iterations',
     `iter_${String(iteration).padStart(3, '0')}_${timestamp}`
   );
   fs.mkdirSync(iterationDir, { recursive: true });
@@ -628,7 +630,7 @@ ${scenario.visualSpec?.color ? `
 
 ## Baseline Metrics (Reference Targets)
 
-### Static Reference (sora_reference_frame.png)
+### Static Reference
 ${baselineMetrics ? `
 | Zone | Target Brightness |
 |------|-------------------|
@@ -639,7 +641,7 @@ ${baselineMetrics.metrics?.intensity?.map(z => `| ${z.name} | ${z.averageBrightn
 - **Effect coverage:** ${baselineMetrics.metrics?.mask?.coveragePercent?.toFixed(1) || 'N/A'}%
 ` : 'No static baseline metrics available'}
 
-### Animation Reference (sora_reference_1.5x.apng)
+### Animation Reference
 ${animationBaseline ? `
 | Metric | Target Value |
 |--------|--------------|
@@ -818,7 +820,7 @@ function getSpecificGuidance(scenario, ssim) {
  * Update latest pointer
  */
 function updateLatestPointer(scenarioName, iterationDir) {
-  const latestDir = path.join(PROJECT_ROOT, 'animations/output/iterations', scenarioName);
+  const latestDir = path.join(PROJECT_ROOT, 'animations', scenarioName, 'output/iterations');
   fs.mkdirSync(latestDir, { recursive: true });
 
   const latestPath = path.join(latestDir, 'LATEST.txt');

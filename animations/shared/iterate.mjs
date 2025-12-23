@@ -82,8 +82,8 @@ function writeBundle(runDir, scenarioName, baseUrl) {
   fs.writeFileSync(path.join(runDir, "bundle.md"), bundle, "utf8");
 }
 
-function updateLatestPointer(runDir) {
-  const latest = path.resolve("animations/output/screenshots/LATEST.txt");
+function updateLatestPointer(runDir, scenario) {
+  const latest = path.resolve(`animations/${scenario}/output/screenshots/LATEST.txt`);
   fs.mkdirSync(path.dirname(latest), { recursive: true });
   fs.writeFileSync(latest, runDir + "\n", "utf8");
 }
@@ -105,7 +105,7 @@ async function main() {
   const leaf = stamp.split("/")[1];
 
   const runDir = path.resolve(
-    `animations/output/screenshots/timeline/${today}/${leaf}__${scenario}`
+    `animations/${scenario}/output/screenshots/timeline/${today}/${leaf}__${scenario}`
   );
   fs.mkdirSync(runDir, { recursive: true });
 

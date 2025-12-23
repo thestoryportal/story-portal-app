@@ -34,7 +34,7 @@ None currently.
 
 ## Pending Review (Human)
 
-- [ ] `animations/output/` folder (1.9GB) — delete or archive?
+- [x] ~~`animations/output/` folder (1.9GB)~~ — **Deleted**, restructured to per-scenario output
 - [ ] `animations/_archive/duplicate-docs/` and `backups/`
 - [ ] `src/legacy/_archived/` WebGL code — delete permanently or keep?
 

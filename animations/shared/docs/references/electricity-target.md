@@ -26,7 +26,7 @@ The electricity effect should appear when the "New Topics" button is clicked. It
 **Sora Alignment Parameters:**
 - Resize: 452×463
 - Offset: (5, 1) on 465×465 canvas
-- Script: `animations/output/align_sora.mjs`
+- Script: (archived - was `animations/output/align_sora.mjs`)
 
 ---
 

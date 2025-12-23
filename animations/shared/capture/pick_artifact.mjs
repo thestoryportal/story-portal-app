@@ -11,8 +11,8 @@ function newestDir(base) {
   return dirs[0].p;
 }
 
-function newestTimelineRoot() {
-  const root = path.resolve("animations/output/screenshots/timeline");
+function newestTimelineRoot(scenario = 'electricity-portal') {
+  const root = path.resolve(`animations/${scenario}/output/screenshots/timeline`);
   const dayDirs = fs.readdirSync(root)
     .map(name => ({ name, p: path.join(root, name) }))
     .filter(x => fs.existsSync(x.p) && fs.statSync(x.p).isDirectory())

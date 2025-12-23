@@ -33,8 +33,8 @@ import { analyzeCapture } from './analyze.mjs';
 /**
  * Find the latest capture directory
  */
-function findLatestCapture() {
-  const timelineRoot = path.resolve('animations/output/screenshots/timeline');
+function findLatestCapture(scenario = 'electricity-portal') {
+  const timelineRoot = path.resolve(`animations/${scenario}/output/screenshots/timeline`);
 
   if (!fs.existsSync(timelineRoot)) {
     throw new Error(`Timeline directory not found: ${timelineRoot}`);

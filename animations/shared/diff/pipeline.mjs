@@ -24,6 +24,7 @@ import { analyzeCapture } from './analyze.mjs';
 import { cropFrames } from './crop.mjs';
 import { analyzeSSIM as analyzeVideoSSIM, analyzeVMAF, analyzeTemporalConsistency, analyzeFlickerOscillation, compareFlicker, generateSideBySideAPNG } from './video-analyze.mjs';
 import { isLPIPSAvailable, analyzeFramesLPIPS } from '../analysis/lpips-analyze.mjs';
+import { isOllamaAvailable, getBestAvailableModel, analyzeLLaVASelective, PROMPTS as LLAVA_PROMPTS } from '../analysis/llava-analyze.mjs';
 import { collectIterations, generateViewer, openInBrowser } from './html-viewer.mjs';
 
 const PROJECT_ROOT = path.resolve(import.meta.dirname, '../../..');
@@ -463,6 +464,84 @@ export async function runPipeline(options) {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // STEP 2.4: LLaVA Vision Analysis (Optional)
+    // ─────────────────────────────────────────────────────────────────────────
+    logger.startStep('2.4', 'LLaVA Analysis', 'Vision-language diff descriptions');
+    try {
+      const ollamaAvailable = await isOllamaAvailable();
+
+      if (ollamaAvailable && focusDir && scenario.reference.withEffect) {
+        const model = await getBestAvailableModel();
+
+        if (model) {
+          // Get frames with their SSIM scores for selective analysis
+          const frameFiles = fs.readdirSync(focusDir)
+            .filter(f => f.endsWith('.png'))
+            .sort();
+
+          if (frameFiles.length > 0 && analysisResult.scores?.perFrameSsim) {
+            // Build frames array with scores
+            const framesWithScores = frameFiles.map((f, i) => ({
+              path: path.join(focusDir, f),
+              score: analysisResult.scores.perFrameSsim?.[i] || 0
+            })).filter(f => f.score > 0);
+
+            if (framesWithScores.length > 0) {
+              logger.substep(`Analyzing ${Math.min(6, framesWithScores.length)} frames with ${model}...`);
+              logger.substep('This may take 1-2 minutes...');
+
+              const llavaResult = await analyzeLLaVASelective(
+                framesWithScores,
+                scenario.reference.withEffect,
+                { bestCount: 3, worstCount: 3, verbose: false }
+              );
+
+              if (llavaResult && !llavaResult.error) {
+                analysisResult.llava = {
+                  model: llavaResult.model,
+                  mode: llavaResult.mode,
+                  summary: llavaResult.summary,
+                  bestFrames: llavaResult.bestFrames?.map(f => ({
+                    frame: path.basename(f.path),
+                    score: f.score,
+                    description: f.description
+                  })) || [],
+                  worstFrames: llavaResult.worstFrames?.map(f => ({
+                    frame: path.basename(f.path),
+                    score: f.score,
+                    description: f.description
+                  })) || []
+                };
+
+                logger.endStepSuccess([
+                  `Model: ${llavaResult.model}`,
+                  `Best frames analyzed: ${llavaResult.bestFrames?.length || 0}`,
+                  `Worst frames analyzed: ${llavaResult.worstFrames?.length || 0}`,
+                  llavaResult.summary ? 'Summary generated' : 'No summary'
+                ]);
+              } else {
+                logger.endStepSuccess([`LLaVA analysis returned: ${llavaResult?.error || 'no results'}`]);
+              }
+            } else {
+              logger.skipStep('No frames with valid SSIM scores for LLaVA analysis');
+            }
+          } else {
+            logger.skipStep('No frames or SSIM scores available');
+          }
+        } else {
+          logger.skipStep('No LLaVA model available (install: ollama pull llava-llama3)');
+        }
+      } else if (!ollamaAvailable) {
+        logger.skipStep('Ollama not available (install: https://ollama.ai)');
+      } else {
+        logger.skipStep('Missing frames or reference for LLaVA');
+      }
+    } catch (error) {
+      logger.warn(`LLaVA analysis failed: ${error.message}`);
+      logger.endStepSuccess(['LLaVA skipped due to error']);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // STEP 2.5: Video Diff Analysis
     // ─────────────────────────────────────────────────────────────────────────
     logger.startStep('2.5', 'Video Diff Analysis', 'Comparing APNG animations');
@@ -582,6 +661,7 @@ export async function runPipeline(options) {
           videoSsim: analysisResult.videoSsim || null,
           vmaf: analysisResult.vmaf || null,
           lpips: analysisResult.lpips || null,
+          llava: analysisResult.llava || null,
           temporalConsistency: analysisResult.temporalConsistency || null,
           flicker: analysisResult.flicker || null
         },
@@ -1163,6 +1243,23 @@ ${animationBaseline ? `
 - Max flicker: ${animationBaseline.metrics?.flicker?.maxFlicker?.toFixed(2) || 'N/A'} (brightness change between frames)
 - Peak frame: ${animationBaseline.metrics?.keyFrames?.peak || 'N/A'} (brightest moment)
 ` : 'No animation baseline metrics available'}
+
+---
+
+## LLaVA Vision Analysis
+
+${analysisResult.llava ? `
+**Model:** ${analysisResult.llava.model}
+
+### Summary
+${analysisResult.llava.summary || 'No summary generated'}
+
+### Best Frames
+${analysisResult.llava.bestFrames?.map(f => `- **${f.frame}** (SSIM: ${(f.score * 100).toFixed(1)}%): ${f.description || 'No description'}`).join('\n') || 'N/A'}
+
+### Worst Frames
+${analysisResult.llava.worstFrames?.map(f => `- **${f.frame}** (SSIM: ${(f.score * 100).toFixed(1)}%): ${f.description || 'No description'}`).join('\n') || 'N/A'}
+` : '*LLaVA not available. Install: `ollama pull llava-llama3`*'}
 
 ---
 

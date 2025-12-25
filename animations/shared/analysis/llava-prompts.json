@@ -1,0 +1,32 @@
+{
+  "version": "1.0.0",
+  "description": "LLaVA prompts for animation frame analysis",
+  "prompts": {
+    "frameAnalysis": {
+      "name": "Frame Analysis",
+      "description": "Analyze a single animation frame",
+      "prompt": "Analyze this animation frame. Describe:\n1. The visual elements visible (bolts, particles, glow effects)\n2. The brightness and intensity level\n3. The color palette and any color variations\n4. The overall quality and clarity\n\nBe concise (2-3 sentences)."
+    },
+    "frameDiff": {
+      "name": "Frame Comparison",
+      "description": "Compare captured frame against reference",
+      "prompt": "Compare these two animation frames. The first is a reference frame showing the target look. The second is a captured frame to evaluate.\n\nDescribe:\n1. How well does the captured frame match the reference?\n2. What differences do you see in brightness, color, or effects?\n3. What specific improvements would make them match better?\n\nBe specific and actionable (3-4 sentences)."
+    },
+    "batchSummary": {
+      "name": "Batch Summary",
+      "description": "Summarize analysis of multiple frames",
+      "prompt": "You are analyzing animation frames for visual quality. Based on the individual frame analyses provided, write a concise summary that:\n1. Identifies which frames match the reference best\n2. Notes common issues across frames\n3. Suggests specific adjustments to improve overall match\n\nKeep it actionable for a developer tuning animation parameters."
+    },
+    "electricitySpecific": {
+      "name": "Electricity Effect Analysis",
+      "description": "Specialized prompt for electricity/lightning effects",
+      "prompt": "Analyze this electricity/lightning animation frame:\n1. Bolt visibility: Are bolts clearly visible with good contrast?\n2. Branching: Do the bolts branch naturally?\n3. Glow intensity: Is the amber glow around bolts appropriate (not too bright/dim)?\n4. Center region: Is the center orb visible without washing out bolt detail?\n5. Edge containment: Do effects stay within the circular boundary?\n\nRate each aspect 1-5 and provide specific adjustment suggestions."
+    }
+  },
+  "scenarios": {
+    "electricity-portal": {
+      "primaryPrompt": "electricitySpecific",
+      "fallbackPrompt": "frameDiff"
+    }
+  }
+}

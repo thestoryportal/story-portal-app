@@ -263,5 +263,72 @@
     "bestSsim": null,
     "phase1CompletedDate": null,
     "lockedParameters": null
+  },
+
+  "humanReviewCalibration": {
+    "calibratedDate": "2025-12-25",
+    "captureFps": 120,
+    "clickFrame": 241,
+    "clickTimeMs": 0,
+    "_note": "Human-grounded timing from 120fps capture review (v2)",
+
+    "actualTiming": {
+      "animationStartFrame": 300,
+      "animationStartMs": 492,
+      "animationEndFrame": 599,
+      "animationEndMs": 2990,
+      "totalAnimationMs": 2498,
+      "totalAnimationFrames": 300
+    },
+
+    "phases": {
+      "static": {
+        "startFrame": 241,
+        "endFrame": 299,
+        "startMs": 0,
+        "endMs": 491,
+        "hasAnimation": false
+      },
+      "build": {
+        "startFrame": 300,
+        "endFrame": 336,
+        "startMs": 492,
+        "endMs": 799,
+        "durationMs": 307,
+        "hasAnimation": true
+      },
+      "peak": {
+        "startFrame": 337,
+        "endFrame": 540,
+        "startMs": 800,
+        "endMs": 2499,
+        "durationMs": 1699,
+        "hasAnimation": true
+      },
+      "decay": {
+        "startFrame": 541,
+        "endFrame": 599,
+        "startMs": 2500,
+        "endMs": 2999,
+        "durationMs": 499,
+        "hasAnimation": true,
+        "_note": "Frames 580-599 are fading but still visible"
+      },
+      "fade": {
+        "startFrame": 600,
+        "endFrame": 1321,
+        "startMs": 3000,
+        "endMs": 9000,
+        "hasAnimation": false
+      }
+    },
+
+    "syncMarker": {
+      "startFrame": 215,
+      "endFrame": 249,
+      "startMs": -217,
+      "endMs": 67,
+      "_note": "Red circle sync marker visible around click moment"
+    }
   }
 }

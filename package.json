@@ -23,7 +23,9 @@
     "diff:baseline": "node animations/shared/diff/extract-baseline.mjs",
     "diff:pipeline": "node animations/shared/diff/pipeline.mjs",
     "diff:crop": "node animations/shared/diff/crop.mjs",
-    "iterate:electricity": "node animations/shared/diff/pipeline.mjs --scenario electricity-portal"
+    "iterate:electricity": "node animations/shared/diff/pipeline.mjs --scenario electricity-portal",
+    "setup:timing": "node animations/shared/setup/timing-calibration.mjs",
+    "capture:human-review": "node animations/shared/capture/human-review.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",

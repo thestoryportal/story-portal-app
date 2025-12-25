@@ -29,11 +29,32 @@ dist-ssr
 /story-portal-chat-tools/
 
 # Animation pipeline output (per-scenario, generated)
-animations/*/output/*
-!animations/*/output/.gitkeep
+animations/*/output/
+animations/*/calibration/
+animations/*/human-review/
+animations/*/iterations/
 
 # Legacy shared output folder (deprecated - use per-scenario output)
 animations/output/
 
 # Archive directory (deprecated scripts, backups)
 animations/_archive/
+animations/_archived/
+
+# Generated screenshots and captures
+docs/screenshots/
+tools/capture-*/
+tools/*.png
+
+# Test outputs
+coverage/
+test-results/
+playwright-report/
+*.test-results/
+
+# Vitest
+.vitest/
+
+# Backup files
+*.backup
+*.bak

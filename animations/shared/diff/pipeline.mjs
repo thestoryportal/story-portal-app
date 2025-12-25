@@ -22,7 +22,7 @@ import path from 'path';
 import { execSync, spawnSync } from 'child_process';
 import { analyzeCapture } from './analyze.mjs';
 import { cropFrames } from './crop.mjs';
-import { analyzeSSIM as analyzeVideoSSIM, analyzeTemporalConsistency, generateSideBySideAPNG } from './video-analyze.mjs';
+import { analyzeSSIM as analyzeVideoSSIM, analyzeVMAF, analyzeTemporalConsistency, analyzeFlickerOscillation, compareFlicker, generateSideBySideAPNG } from './video-analyze.mjs';
 import { collectIterations, generateViewer, openInBrowser } from './html-viewer.mjs';
 
 const PROJECT_ROOT = path.resolve(import.meta.dirname, '../../..');
@@ -98,6 +98,9 @@ class PipelineLogger {
       console.log(`  Frame SSIM: ${(summary.ssim * 100).toFixed(1)}%`);
       if (summary.videoSsim !== undefined) {
         console.log(`  Video SSIM: ${(summary.videoSsim * 100).toFixed(1)}%`);
+      }
+      if (summary.vmaf !== undefined && summary.vmaf !== null) {
+        console.log(`  VMAF: ${summary.vmaf.toFixed(1)}`);
       }
       if (summary.action) {
         console.log(`  Action: ${summary.action.toUpperCase()}`);
@@ -418,12 +421,21 @@ export async function runPipeline(options) {
 
         if (videoAnalysis) {
           analysisResult.videoSsim = videoAnalysis.aggregate || null;
+          analysisResult.vmaf = videoAnalysis.vmaf?.aggregate || null;
           analysisResult.temporalConsistency = videoAnalysis.temporal?.consistency || null;
+          analysisResult.flicker = videoAnalysis.flicker || null;
 
-          logger.endStepSuccess([
+          const successDetails = [
             `Video SSIM: ${((videoAnalysis.aggregate || 0) * 100).toFixed(1)}%`,
             `Temporal consistency: ${((videoAnalysis.temporal?.consistency || 0) * 100).toFixed(1)}%`
-          ]);
+          ];
+          if (videoAnalysis.vmaf) {
+            successDetails.push(`VMAF: ${videoAnalysis.vmaf.aggregate?.toFixed(1) || 'N/A'}`);
+          }
+          if (videoAnalysis.flicker) {
+            successDetails.push(`Flicker: ${videoAnalysis.flicker.oscillationCount} oscillations`);
+          }
+          logger.endStepSuccess(successDetails);
         } else {
           logger.endStepSuccess(['Video analysis returned no results']);
         }
@@ -508,7 +520,9 @@ export async function runPipeline(options) {
         scores: {
           ...analysisResult.scores,
           videoSsim: analysisResult.videoSsim || null,
-          temporalConsistency: analysisResult.temporalConsistency || null
+          vmaf: analysisResult.vmaf || null,
+          temporalConsistency: analysisResult.temporalConsistency || null,
+          flicker: analysisResult.flicker || null
         },
         verdict: analysisResult.verdict,
         convergence,
@@ -553,6 +567,7 @@ export async function runPipeline(options) {
   logger.endPipeline(pipelineSuccess, {
     ssim: analysisResult?.scores?.bestSsim,
     videoSsim: analysisResult?.videoSsim,
+    vmaf: analysisResult?.vmaf,
     action: convergence?.action
   });
 
@@ -1027,7 +1042,9 @@ ${verdict.pass ? '✅' : '❌'} ${verdict.message || 'No analysis data'}
 |--------|---------|--------|--------|
 | Frame SSIM | ${(ssim * 100).toFixed(1)}% | ≥${(convergence.passThreshold * 100).toFixed(0)}% | ${ssim >= convergence.passThreshold ? '✅' : '❌'} |
 | Video SSIM | ${analysisResult.videoSsim ? (analysisResult.videoSsim * 100).toFixed(1) + '%' : 'N/A'} | ≥${(convergence.passThreshold * 100).toFixed(0)}% | ${analysisResult.videoSsim >= convergence.passThreshold ? '✅' : '❌'} |
+| VMAF | ${analysisResult.vmaf ? analysisResult.vmaf.toFixed(1) : 'N/A'} | ≥80 | ${analysisResult.vmaf >= 80 ? '✅' : '❌'} |
 | Temporal | ${analysisResult.temporalConsistency ? (analysisResult.temporalConsistency * 100).toFixed(1) + '%' : 'N/A'} | ≥90% | ${analysisResult.temporalConsistency >= 0.9 ? '✅' : '⚠️'} |
+| Flicker | ${analysisResult.flicker ? analysisResult.flicker.oscillationCount + ' osc' : 'N/A'} | Match ref | ${analysisResult.flicker ? '📊' : '—'} |
 | Diff % | ${diffPercent.toFixed(1)}% | <15% | ${diffPercent < 15 ? '✅' : '❌'} |
 
 ---
@@ -1332,6 +1349,29 @@ async function runVideoAnalysis(capturedPath, referencePath, outputDir) {
     // Parse per-frame scores for temporal analysis
     const temporal = analyzeTemporalConsistency(ssim.perFrame);
 
+    // Run VMAF analysis (perceptually accurate, slower)
+    let vmaf = null;
+    try {
+      console.log(`  Running VMAF analysis...`);
+      vmaf = await analyzeVMAF(capturedPath, referencePath, outputDir);
+      if (vmaf) {
+        console.log(`  VMAF aggregate: ${vmaf.aggregate?.toFixed(2) || 'N/A'}`);
+      }
+    } catch (vmafError) {
+      console.warn(`  VMAF analysis failed: ${vmafError.message}`);
+    }
+
+    // Analyze flicker oscillation
+    let flicker = null;
+    try {
+      flicker = analyzeFlickerOscillation(ssim.perFrame);
+      if (flicker) {
+        console.log(`  Flicker: ${flicker.oscillationCount} oscillations, rate ${(flicker.flickerRate * 100).toFixed(1)}%`);
+      }
+    } catch (flickerError) {
+      console.warn(`  Flicker analysis failed: ${flickerError.message}`);
+    }
+
     // Generate side-by-side comparison APNG
     let sideBySidePath = null;
     try {
@@ -1354,6 +1394,14 @@ async function runVideoAnalysis(capturedPath, referencePath, outputDir) {
         mean: ssim.mean,
         perFrame: ssim.perFrame
       },
+      vmaf: vmaf ? {
+        aggregate: vmaf.aggregate,
+        min: vmaf.min,
+        max: vmaf.max,
+        mean: vmaf.mean,
+        perFrame: vmaf.perFrame
+      } : null,
+      flicker,
       temporal
     };
 
@@ -1362,7 +1410,7 @@ async function runVideoAnalysis(capturedPath, referencePath, outputDir) {
       JSON.stringify(results, null, 2)
     );
 
-    return { ...ssim, temporal, sideBySidePath };
+    return { ...ssim, vmaf, flicker, temporal, sideBySidePath };
   } catch (error) {
     console.warn(`  Video analysis failed: ${error.message}`);
     return null;

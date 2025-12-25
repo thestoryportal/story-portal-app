@@ -25,7 +25,9 @@ export async function analyzeCapture(options) {
     referencePath,
     maskPath = null,
     outputDir,
-    thresholds = {}
+    thresholds = {},
+    generatePerFrameHeatmaps = false,  // Enable per-frame heatmap generation
+    heatmapFrameLimit = 30             // Max frames to generate heatmaps for
   } = options;
 
   const config = {
@@ -39,6 +41,11 @@ export async function analyzeCapture(options) {
   console.log('Loading reference image...');
   const reference = await loadImage(referencePath);
   const mask = maskPath ? await loadImage(maskPath) : null;
+
+  // Compute radial zones for reference (used for comparison)
+  const maskedRef = mask ? applyMask(reference, mask) : reference;
+  const referenceRadialZones = computeRadialZones(maskedRef);
+  console.log(`  Reference zones - Core: ${referenceRadialZones.zones[0]?.averageBrightness.toFixed(1)}, Mid: ${referenceRadialZones.zones[1]?.averageBrightness.toFixed(1)}, Outer: ${referenceRadialZones.zones[2]?.averageBrightness.toFixed(1)}`);
 
   // Get all frames (supports frame_001.png or 1.png naming)
   const frameFiles = fs.readdirSync(framesDir)
@@ -95,6 +102,63 @@ export async function analyzeCapture(options) {
     path.join(outputDir, 'diff_heatmap.png')
   );
 
+  // Compute radial zones for best frame
+  console.log('Computing radial zone analysis for best frame...');
+  const maskedBestFrame = mask ? applyMask(bestFrame, mask) : bestFrame;
+  const bestFrameRadialZones = computeRadialZones(maskedBestFrame);
+  const radialZoneComparison = compareRadialZones(bestFrameRadialZones, referenceRadialZones);
+
+  // Log zone comparison
+  for (const zone of radialZoneComparison.zones) {
+    const sign = zone.diff > 0 ? '+' : '';
+    console.log(`  ${zone.name}: ${zone.frameBrightness.toFixed(1)} vs ref ${zone.referenceBrightness.toFixed(1)} (${sign}${zone.percentDiff.toFixed(1)}%)`);
+  }
+
+  // Generate per-frame heatmaps if enabled
+  let perFrameHeatmapPaths = [];
+  if (generatePerFrameHeatmaps) {
+    console.log('Generating per-frame heatmaps...');
+    const heatmapsDir = path.join(outputDir, 'heatmaps');
+    fs.mkdirSync(heatmapsDir, { recursive: true });
+
+    // Select frames to generate heatmaps for (worst frames first, then evenly distributed)
+    const sortedByWorst = [...frameResults].sort((a, b) => a.ssim - b.ssim);
+    const framesToHeatmap = new Set();
+
+    // Add worst 5 frames
+    sortedByWorst.slice(0, 5).forEach(f => framesToHeatmap.add(f.file));
+
+    // Add best 3 frames
+    sortedByWorst.slice(-3).forEach(f => framesToHeatmap.add(f.file));
+
+    // Fill rest with evenly distributed frames
+    const step = Math.max(1, Math.floor(frameResults.length / (heatmapFrameLimit - framesToHeatmap.size)));
+    for (let i = 0; i < frameResults.length && framesToHeatmap.size < heatmapFrameLimit; i += step) {
+      framesToHeatmap.add(frameResults[i].file);
+    }
+
+    let heatmapCount = 0;
+    for (const filename of framesToHeatmap) {
+      const framePath = path.join(framesDir, filename);
+      let frameImg = await loadImage(framePath);
+
+      // Resize to match reference if needed
+      if (frameImg.width !== reference.width || frameImg.height !== reference.height) {
+        frameImg = await resizeToMatch(frameImg, reference.width, reference.height);
+      }
+
+      const heatmapPath = path.join(heatmapsDir, `heatmap_${filename}`);
+      await generateDiffHeatmap(frameImg, reference, mask, heatmapPath);
+      perFrameHeatmapPaths.push({ frame: filename, path: heatmapPath });
+      heatmapCount++;
+
+      if (heatmapCount % 10 === 0) {
+        process.stdout.write(`\r  Generated ${heatmapCount}/${framesToHeatmap.size} heatmaps`);
+      }
+    }
+    console.log(`\n  Generated ${perFrameHeatmapPaths.length} per-frame heatmaps`);
+  }
+
   // Generate side-by-side comparison
   console.log('Generating comparison image...');
   await generateComparison(
@@ -122,6 +186,16 @@ export async function analyzeCapture(options) {
       bestDiffPercent: aggregated.bestFrame.diffPercent,
       meanDiffPercent: aggregated.meanDiffPercent
     },
+
+    // Radial zone intensity analysis
+    radialZones: {
+      reference: referenceRadialZones,
+      bestFrame: bestFrameRadialZones,
+      comparison: radialZoneComparison
+    },
+
+    // Per-frame heatmaps (if generated)
+    perFrameHeatmaps: perFrameHeatmapPaths.length > 0 ? perFrameHeatmapPaths : null,
 
     verdict: {
       pass: aggregated.bestFrame.ssim >= config.ssimPass,
@@ -171,8 +245,9 @@ async function loadImage(filepath) {
 /**
  * Analyze a single frame against reference
  */
-async function analyzeFrame(frame, reference, mask, filename) {
+async function analyzeFrame(frame, reference, mask, filename, options = {}) {
   const { width, height } = reference;
+  const { computeRadialZonesForFrame = false, referenceZones = null } = options;
 
   // Ensure frame matches reference dimensions
   let processedFrame = frame;
@@ -209,13 +284,23 @@ async function analyzeFrame(frame, reference, mask, filename) {
 
   const diffPercent = (diffPixels / totalPixels) * 100;
 
-  return {
+  const result = {
     file: filename,
     ssim: ssimResult.mssim,
     diffPixels,
     diffPercent,
     totalPixels
   };
+
+  // Compute radial zones for this frame if requested
+  if (computeRadialZonesForFrame) {
+    result.radialZones = computeRadialZones(maskedFrame);
+    if (referenceZones) {
+      result.radialZoneComparison = compareRadialZones(result.radialZones, referenceZones);
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -423,7 +508,31 @@ function generateVerdictMessage(aggregated, config) {
  * Generate markdown report
  */
 function generateMarkdownReport(report) {
-  const { scores, verdict, bestFrame, worstFrames, thresholds } = report;
+  const { scores, verdict, bestFrame, worstFrames, thresholds, radialZones } = report;
+
+  // Build radial zones section
+  let radialZonesSection = '';
+  if (radialZones?.comparison?.zones) {
+    radialZonesSection = `
+---
+
+## Radial Zone Intensity
+
+Brightness comparison between capture and reference by zone:
+
+| Zone | Capture | Reference | Diff | Status |
+|------|---------|-----------|------|--------|
+${radialZones.comparison.zones.map(z => {
+  const sign = z.diff > 0 ? '+' : '';
+  const status = Math.abs(z.percentDiff) < 10 ? '✅' : (Math.abs(z.percentDiff) < 20 ? '⚠️' : '❌');
+  return `| ${z.name} | ${z.frameBrightness.toFixed(1)} | ${z.referenceBrightness.toFixed(1)} | ${sign}${z.percentDiff.toFixed(1)}% | ${status} |`;
+}).join('\n')}
+
+**Overall:** ${radialZones.comparison.overallPercentDiff > 0 ? '+' : ''}${radialZones.comparison.overallPercentDiff.toFixed(1)}% brightness difference
+
+*Thresholds: ✅ <10%, ⚠️ 10-20%, ❌ >20%*
+`;
+  }
 
   return `# Diff Analysis Report
 
@@ -449,7 +558,7 @@ ${verdict.pass ? '✅' : '❌'} ${verdict.message}
 - **Best:** ${(scores.maxSsim * 100).toFixed(1)}%
 - **Median:** ${(scores.medianSsim * 100).toFixed(1)}%
 - **Worst:** ${(scores.minSsim * 100).toFixed(1)}%
-
+${radialZonesSection}
 ---
 
 ## Best Frame
@@ -503,6 +612,138 @@ ${verdict.pass
 `;
 }
 
+/**
+ * Compute radial zone intensity for an image
+ * Divides the image into concentric zones and computes average brightness for each
+ * Useful for comparing electricity effect intensity distribution
+ *
+ * @param {Object} image - Image with data, width, height properties
+ * @param {Object} options - Zone configuration
+ * @returns {Object} Zone intensities and overall brightness
+ */
+function computeRadialZones(image, options = {}) {
+  const {
+    centerX = image.width / 2,
+    centerY = image.height / 2,
+    zones = [
+      { name: 'core', innerRadius: 0, outerRadius: 0.3 },
+      { name: 'mid', innerRadius: 0.3, outerRadius: 0.6 },
+      { name: 'outer', innerRadius: 0.6, outerRadius: 1.0 }
+    ]
+  } = options;
+
+  // Max radius from center to corner
+  const maxRadius = Math.min(image.width, image.height) / 2;
+
+  // Accumulators for each zone
+  const zoneStats = zones.map(z => ({
+    name: z.name,
+    innerRadius: z.innerRadius * maxRadius,
+    outerRadius: z.outerRadius * maxRadius,
+    sumBrightness: 0,
+    pixelCount: 0,
+    maxBrightness: 0,
+    minBrightness: 255
+  }));
+
+  // Overall stats
+  let totalBrightness = 0;
+  let totalPixels = 0;
+
+  // Iterate through pixels
+  for (let y = 0; y < image.height; y++) {
+    for (let x = 0; x < image.width; x++) {
+      const i = (y * image.width + x) * 4;
+      const r = image.data[i];
+      const g = image.data[i + 1];
+      const b = image.data[i + 2];
+      const a = image.data[i + 3];
+
+      // Skip fully transparent pixels
+      if (a < 10) continue;
+
+      // Compute luminance (perceived brightness)
+      const brightness = 0.299 * r + 0.587 * g + 0.114 * b;
+
+      // Compute distance from center
+      const dx = x - centerX;
+      const dy = y - centerY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      // Update overall stats
+      totalBrightness += brightness;
+      totalPixels++;
+
+      // Assign to zone
+      for (const zone of zoneStats) {
+        if (distance >= zone.innerRadius && distance < zone.outerRadius) {
+          zone.sumBrightness += brightness;
+          zone.pixelCount++;
+          zone.maxBrightness = Math.max(zone.maxBrightness, brightness);
+          zone.minBrightness = Math.min(zone.minBrightness, brightness);
+          break;
+        }
+      }
+    }
+  }
+
+  // Compute averages
+  const result = {
+    zones: zoneStats.map(z => ({
+      name: z.name,
+      averageBrightness: z.pixelCount > 0 ? z.sumBrightness / z.pixelCount : 0,
+      maxBrightness: z.pixelCount > 0 ? z.maxBrightness : 0,
+      minBrightness: z.pixelCount > 0 ? z.minBrightness : 0,
+      pixelCount: z.pixelCount
+    })),
+    overall: {
+      averageBrightness: totalPixels > 0 ? totalBrightness / totalPixels : 0,
+      totalPixels
+    }
+  };
+
+  return result;
+}
+
+/**
+ * Compare radial zones between two images
+ * Returns difference metrics for each zone
+ */
+function compareRadialZones(frameZones, referenceZones) {
+  const comparison = {
+    zones: [],
+    overallDiff: 0
+  };
+
+  for (let i = 0; i < frameZones.zones.length; i++) {
+    const fz = frameZones.zones[i];
+    const rz = referenceZones.zones[i];
+
+    if (rz) {
+      const diff = fz.averageBrightness - rz.averageBrightness;
+      const percentDiff = rz.averageBrightness > 0
+        ? (diff / rz.averageBrightness) * 100
+        : 0;
+
+      comparison.zones.push({
+        name: fz.name,
+        frameBrightness: fz.averageBrightness,
+        referenceBrightness: rz.averageBrightness,
+        diff,
+        percentDiff
+      });
+    }
+  }
+
+  // Overall brightness comparison
+  comparison.overallDiff = frameZones.overall.averageBrightness - referenceZones.overall.averageBrightness;
+  comparison.overallPercentDiff = referenceZones.overall.averageBrightness > 0
+    ? (comparison.overallDiff / referenceZones.overall.averageBrightness) * 100
+    : 0;
+
+  return comparison;
+}
+
 // Utility functions
 function mean(arr) {
   if (arr.length === 0) return 0;
@@ -515,3 +756,6 @@ function median(arr) {
   const mid = Math.floor(sorted.length / 2);
   return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 }
+
+// Export for use by other modules
+export { computeRadialZones, compareRadialZones };

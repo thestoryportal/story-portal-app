@@ -417,6 +417,97 @@ function analyzeTemporalConsistency(ssimScores) {
 }
 
 /**
+ * Analyze flicker oscillation from SSIM per-frame scores
+ * Measures brightness-related oscillation patterns
+ */
+function analyzeFlickerOscillation(ssimScores) {
+  if (ssimScores.length < 3) return null;
+
+  const scores = ssimScores.map(s => s.ssim);
+
+  // Calculate changes between frames
+  const changes = [];
+  for (let i = 1; i < scores.length; i++) {
+    changes.push(Math.abs(scores[i] - scores[i - 1]));
+  }
+
+  // Count oscillations (direction changes)
+  let oscillations = 0;
+  let lastDirection = 0;
+  for (let i = 1; i < scores.length; i++) {
+    const direction = Math.sign(scores[i] - scores[i - 1]);
+    if (direction !== 0 && direction !== lastDirection) {
+      oscillations++;
+      lastDirection = direction;
+    }
+  }
+
+  // Calculate stats
+  const averageChange = changes.reduce((a, b) => a + b, 0) / changes.length;
+  const maxChange = Math.max(...changes);
+  const stdDev = Math.sqrt(
+    changes.reduce((sum, c) => sum + Math.pow(c - averageChange, 2), 0) / changes.length
+  );
+
+  return {
+    oscillationCount: oscillations,
+    averageChange,
+    maxChange,
+    changeIntensity: stdDev,
+    flickerRate: oscillations / scores.length
+  };
+}
+
+/**
+ * Compare flicker between captured and reference
+ */
+function compareFlicker(capturedFlicker, baselineFlicker) {
+  if (!capturedFlicker || !baselineFlicker) return null;
+
+  const oscillationRatio = baselineFlicker.oscillationCount > 0
+    ? capturedFlicker.oscillationCount / baselineFlicker.oscillationCount
+    : 1;
+
+  const intensityRatio = baselineFlicker.flickerIntensity > 0
+    ? capturedFlicker.changeIntensity / baselineFlicker.flickerIntensity
+    : 1;
+
+  // Score: 1.0 = perfect match, <1 = less flicker than ref, >1 = more flicker
+  const oscillationMatch = Math.abs(1 - oscillationRatio) < 0.2; // Within 20%
+  const intensityMatch = Math.abs(1 - intensityRatio) < 0.3; // Within 30%
+
+  return {
+    oscillationRatio,
+    intensityRatio,
+    oscillationMatch,
+    intensityMatch,
+    overall: oscillationMatch && intensityMatch,
+    message: generateFlickerMessage(oscillationRatio, intensityRatio)
+  };
+}
+
+function generateFlickerMessage(oscillationRatio, intensityRatio) {
+  if (Math.abs(1 - oscillationRatio) < 0.1 && Math.abs(1 - intensityRatio) < 0.2) {
+    return 'Flicker pattern matches reference well.';
+  }
+
+  const issues = [];
+  if (oscillationRatio < 0.7) {
+    issues.push('Animation has fewer flicker oscillations than reference');
+  } else if (oscillationRatio > 1.3) {
+    issues.push('Animation flickers more frequently than reference');
+  }
+
+  if (intensityRatio < 0.7) {
+    issues.push('Flicker intensity is lower than reference');
+  } else if (intensityRatio > 1.3) {
+    issues.push('Flicker intensity is higher than reference');
+  }
+
+  return issues.length > 0 ? issues.join('. ') + '.' : 'Flicker within acceptable range.';
+}
+
+/**
  * Generate verdict based on scores
  */
 function generateVerdict(ssim, vmaf = null) {
@@ -830,4 +921,12 @@ async function generateSideBySideAPNG(referencePath, capturedPath, outputPath, o
 }
 
 // Export for use as module
-export { analyzeSSIM, analyzeVMAF, analyzeTemporalConsistency, generateVerdict, generateSideBySideAPNG };
+export {
+  analyzeSSIM,
+  analyzeVMAF,
+  analyzeTemporalConsistency,
+  analyzeFlickerOscillation,
+  compareFlicker,
+  generateVerdict,
+  generateSideBySideAPNG
+};

@@ -23,6 +23,7 @@ import { execSync, spawnSync } from 'child_process';
 import { analyzeCapture } from './analyze.mjs';
 import { cropFrames } from './crop.mjs';
 import { analyzeSSIM as analyzeVideoSSIM, analyzeVMAF, analyzeTemporalConsistency, analyzeFlickerOscillation, compareFlicker, generateSideBySideAPNG } from './video-analyze.mjs';
+import { isLPIPSAvailable, analyzeFramesLPIPS } from '../analysis/lpips-analyze.mjs';
 import { collectIterations, generateViewer, openInBrowser } from './html-viewer.mjs';
 
 const PROJECT_ROOT = path.resolve(import.meta.dirname, '../../..');
@@ -403,6 +404,65 @@ export async function runPipeline(options) {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // STEP 2.3: LPIPS Perceptual Analysis (Optional)
+    // ─────────────────────────────────────────────────────────────────────────
+    logger.startStep('2.3', 'LPIPS Analysis', 'Deep learning perceptual similarity');
+    try {
+      const lpipsAvailable = await isLPIPSAvailable();
+
+      if (lpipsAvailable && focusDir && scenario.reference.withEffect) {
+        // Get frame files
+        const frameFiles = fs.readdirSync(focusDir)
+          .filter(f => f.endsWith('.png'))
+          .sort()
+          .slice(0, 30); // Limit to 30 frames for performance
+
+        if (frameFiles.length > 0) {
+          const framePaths = frameFiles.map(f => path.join(focusDir, f));
+          const referencePath = scenario.reference.withEffect;
+
+          logger.substep(`Analyzing ${frameFiles.length} frames with LPIPS...`);
+
+          const lpipsResult = await analyzeFramesLPIPS(framePaths, referencePath);
+
+          if (lpipsResult && !lpipsResult.error) {
+            analysisResult.lpips = {
+              mean: lpipsResult.aggregate?.mean || null,
+              min: lpipsResult.aggregate?.min || null,
+              max: lpipsResult.aggregate?.max || null,
+              perFrame: lpipsResult.perFrame || []
+            };
+
+            // Find best LPIPS frame (lowest score = most similar)
+            const validFrames = lpipsResult.perFrame?.filter(f => f.lpips !== undefined) || [];
+            if (validFrames.length > 0) {
+              const bestFrame = validFrames.reduce((a, b) => a.lpips < b.lpips ? a : b);
+              analysisResult.lpips.bestFrame = bestFrame.frame;
+              analysisResult.lpips.bestScore = bestFrame.lpips;
+            }
+
+            logger.endStepSuccess([
+              `LPIPS mean: ${lpipsResult.aggregate?.mean?.toFixed(4) || 'N/A'}`,
+              `LPIPS range: ${lpipsResult.aggregate?.min?.toFixed(4) || 'N/A'} - ${lpipsResult.aggregate?.max?.toFixed(4) || 'N/A'}`,
+              `Frames analyzed: ${lpipsResult.aggregate?.valid || 0}`
+            ]);
+          } else {
+            logger.endStepSuccess([`LPIPS analysis returned error: ${lpipsResult?.error || 'unknown'}`]);
+          }
+        } else {
+          logger.skipStep('No frames available for LPIPS analysis');
+        }
+      } else if (!lpipsAvailable) {
+        logger.skipStep('LPIPS not available (install: pip install lpips torch)');
+      } else {
+        logger.skipStep('Missing frames or reference for LPIPS');
+      }
+    } catch (error) {
+      logger.warn(`LPIPS analysis failed: ${error.message}`);
+      logger.endStepSuccess(['LPIPS skipped due to error']);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // STEP 2.5: Video Diff Analysis
     // ─────────────────────────────────────────────────────────────────────────
     logger.startStep('2.5', 'Video Diff Analysis', 'Comparing APNG animations');
@@ -521,6 +581,7 @@ export async function runPipeline(options) {
           ...analysisResult.scores,
           videoSsim: analysisResult.videoSsim || null,
           vmaf: analysisResult.vmaf || null,
+          lpips: analysisResult.lpips || null,
           temporalConsistency: analysisResult.temporalConsistency || null,
           flicker: analysisResult.flicker || null
         },
@@ -1043,6 +1104,7 @@ ${verdict.pass ? '✅' : '❌'} ${verdict.message || 'No analysis data'}
 | Frame SSIM | ${(ssim * 100).toFixed(1)}% | ≥${(convergence.passThreshold * 100).toFixed(0)}% | ${ssim >= convergence.passThreshold ? '✅' : '❌'} |
 | Video SSIM | ${analysisResult.videoSsim ? (analysisResult.videoSsim * 100).toFixed(1) + '%' : 'N/A'} | ≥${(convergence.passThreshold * 100).toFixed(0)}% | ${analysisResult.videoSsim >= convergence.passThreshold ? '✅' : '❌'} |
 | VMAF | ${analysisResult.vmaf ? analysisResult.vmaf.toFixed(1) : 'N/A'} | ≥80 | ${analysisResult.vmaf >= 80 ? '✅' : '❌'} |
+| LPIPS | ${analysisResult.lpips?.mean ? analysisResult.lpips.mean.toFixed(4) : 'N/A'} | <0.15 | ${analysisResult.lpips?.mean < 0.15 ? '✅' : '❌'} |
 | Temporal | ${analysisResult.temporalConsistency ? (analysisResult.temporalConsistency * 100).toFixed(1) + '%' : 'N/A'} | ≥90% | ${analysisResult.temporalConsistency >= 0.9 ? '✅' : '⚠️'} |
 | Flicker | ${analysisResult.flicker ? analysisResult.flicker.oscillationCount + ' osc' : 'N/A'} | Match ref | ${analysisResult.flicker ? '📊' : '—'} |
 | Diff % | ${diffPercent.toFixed(1)}% | <15% | ${diffPercent < 15 ? '✅' : '❌'} |

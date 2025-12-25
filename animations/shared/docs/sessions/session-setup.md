@@ -211,7 +211,7 @@ node animations/shared/capture/video.mjs \
 ### Step 4.3: Check Animation Output
 
 The video capture automatically generates `animation.apng` with:
-- Frames trimmed to effect window (975ms–2138ms)
+- Frames trimmed to effect window (1200–2000ms)
 - Circular transparency mask applied
 - Output in `masked/` folder
 
@@ -247,8 +247,8 @@ Continue adjusting until human confirms:
 > "Yes, the captured animation shows the effect clearly."
 
 **Current calibrated values (electricity-portal):**
-- effectStartMs: 975
-- effectEndMs: 2138
+- effectStartMs: 1200
+- effectEndMs: 2000
 - duration: 4000
 
 ✅ **Phase 4 Complete** when timing is verified.

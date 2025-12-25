@@ -28,8 +28,8 @@ node animations/shared/capture/video.mjs [options]
 | `--duration` | Recording duration (ms) | 4000 |
 | `--settleMs` | Wait before trigger | 500 |
 | `--fps` | Output framerate | 30 |
-| `--effectStartMs` | Effect start time | 975 |
-| `--effectEndMs` | Effect end time | 2138 |
+| `--effectStartMs` | Effect start time | 1200 |
+| `--effectEndMs` | Effect end time | 2000 |
 | `--no-mask` | Skip circular mask | false |
 
 **Outputs:**
@@ -44,7 +44,7 @@ animations/electricity-portal/output/screenshots/timeline/YYYY-MM-DD/HHMMSS__lab
 **Key Features:**
 - Uses sharp for cropping (preserves exact 465×465 dimensions)
 - Applies circular transparency mask
-- Trims to effect timing window (975ms–2138ms)
+- Trims to effect timing window (1200ms–2000ms)
 - Generates APNG at actual capture framerate
 
 ---
@@ -254,24 +254,24 @@ node animations/shared/diff/pipeline.mjs --scenario electricity-portal
   "capture": {
     "viewport": { "width": 1440, "height": 768 },
     "deviceScaleFactor": 1,
-    "duration": 3500,
+    "duration": 3200,
     "fps": 30,
     "captureMode": "video",
     "settleMs": 500,
     "headless": false,
     "mode": "newtopics",
     "crop": {
-      "x": 475,
-      "y": 36,
+      "x": 482,
+      "y": 39,
       "width": 465,
       "height": 465,
       "circularMask": true,
-      "_note": "Centered on portal for 1440x768 viewport, calibrated 2025-12-22"
+      "_note": "Centered on portal for 1440x768 viewport, calibrated 2025-12-24"
     },
     "effectTiming": {
-      "startMs": 975,
-      "endMs": 2138,
-      "_note": "Time-based effect window (~1.16s duration)"
+      "startMs": 1200,
+      "endMs": 2000,
+      "_note": "Peak stable window (0.8s duration)"
     }
   },
 
@@ -303,10 +303,10 @@ node animations/shared/diff/pipeline.mjs --scenario electricity-portal
     "maskVerified": true,
     "dualMaskCalibrated": true,
     "timingVerified": true,
-    "verifiedDate": "2025-12-22",
+    "verifiedDate": "2025-12-24",
     "croppingMethod": "sharp-extract",
-    "effectTimingMs": "975-2138",
-    "cropCoordinates": "475,36 @ 465x465"
+    "effectTimingMs": "1200-2000",
+    "cropCoordinates": "482,39 @ 465x465"
   }
 }
 ```

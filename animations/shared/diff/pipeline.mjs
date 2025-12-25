@@ -22,9 +22,241 @@ import path from 'path';
 import { execSync, spawnSync } from 'child_process';
 import { analyzeCapture } from './analyze.mjs';
 import { cropFrames } from './crop.mjs';
-import { analyzeSSIM as analyzeVideoSSIM, analyzeTemporalConsistency } from './video-analyze.mjs';
+import { analyzeSSIM as analyzeVideoSSIM, analyzeTemporalConsistency, generateSideBySideAPNG } from './video-analyze.mjs';
+import { collectIterations, generateViewer, openInBrowser } from './html-viewer.mjs';
 
 const PROJECT_ROOT = path.resolve(import.meta.dirname, '../../..');
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LOGGING INFRASTRUCTURE
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Pipeline Logger - Detailed step-by-step logging with timing
+ */
+class PipelineLogger {
+  constructor() {
+    this.steps = [];
+    this.currentStep = null;
+    this.pipelineStart = null;
+    this.indentLevel = 0;
+  }
+
+  /**
+   * Start the entire pipeline
+   */
+  startPipeline(scenarioName, iteration) {
+    this.pipelineStart = Date.now();
+    this.steps = [];
+
+    const border = '═'.repeat(70);
+    console.log(`\n${border}`);
+    console.log(`  🚀 ITERATION PIPELINE STARTED`);
+    console.log(`  Scenario: ${scenarioName}`);
+    console.log(`  Iteration: #${iteration}`);
+    console.log(`  Started: ${new Date().toISOString()}`);
+    console.log(`${border}\n`);
+  }
+
+  /**
+   * End the entire pipeline
+   */
+  endPipeline(success, summary = {}) {
+    const duration = Date.now() - this.pipelineStart;
+    const border = '═'.repeat(70);
+
+    console.log(`\n${border}`);
+    console.log(`  ${success ? '✅ PIPELINE COMPLETED' : '❌ PIPELINE FAILED'}`);
+    console.log(`  Total Duration: ${this.formatDuration(duration)}`);
+    console.log(`  Ended: ${new Date().toISOString()}`);
+    console.log(`${border}`);
+
+    // Print step summary
+    console.log(`\n${'─'.repeat(70)}`);
+    console.log('  STEP SUMMARY');
+    console.log('─'.repeat(70));
+
+    for (const step of this.steps) {
+      const status = step.success ? '✅' : (step.skipped ? '⏭️' : '❌');
+      const duration = step.duration ? this.formatDuration(step.duration) : 'N/A';
+      console.log(`  ${status} ${step.name.padEnd(35)} ${duration.padStart(12)}`);
+      if (step.error) {
+        console.log(`      └─ Error: ${step.error}`);
+      }
+      if (step.details) {
+        for (const detail of step.details) {
+          console.log(`      └─ ${detail}`);
+        }
+      }
+    }
+
+    console.log('─'.repeat(70));
+
+    // Print key metrics if available
+    if (summary.ssim !== undefined) {
+      console.log(`\n  📊 KEY METRICS`);
+      console.log(`  Frame SSIM: ${(summary.ssim * 100).toFixed(1)}%`);
+      if (summary.videoSsim !== undefined) {
+        console.log(`  Video SSIM: ${(summary.videoSsim * 100).toFixed(1)}%`);
+      }
+      if (summary.action) {
+        console.log(`  Action: ${summary.action.toUpperCase()}`);
+      }
+    }
+
+    console.log(`\n${border}\n`);
+  }
+
+  /**
+   * Start a new step
+   */
+  startStep(stepNumber, name, description = '') {
+    this.currentStep = {
+      number: stepNumber,
+      name,
+      description,
+      startTime: Date.now(),
+      success: null,
+      skipped: false,
+      error: null,
+      details: [],
+      substeps: []
+    };
+
+    const prefix = `Step ${stepNumber}`;
+    console.log(`\n${'─'.repeat(70)}`);
+    console.log(`  📌 ${prefix}: ${name}`);
+    if (description) {
+      console.log(`     ${description}`);
+    }
+    console.log(`     Started: ${new Date().toISOString()}`);
+    console.log('─'.repeat(70));
+
+    this.indentLevel = 1;
+  }
+
+  /**
+   * End current step with success
+   */
+  endStepSuccess(details = []) {
+    if (!this.currentStep) return;
+
+    this.currentStep.duration = Date.now() - this.currentStep.startTime;
+    this.currentStep.success = true;
+    this.currentStep.details = details;
+
+    console.log(`  ✅ ${this.currentStep.name} COMPLETED`);
+    console.log(`     Duration: ${this.formatDuration(this.currentStep.duration)}`);
+    for (const detail of details) {
+      console.log(`     • ${detail}`);
+    }
+
+    this.steps.push({ ...this.currentStep });
+    this.currentStep = null;
+    this.indentLevel = 0;
+  }
+
+  /**
+   * End current step with failure
+   */
+  endStepFailure(error, details = []) {
+    if (!this.currentStep) return;
+
+    this.currentStep.duration = Date.now() - this.currentStep.startTime;
+    this.currentStep.success = false;
+    this.currentStep.error = error;
+    this.currentStep.details = details;
+
+    console.log(`  ❌ ${this.currentStep.name} FAILED`);
+    console.log(`     Duration: ${this.formatDuration(this.currentStep.duration)}`);
+    console.log(`     Error: ${error}`);
+    for (const detail of details) {
+      console.log(`     • ${detail}`);
+    }
+
+    this.steps.push({ ...this.currentStep });
+    this.currentStep = null;
+    this.indentLevel = 0;
+  }
+
+  /**
+   * Mark current step as skipped
+   */
+  skipStep(reason) {
+    if (!this.currentStep) return;
+
+    this.currentStep.duration = Date.now() - this.currentStep.startTime;
+    this.currentStep.skipped = true;
+    this.currentStep.details = [reason];
+
+    console.log(`  ⏭️  ${this.currentStep.name} SKIPPED`);
+    console.log(`     Reason: ${reason}`);
+
+    this.steps.push({ ...this.currentStep });
+    this.currentStep = null;
+    this.indentLevel = 0;
+  }
+
+  /**
+   * Log a substep within the current step
+   */
+  substep(name) {
+    const indent = '     ';
+    console.log(`${indent}▸ ${name}`);
+    if (this.currentStep) {
+      this.currentStep.substeps.push({ name, time: Date.now() });
+    }
+  }
+
+  /**
+   * Log progress within a substep
+   */
+  progress(message) {
+    const indent = '       ';
+    console.log(`${indent}${message}`);
+  }
+
+  /**
+   * Log a warning
+   */
+  warn(message) {
+    const indent = '     ';
+    console.log(`${indent}⚠️  ${message}`);
+  }
+
+  /**
+   * Log an info message
+   */
+  info(message) {
+    const indent = '     ';
+    console.log(`${indent}ℹ️  ${message}`);
+  }
+
+  /**
+   * Format duration in human-readable format
+   */
+  formatDuration(ms) {
+    if (ms < 1000) return `${ms}ms`;
+    if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
+    const mins = Math.floor(ms / 60000);
+    const secs = ((ms % 60000) / 1000).toFixed(1);
+    return `${mins}m ${secs}s`;
+  }
+
+  /**
+   * Get full step log as JSON (for saving to file)
+   */
+  toJSON() {
+    return {
+      pipelineStart: this.pipelineStart,
+      pipelineDuration: Date.now() - this.pipelineStart,
+      steps: this.steps
+    };
+  }
+}
+
+// Global logger instance
+const logger = new PipelineLogger();
 
 /**
  * Main pipeline orchestrator
@@ -38,130 +270,304 @@ export async function runPipeline(options) {
     outputDir = null
   } = options;
 
-  console.log('\n' + '═'.repeat(60));
-  console.log(`  ITERATION PIPELINE: ${scenarioName}`);
-  console.log(`  Iteration #${iteration}`);
-  console.log('═'.repeat(60) + '\n');
+  // Start pipeline logging
+  logger.startPipeline(scenarioName, iteration);
 
-  // Load scenario config
-  const scenario = loadScenario(scenarioName);
+  let pipelineSuccess = true;
+  let scenario, iterationDir, captureDir, focusDir, analysisResult, convergence, feedback;
 
-  // Create output directory for this iteration
-  const timestamp = getTimestamp();
-  // Output to per-scenario directory: animations/{scenario}/output/iterations/
-  const iterationDir = outputDir || path.join(
-    PROJECT_ROOT,
-    'animations',
-    scenarioName,
-    'output/iterations',
-    `iter_${String(iteration).padStart(3, '0')}_${timestamp}`
-  );
-  fs.mkdirSync(iterationDir, { recursive: true });
-
-  let captureDir = framesDir;
-  let focusDir = framesDir; // Will be set to cropped frames
-
-  // Step 1: Capture (if not skipped)
-  if (!skipCapture && !framesDir) {
-    console.log('📹 Step 1: Capturing animation...');
-    captureDir = await runCapture(scenario, iterationDir);
-  } else if (framesDir) {
-    console.log(`📁 Step 1: Using existing frames from ${framesDir}`);
-    captureDir = framesDir;
-  } else {
-    console.log('⏭️  Step 1: Capture skipped');
-  }
-
-  // Step 1.5: Crop to focus region (if crop config exists and frames need cropping)
-  const needsCropping = await checkNeedsCropping(captureDir, scenario);
-  if (captureDir && scenario.capture?.crop && needsCropping) {
-    console.log('\n✂️  Step 1.5: Cropping to focus region...');
-    focusDir = path.join(iterationDir, 'focus');
-    await runCrop(scenario, captureDir, focusDir);
-  } else if (captureDir && scenario.capture?.crop && !needsCropping) {
-    console.log('\n✂️  Step 1.5: Frames already focused (smaller than crop region), skipping crop');
-    focusDir = captureDir;
-  } else {
-    focusDir = captureDir;
-  }
-
-  // Step 2: Run diff analysis (frames)
-  console.log('\n🔍 Step 2: Running frame diff analysis...');
-  const analysisDir = path.join(iterationDir, 'analysis');
-  const analysisResult = await runAnalysis(scenario, focusDir, analysisDir);
-
-  // Step 2.5: Run video diff analysis (APNG vs reference APNG)
-  let videoAnalysis = null;
-  const capturedApng = findCapturedApng(captureDir);
-  const referenceApng = scenario.reference?.animation;
-
-  if (capturedApng && referenceApng && fs.existsSync(referenceApng)) {
-    console.log('\n🎬 Step 2.5: Running video diff analysis...');
-    const videoAnalysisDir = path.join(analysisDir, 'video');
-    fs.mkdirSync(videoAnalysisDir, { recursive: true });
-
-    videoAnalysis = await runVideoAnalysis(capturedApng, referenceApng, videoAnalysisDir);
-
-    // Merge video SSIM into analysis result for combined feedback
-    analysisResult.videoSsim = videoAnalysis?.aggregate || null;
-    analysisResult.temporalConsistency = videoAnalysis?.temporal?.consistency || null;
-
-    console.log(`  Video SSIM: ${(videoAnalysis.aggregate * 100).toFixed(1)}%`);
-    console.log(`  Temporal consistency: ${((videoAnalysis.temporal?.consistency || 0) * 100).toFixed(1)}%`);
-  }
-
-  // Step 2.6: Open APNG in Chrome for human review
-  if (capturedApng) {
-    console.log('\n🖼️  Step 2.6: Opening APNG in Chrome for review...');
-    openApngInChrome(capturedApng);
-  }
-
-  // Step 3: Check convergence
-  console.log('\n📊 Step 3: Checking convergence...');
-  const convergence = checkConvergence(scenario, analysisResult, iteration);
-
-  // Step 4: Generate feedback
-  console.log('\n📝 Step 4: Generating feedback...');
-  const feedback = generateFeedback(scenario, analysisResult, convergence, iteration);
-
-  // Step 5: Save iteration report
-  const reportPath = path.join(iterationDir, 'iteration_report.md');
-  fs.writeFileSync(reportPath, feedback.markdown);
-
-  // Save machine-readable state
-  const statePath = path.join(iterationDir, 'iteration_state.json');
-  fs.writeFileSync(statePath, JSON.stringify({
-    iteration,
-    timestamp,
-    scenario: scenarioName,
-    scores: {
-      ...analysisResult.scores,
-      videoSsim: analysisResult.videoSsim || null,
-      temporalConsistency: analysisResult.temporalConsistency || null
-    },
-    verdict: analysisResult.verdict,
-    convergence,
-    nextAction: convergence.action,
-    baselineTargets: {
-      static: scenario._baselineMetrics ? {
-        brightnessCore: scenario._baselineMetrics.metrics?.intensity?.[0]?.averageBrightness,
-        brightestHex: scenario._baselineMetrics.metrics?.colors?.brightest?.hex,
-        effectCoverage: scenario._baselineMetrics.metrics?.mask?.coveragePercent
-      } : null,
-      animation: scenario._animationBaseline ? {
-        frameCount: scenario._animationBaseline.metrics?.animation?.frameCount,
-        flickerOscillations: scenario._animationBaseline.metrics?.flicker?.oscillationCount,
-        motionEnergy: scenario._animationBaseline.metrics?.motion?.averageChange,
-        colorConsistency: scenario._animationBaseline.metrics?.colorStability?.colorConsistency
-      } : null
+  try {
+    // ─────────────────────────────────────────────────────────────────────────
+    // STEP 0: Load Configuration
+    // ─────────────────────────────────────────────────────────────────────────
+    logger.startStep('0', 'Load Configuration', 'Loading scenario.json and baseline metrics');
+    try {
+      scenario = loadScenario(scenarioName);
+      logger.substep(`Loaded scenario: ${scenario._path}`);
+      logger.substep(`Reference image: ${scenario.reference.withEffect ? '✓' : '✗'}`);
+      logger.substep(`Mask image: ${scenario.reference.mask ? '✓' : '✗'}`);
+      logger.substep(`Baseline metrics: ${scenario._baselineMetrics ? '✓' : '✗'}`);
+      logger.substep(`Animation baseline: ${scenario._animationBaseline ? '✓' : '✗'}`);
+      logger.endStepSuccess([
+        `Scenario: ${scenarioName}`,
+        `Thresholds: pass=${scenario.thresholds?.ssim?.pass || 0.85}, target=${scenario.convergence?.targetSsim || 0.90}`
+      ]);
+    } catch (error) {
+      logger.endStepFailure(error.message);
+      throw error;
     }
-  }, null, 2));
 
-  // Update latest pointer
-  updateLatestPointer(scenarioName, iterationDir);
+    // Create output directory for this iteration
+    const timestamp = getTimestamp();
+    iterationDir = outputDir || path.join(
+      PROJECT_ROOT,
+      'animations',
+      scenarioName,
+      'output/iterations',
+      `iter_${String(iteration).padStart(3, '0')}_${timestamp}`
+    );
+    fs.mkdirSync(iterationDir, { recursive: true });
+    logger.info(`Output directory: ${iterationDir}`);
 
-  // Print summary
-  printSummary(analysisResult, convergence, iterationDir);
+    captureDir = framesDir;
+    focusDir = framesDir;
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // STEP 1: Capture Animation
+    // ─────────────────────────────────────────────────────────────────────────
+    logger.startStep('1', 'Capture Animation', 'Recording effect frames via Puppeteer');
+    try {
+      if (!skipCapture && !framesDir) {
+        const captureMode = scenario.capture?.captureMode || 'screenshot';
+        logger.substep(`Capture mode: ${captureMode}`);
+        logger.substep(`Duration: ${scenario.capture?.duration || 4000}ms`);
+        logger.substep(`Effect timing: ${scenario.capture?.effectTiming?.startMs || 0}-${scenario.capture?.effectTiming?.endMs || 2000}ms`);
+
+        captureDir = await runCapture(scenario, iterationDir);
+
+        const frameCount = fs.readdirSync(captureDir).filter(f => f.endsWith('.png')).length;
+        logger.endStepSuccess([
+          `Captured ${frameCount} frames`,
+          `Output: ${captureDir}`
+        ]);
+      } else if (framesDir) {
+        logger.skipStep(`Using existing frames from ${framesDir}`);
+        captureDir = framesDir;
+      } else {
+        logger.skipStep('Capture disabled');
+      }
+    } catch (error) {
+      logger.endStepFailure(error.message);
+      throw error;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // STEP 1.5: Crop to Focus Region
+    // ─────────────────────────────────────────────────────────────────────────
+    logger.startStep('1.5', 'Crop to Focus Region', 'Extracting effect region from full frames');
+    try {
+      const needsCropping = await checkNeedsCropping(captureDir, scenario);
+
+      if (captureDir && scenario.capture?.crop && needsCropping) {
+        const crop = scenario.capture.crop;
+        logger.substep(`Crop region: ${crop.width}x${crop.height} at (${crop.x}, ${crop.y})`);
+        logger.substep(`Circular mask: ${crop.circularMask ? 'yes' : 'no'}`);
+
+        focusDir = path.join(iterationDir, 'focus');
+        await runCrop(scenario, captureDir, focusDir);
+
+        const croppedCount = fs.readdirSync(focusDir).filter(f => f.endsWith('.png')).length;
+        logger.endStepSuccess([
+          `Cropped ${croppedCount} frames`,
+          `Output: ${focusDir}`
+        ]);
+      } else if (captureDir && scenario.capture?.crop && !needsCropping) {
+        logger.skipStep('Frames already at target size');
+        focusDir = captureDir;
+      } else {
+        logger.skipStep('No crop configuration');
+        focusDir = captureDir;
+      }
+    } catch (error) {
+      logger.endStepFailure(error.message);
+      throw error;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // STEP 2: Frame Diff Analysis
+    // ─────────────────────────────────────────────────────────────────────────
+    logger.startStep('2', 'Frame Diff Analysis', 'Computing SSIM scores against reference');
+    try {
+      const analysisDir = path.join(iterationDir, 'analysis');
+      logger.substep(`Reference: ${path.basename(scenario.reference.withEffect)}`);
+      logger.substep(`Mask: ${scenario.reference.mask ? path.basename(scenario.reference.mask) : 'none'}`);
+
+      analysisResult = await runAnalysis(scenario, focusDir, analysisDir);
+
+      const ssim = analysisResult.scores?.bestSsim || 0;
+      const meanSsim = analysisResult.scores?.meanSsim || 0;
+      const diffPercent = analysisResult.scores?.bestDiffPercent || 100;
+
+      logger.endStepSuccess([
+        `Best SSIM: ${(ssim * 100).toFixed(1)}%`,
+        `Mean SSIM: ${(meanSsim * 100).toFixed(1)}%`,
+        `Diff: ${diffPercent.toFixed(1)}%`,
+        `Frames analyzed: ${analysisResult.framesAnalyzed || 0}`
+      ]);
+    } catch (error) {
+      logger.endStepFailure(error.message);
+      throw error;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // STEP 2.5: Video Diff Analysis
+    // ─────────────────────────────────────────────────────────────────────────
+    logger.startStep('2.5', 'Video Diff Analysis', 'Comparing APNG animations');
+    try {
+      const capturedApng = findCapturedApng(captureDir);
+      const referenceApng = scenario.reference?.animation;
+
+      if (capturedApng && referenceApng && fs.existsSync(referenceApng)) {
+        logger.substep(`Captured: ${path.basename(capturedApng)}`);
+        logger.substep(`Reference: ${path.basename(referenceApng)}`);
+
+        const videoAnalysisDir = path.join(iterationDir, 'analysis', 'video');
+        fs.mkdirSync(videoAnalysisDir, { recursive: true });
+
+        const videoAnalysis = await runVideoAnalysis(capturedApng, referenceApng, videoAnalysisDir);
+
+        if (videoAnalysis) {
+          analysisResult.videoSsim = videoAnalysis.aggregate || null;
+          analysisResult.temporalConsistency = videoAnalysis.temporal?.consistency || null;
+
+          logger.endStepSuccess([
+            `Video SSIM: ${((videoAnalysis.aggregate || 0) * 100).toFixed(1)}%`,
+            `Temporal consistency: ${((videoAnalysis.temporal?.consistency || 0) * 100).toFixed(1)}%`
+          ]);
+        } else {
+          logger.endStepSuccess(['Video analysis returned no results']);
+        }
+      } else {
+        logger.skipStep(capturedApng ? 'Reference APNG not found' : 'Captured APNG not found');
+      }
+    } catch (error) {
+      logger.warn(`Video analysis failed: ${error.message}`);
+      logger.endStepSuccess(['Video analysis skipped due to error']);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // STEP 2.6: Open APNG for Review
+    // ─────────────────────────────────────────────────────────────────────────
+    logger.startStep('2.6', 'Open APNG for Review', 'Opening animation in Chrome');
+    try {
+      const capturedApng = findCapturedApng(captureDir);
+      if (capturedApng) {
+        openApngInChrome(capturedApng);
+        logger.endStepSuccess([`Opened: ${capturedApng}`]);
+      } else {
+        logger.skipStep('No APNG available');
+      }
+    } catch (error) {
+      logger.warn(`Could not open APNG: ${error.message}`);
+      logger.endStepSuccess(['APNG open skipped']);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // STEP 3: Check Convergence
+    // ─────────────────────────────────────────────────────────────────────────
+    logger.startStep('3', 'Check Convergence', 'Evaluating iteration progress');
+    try {
+      convergence = checkConvergence(scenario, analysisResult, iteration);
+
+      logger.substep(`Current SSIM: ${(convergence.currentSsim * 100).toFixed(1)}%`);
+      logger.substep(`Pass threshold: ${(convergence.passThreshold * 100).toFixed(0)}%`);
+      logger.substep(`Target SSIM: ${(convergence.targetSsim * 100).toFixed(0)}%`);
+      logger.substep(`Action: ${convergence.action.toUpperCase()}`);
+
+      logger.endStepSuccess([
+        `Action: ${convergence.action.toUpperCase()}`,
+        `Reason: ${convergence.reason}`
+      ]);
+    } catch (error) {
+      logger.endStepFailure(error.message);
+      throw error;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // STEP 4: Generate Feedback
+    // ─────────────────────────────────────────────────────────────────────────
+    logger.startStep('4', 'Generate Feedback', 'Creating iteration report');
+    try {
+      feedback = generateFeedback(scenario, analysisResult, convergence, iteration);
+      logger.endStepSuccess([
+        `Report generated`,
+        `Action: ${feedback.action}`,
+        `SSIM: ${(feedback.ssim * 100).toFixed(1)}%`
+      ]);
+    } catch (error) {
+      logger.endStepFailure(error.message);
+      throw error;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // STEP 5: Save Results
+    // ─────────────────────────────────────────────────────────────────────────
+    logger.startStep('5', 'Save Results', 'Writing reports and state files');
+    try {
+      // Save iteration report
+      const reportPath = path.join(iterationDir, 'iteration_report.md');
+      fs.writeFileSync(reportPath, feedback.markdown);
+      logger.substep(`Saved: iteration_report.md`);
+
+      // Save machine-readable state
+      const statePath = path.join(iterationDir, 'iteration_state.json');
+      fs.writeFileSync(statePath, JSON.stringify({
+        iteration,
+        timestamp,
+        scenario: scenarioName,
+        scores: {
+          ...analysisResult.scores,
+          videoSsim: analysisResult.videoSsim || null,
+          temporalConsistency: analysisResult.temporalConsistency || null
+        },
+        verdict: analysisResult.verdict,
+        convergence,
+        nextAction: convergence.action,
+        baselineTargets: {
+          static: scenario._baselineMetrics ? {
+            brightnessCore: scenario._baselineMetrics.metrics?.intensity?.[0]?.averageBrightness,
+            brightestHex: scenario._baselineMetrics.metrics?.colors?.brightest?.hex,
+            effectCoverage: scenario._baselineMetrics.metrics?.mask?.coveragePercent
+          } : null,
+          animation: scenario._animationBaseline ? {
+            frameCount: scenario._animationBaseline.metrics?.animation?.frameCount,
+            flickerOscillations: scenario._animationBaseline.metrics?.flicker?.oscillationCount,
+            motionEnergy: scenario._animationBaseline.metrics?.motion?.averageChange,
+            colorConsistency: scenario._animationBaseline.metrics?.colorStability?.colorConsistency
+          } : null
+        },
+        pipelineLog: logger.toJSON()
+      }, null, 2));
+      logger.substep(`Saved: iteration_state.json`);
+
+      // Update latest pointer
+      updateLatestPointer(scenarioName, iterationDir);
+      logger.substep(`Updated: LATEST.txt`);
+
+      logger.endStepSuccess([
+        `Output directory: ${iterationDir}`,
+        `Reports saved successfully`
+      ]);
+    } catch (error) {
+      logger.endStepFailure(error.message);
+      throw error;
+    }
+
+  } catch (error) {
+    pipelineSuccess = false;
+    console.error(`\n❌ Pipeline error: ${error.message}`);
+    if (process.env.DEBUG) console.error(error.stack);
+  }
+
+  // End pipeline with summary
+  logger.endPipeline(pipelineSuccess, {
+    ssim: analysisResult?.scores?.bestSsim,
+    videoSsim: analysisResult?.videoSsim,
+    action: convergence?.action
+  });
+
+  // Generate and open HTML viewer with all iterations
+  try {
+    const outputDir = path.join(PROJECT_ROOT, 'animations', scenario.name, 'output');
+    const iterations = collectIterations(outputDir, scenario.name, scenario);
+
+    if (iterations.length > 0) {
+      const htmlPath = await generateViewer(outputDir, iterations, scenario.name, scenario);
+      await openInBrowser(htmlPath);
+    }
+  } catch (viewerError) {
+    console.warn(`Could not open HTML viewer: ${viewerError.message}`);
+  }
 
   return {
     iteration,
@@ -253,8 +659,8 @@ async function runVideoCapture(scenario, captureDir, captureConfig) {
     '--duration', String(captureConfig.duration || 4000),
     '--settleMs', String(captureConfig.settleMs || 500),
     '--fps', String(captureConfig.videoFps || 30),
-    '--effectStartMs', String(effectTiming.startMs || 600),
-    '--effectEndMs', String(effectTiming.endMs || 2450),
+    '--effectStartMs', String(effectTiming.startMs || 1200),
+    '--effectEndMs', String(effectTiming.endMs || 2000),
   ];
 
   // Add crop args if specified
@@ -269,32 +675,40 @@ async function runVideoCapture(scenario, captureDir, captureConfig) {
     args.push('--no-mask');
   }
 
-  console.log(`  Running video capture: ${args.slice(0, 4).join(' ')} ...`);
-  console.log(`  Mode: Video screencast with effect timing ${effectTiming.startMs}-${effectTiming.endMs}ms`);
+  logger.substep(`Launching Puppeteer video capture...`);
+  logger.progress(`Command: node animations/shared/capture/video.mjs`);
+  logger.progress(`Viewport: ${viewport.width}x${viewport.height}`);
+  logger.progress(`Crop: ${cropConfig.width}x${cropConfig.height} at (${cropConfig.x}, ${cropConfig.y})`);
 
+  const captureStartTime = Date.now();
   const result = spawnSync(args[0], args.slice(1), {
     cwd: PROJECT_ROOT,
     stdio: 'pipe',
     env: { ...process.env }
   });
+  const captureElapsed = Date.now() - captureStartTime;
 
   const stdout = result.stdout?.toString() || '';
   const stderr = result.stderr?.toString() || '';
 
+  logger.progress(`Puppeteer capture completed in ${logger.formatDuration(captureElapsed)}`);
+
   if (result.status !== 0) {
-    console.error('  Capture stdout:', stdout);
-    console.error('  Capture stderr:', stderr);
+    logger.warn(`Capture stdout: ${stdout.slice(0, 500)}`);
+    logger.warn(`Capture stderr: ${stderr.slice(0, 500)}`);
     throw new Error(`Video capture failed with status ${result.status}`);
   }
 
   // Parse output to find the capture directory
   const outDirMatch = stdout.match(/Output directory:\s*(.+)/);
   if (!outDirMatch) {
-    console.error('  Capture output:', stdout);
+    logger.warn(`Could not parse output directory from: ${stdout.slice(0, 300)}`);
     throw new Error('Could not parse video capture output directory');
   }
 
   const videoCaptureDir = outDirMatch[1].trim();
+  logger.progress(`Video capture output: ${videoCaptureDir}`);
+
   const maskedDir = path.join(videoCaptureDir, 'masked');
 
   // Copy masked frames to our iteration frames directory
@@ -303,6 +717,8 @@ async function runVideoCapture(scenario, captureDir, captureConfig) {
       .filter(f => f.endsWith('.png'))
       .sort();
 
+    logger.substep(`Copying ${maskedFrames.length} masked frames...`);
+
     for (const frame of maskedFrames) {
       fs.copyFileSync(
         path.join(maskedDir, frame),
@@ -310,7 +726,7 @@ async function runVideoCapture(scenario, captureDir, captureConfig) {
       );
     }
 
-    console.log(`  Copied ${maskedFrames.length} masked frames to ${captureDir}`);
+    logger.progress(`Copied to: ${captureDir}`);
 
     // Also copy animation.apng if it exists
     const apngSource = path.join(videoCaptureDir, 'animation.apng');
@@ -318,7 +734,7 @@ async function runVideoCapture(scenario, captureDir, captureConfig) {
       const iterationDir = path.dirname(captureDir);
       const apngDest = path.join(iterationDir, 'animation.apng');
       fs.copyFileSync(apngSource, apngDest);
-      console.log(`  Copied animation.apng to ${apngDest}`);
+      logger.progress(`Copied animation.apng`);
     }
   } else {
     // Fallback to crops directory
@@ -328,6 +744,8 @@ async function runVideoCapture(scenario, captureDir, captureConfig) {
         .filter(f => f.endsWith('.png'))
         .sort();
 
+      logger.substep(`Copying ${cropFrames.length} cropped frames (fallback)...`);
+
       for (const frame of cropFrames) {
         fs.copyFileSync(
           path.join(cropsDir, frame),
@@ -335,7 +753,7 @@ async function runVideoCapture(scenario, captureDir, captureConfig) {
         );
       }
 
-      console.log(`  Copied ${cropFrames.length} cropped frames to ${captureDir}`);
+      logger.progress(`Copied to: ${captureDir}`);
 
       // Also copy animation.apng if it exists
       const apngSource = path.join(videoCaptureDir, 'animation.apng');
@@ -343,7 +761,7 @@ async function runVideoCapture(scenario, captureDir, captureConfig) {
         const iterationDir = path.dirname(captureDir);
         const apngDest = path.join(iterationDir, 'animation.apng');
         fs.copyFileSync(apngSource, apngDest);
-        console.log(`  Copied animation.apng to ${apngDest}`);
+        logger.progress(`Copied animation.apng`);
       }
     } else {
       throw new Error(`No frames found in ${videoCaptureDir}`);
@@ -387,19 +805,27 @@ async function runScreenshotCapture(scenario, captureDir, captureConfig) {
     }
   }
 
-  console.log(`  Running screenshot capture: ${args.slice(0, 4).join(' ')} ...`);
+  logger.substep(`Launching screenshot burst capture...`);
+  logger.progress(`Command: node animations/shared/capture/run.mjs`);
+  logger.progress(`Headless: ${headless}`);
+  logger.progress(`Viewport: ${viewport.width}x${viewport.height}`);
+  logger.progress(`Burst: ${captureConfig.burstFrames || 30} frames @ ${captureConfig.burstIntervalMs || 50}ms interval`);
 
+  const captureStartTime = Date.now();
   const result = spawnSync(args[0], args.slice(1), {
     cwd: PROJECT_ROOT,
     stdio: 'pipe',
     env: { ...process.env }
   });
+  const captureElapsed = Date.now() - captureStartTime;
+
+  logger.progress(`Screenshot capture completed in ${logger.formatDuration(captureElapsed)}`);
 
   if (result.status !== 0) {
     const stderr = result.stderr?.toString() || '';
     const stdout = result.stdout?.toString() || '';
-    console.error('  Capture output:', stdout);
-    console.error('  Capture errors:', stderr);
+    logger.warn(`Capture stdout: ${stdout.slice(0, 500)}`);
+    logger.warn(`Capture stderr: ${stderr.slice(0, 500)}`);
     throw new Error(`Screenshot capture failed with status ${result.status}`);
   }
 
@@ -413,12 +839,14 @@ async function runScreenshotCapture(scenario, captureDir, captureConfig) {
     const cropsDir = cropsMatch ? cropsMatch[1].trim() : null;
     const sourceDir = cropsDir && fs.existsSync(cropsDir) ? cropsDir : actualCaptureDir;
 
-    console.log(`  Captured to: ${actualCaptureDir}`);
-    if (cropsDir) console.log(`  Using crops from: ${cropsDir}`);
+    logger.progress(`Captured to: ${actualCaptureDir}`);
+    if (cropsDir) logger.progress(`Using crops from: ${cropsDir}`);
 
     // Copy frames to our iteration directory
     const sourceFrames = fs.readdirSync(sourceDir)
       .filter(f => f.endsWith('.png'));
+
+    logger.substep(`Copying ${sourceFrames.length} frames...`);
 
     for (const frame of sourceFrames) {
       fs.copyFileSync(
@@ -427,9 +855,9 @@ async function runScreenshotCapture(scenario, captureDir, captureConfig) {
       );
     }
 
-    console.log(`  Copied ${sourceFrames.length} frames to ${captureDir}`);
+    logger.progress(`Copied to: ${captureDir}`);
   } else {
-    console.warn('  ⚠️  Could not parse capture output directory');
+    logger.warn('Could not parse capture output directory');
   }
 
   return captureDir;
@@ -828,34 +1256,6 @@ function updateLatestPointer(scenarioName, iterationDir) {
 }
 
 /**
- * Print summary
- */
-function printSummary(analysisResult, convergence, iterationDir) {
-  const ssim = analysisResult.scores?.bestSsim || 0;
-  const videoSsim = analysisResult.videoSsim;
-  const temporal = analysisResult.temporalConsistency;
-
-  console.log('\n' + '═'.repeat(60));
-  console.log('  ITERATION SUMMARY');
-  console.log('═'.repeat(60));
-  console.log(`  Frame SSIM: ${(ssim * 100).toFixed(1)}%`);
-  if (videoSsim) {
-    console.log(`  Video SSIM: ${(videoSsim * 100).toFixed(1)}%`);
-  }
-  if (temporal) {
-    console.log(`  Temporal:   ${(temporal * 100).toFixed(1)}%`);
-  }
-  console.log(`  Threshold:  ${(convergence.passThreshold * 100).toFixed(0)}%`);
-  console.log(`  Target:     ${(convergence.targetSsim * 100).toFixed(0)}%`);
-  console.log('─'.repeat(60));
-  console.log(`  Action:     ${convergence.action.toUpperCase()}`);
-  console.log(`  Reason:     ${convergence.reason}`);
-  console.log('─'.repeat(60));
-  console.log(`  Output:     ${iterationDir}`);
-  console.log('═'.repeat(60) + '\n');
-}
-
-/**
  * Get timestamp
  */
 function getTimestamp() {
@@ -932,11 +1332,21 @@ async function runVideoAnalysis(capturedPath, referencePath, outputDir) {
     // Parse per-frame scores for temporal analysis
     const temporal = analyzeTemporalConsistency(ssim.perFrame);
 
+    // Generate side-by-side comparison APNG
+    let sideBySidePath = null;
+    try {
+      sideBySidePath = path.join(outputDir, 'animation_comparison.apng');
+      await generateSideBySideAPNG(referencePath, capturedPath, sideBySidePath);
+    } catch (sbsError) {
+      console.warn(`  Side-by-side generation failed: ${sbsError.message}`);
+    }
+
     // Save results
     const results = {
       timestamp: new Date().toISOString(),
       captured: capturedPath,
       reference: referencePath,
+      sideBySide: sideBySidePath,
       ssim: {
         aggregate: ssim.aggregate,
         min: ssim.min,
@@ -952,7 +1362,7 @@ async function runVideoAnalysis(capturedPath, referencePath, outputDir) {
       JSON.stringify(results, null, 2)
     );
 
-    return { ...ssim, temporal };
+    return { ...ssim, temporal, sideBySidePath };
   } catch (error) {
     console.warn(`  Video analysis failed: ${error.message}`);
     return null;

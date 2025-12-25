@@ -168,8 +168,8 @@ Verified 2025-12-22:
 | Parameter | Value |
 |-----------|-------|
 | **Viewport** | 1440×768 @ 1x scale |
-| **Crop** | (475, 36) @ 465×465 |
-| **Effect Timing** | 975ms–2138ms |
+| **Crop** | (482, 39) @ 465×465 |
+| **Effect Timing** | 1200–2000ms |
 | **Cropping** | sharp extract (not ffmpeg) |
 
 ### Mask

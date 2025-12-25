@@ -21,14 +21,14 @@ We need to capture during peak intensity using video.mjs.
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `duration` | Total recording duration (ms) | 4000 |
-| `effectStartMs` | When effect starts after trigger | 975 |
-| `effectEndMs` | When effect ends after trigger | 2138 |
+| `duration` | Total recording duration (ms) | 3200 |
+| `effectStartMs` | When effect starts after trigger | 1200 |
+| `effectEndMs` | When effect ends after trigger | 2000 |
 | `settleMs` | Wait before trigger | 500 |
 
 **Effect window = effectEndMs - effectStartMs**
 
-Calibrated: 2138 - 975 = 1163ms (~1.16s)
+Calibrated: 2000 - 1200 = 800ms (peak stable window, 2025-12-24)
 
 ---
 
@@ -157,8 +157,8 @@ Save verified timing parameters in scenario.json:
 {
   "capture": {
     "effectTiming": {
-      "startMs": 975,
-      "endMs": 2138
+      "startMs": 1200,
+      "endMs": 2000
     }
   }
 }
@@ -184,12 +184,14 @@ Show the human:
 
 | Parameter | Value |
 |-----------|-------|
-| effectStartMs | 975 |
-| effectEndMs | 2138 |
-| duration | 4000 |
+| effectStartMs | 1200 |
+| effectEndMs | 2000 |
+| duration | 3200 |
 | settleMs | 500 |
 | viewport | 1440×768 |
-| crop | (475, 36) @ 465×465 |
+| crop | (482, 39) @ 465×465 |
+
+*Calibrated 2025-12-24*
 
 ---
 

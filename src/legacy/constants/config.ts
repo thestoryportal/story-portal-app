@@ -17,17 +17,14 @@ export const ELECTRICITY_CONFIG = {
   // Set to null for random (production) behavior.
   // When enabled, call resetDeterministicRandom() at effect start.
   deterministicSeed: 42 as number | null, // 42 = iteration mode, null = production mode
-  // === EFFECT TIMING (source of truth for capture pipeline) ===
+  // === EFFECT TIMING ===
+  // NOTE: scenario.json is the source of truth for capture pipeline timing.
   // These values are used by:
   //   - useWheelSelection.ts (effect duration, topic swap delay)
-  //   - scenario.json (capture window timing)
-  //   - video.mjs (capture window defaults)
-  // If you change these, the capture pipeline will stay in sync.
   effectDurationMs: 3000,         // Total effect duration after "New Topics" click
   topicSwapDelayMs: 1000,         // When wheel topics actually swap
-  captureWindowStartMs: 975,      // Capture starts (late build phase, approaching peak)
-  captureWindowEndMs: 2138,       // Capture ends (into calm phase)
-  // Capture window rationale: 975-2138ms captures end of BUILD, full PEAK, start of CALM
+  // Capture timing is defined in scenario.json (1200-2000ms peak-only window)
+  // Calibrated 2025-12-24 for mask alignment and peak stability
 
   // Bolt structure - 12-20 arcs radiating from center
   numMainBolts: 18, // Dense radial bolt count

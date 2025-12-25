@@ -55,13 +55,13 @@ cropHeight = 465
 ```
 
 **Example (calibrated for 1440×768 viewport):**
-Portal center at (707.5, 268.5):
+Portal center at (714.5, 271.5):
 ```
-cropX = 707.5 - 232.5 = 475
-cropY = 268.5 - 232.5 = 36
+cropX = 714.5 - 232.5 = 482
+cropY = 271.5 - 232.5 = 39
 ```
 
-**Current calibrated values:** (475, 36) @ 465×465
+**Current calibrated values:** (482, 39) @ 465×465 (calibrated 2025-12-24)
 
 ---
 
@@ -70,8 +70,8 @@ cropY = 268.5 - 232.5 = 36
 ```bash
 # Edit animations/electricity-portal/scenario.json
 jq '.capture.crop = {
-  "x": 475,
-  "y": 36,
+  "x": 482,
+  "y": 39,
   "width": 465,
   "height": 465,
   "circularMask": true

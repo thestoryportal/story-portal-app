@@ -5,7 +5,7 @@
   "capture": {
     "selector": "[data-capture='portal']",
     "fallbackSelector": ".portal-container",
-    "duration": 3500,
+    "duration": 3200,
     "fps": 30,
     "captureMode": "video",
     "videoFps": 30,
@@ -18,21 +18,22 @@
     "headless": false,
     "mode": "newtopics",
     "crop": {
-      "x": 481,
-      "y": 40,
+      "x": 482,
+      "y": 39,
       "width": 465,
       "height": 465,
       "circularMask": true,
       "maskOffsetX": 0,
       "maskOffsetY": 0,
       "maskRadiusAdjust": 0,
-      "_note": "Calibrated 2025-12-23: 465x465, x=481 y=40"
+      "_note": "Calibrated 2025-12-24: 465x465, x=482 y=39 (left 1px, down 1px for mask alignment)"
     },
     "effectTiming": {
-      "startMs": 975,
-      "endMs": 2138,
-      "_sourceOfTruth": "src/legacy/constants/config.ts → ELECTRICITY_CONFIG.captureWindowStartMs/EndMs",
-      "_note": "Time-based effect window (~1.16s duration), calibrated 2025-12-22. Keep in sync with config.ts."
+      "startMs": 1200,
+      "endMs": 2000,
+      "targetFrameCount": 128,
+      "loopToMatch": true,
+      "_note": "Peak stable window (1200-2000ms, 0.8s). Loop to match reference 128 frames."
     }
   },
 
@@ -126,16 +127,16 @@
     "timingVerified": true,
     "videoPipelineVerified": true,
     "referenceAlignmentComplete": true,
-    "verifiedDate": "2025-12-23",
+    "verifiedDate": "2025-12-24",
     "captureFormat": "jpeg",
     "captureMode": "video-screencast",
     "croppingMethod": "sharp-extract",
-    "effectDuration": "~1.16s",
-    "effectTimingMs": "975-2138",
+    "effectDuration": "0.8s (peak-only window)",
+    "effectTimingMs": "1200-2000",
     "circularMaskApplied": true,
-    "cropCoordinates": "481,40 @ 465x465",
+    "cropCoordinates": "482,39 @ 465x465",
     "soraAlignmentParams": "452x463, offset (5,1) on 465x465 canvas",
-    "_calibrationNote": "Fully calibrated 2025-12-23: crop x=481 y=40 465x465, single mask (capture 319x317), Sora reference aligned 452x463 offset (5,1)"
+    "_calibrationNote": "Calibrated 2025-12-24: crop x=482 y=39 (mask alignment), timing 1200-2000ms (peak-only window)"
   },
 
   "visualSpec": {

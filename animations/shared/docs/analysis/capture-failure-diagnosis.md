@@ -254,6 +254,6 @@ If after working through this checklist the issue persists:
    - Add console.log statements
 
 4. **Verify calibrated values:**
-   - Crop: (475, 36) @ 465×465
-   - Effect timing: 975ms–2138ms
+   - Crop: (482, 39) @ 465×465
+   - Effect timing: 1200–2000ms
    - Viewport: 1440×768

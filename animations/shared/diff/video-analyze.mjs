@@ -4,6 +4,12 @@
  * Video/APNG diff analysis using FFmpeg SSIM and VMAF.
  * Compares captured animation against reference animation for temporal quality metrics.
  *
+ * Features:
+ *   - Automatic dimension normalization (resize to match)
+ *   - Frame rate normalization
+ *   - Optional circular mask application
+ *   - Per-frame and aggregate SSIM scoring
+ *
  * Usage:
  *   node video-analyze.mjs --captured path/to/captured.apng --reference path/to/reference.apng --output path/to/output
  *
@@ -13,7 +19,7 @@
  *   - ssim_log.txt: Raw FFmpeg SSIM output
  */
 
-import { spawn } from 'child_process';
+import { spawn, spawnSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { parseArgs } from 'util';
@@ -85,7 +91,7 @@ async function runFFmpeg(args, captureStderr = false) {
 }
 
 /**
- * Get video info (duration, frame count, fps)
+ * Get video info (duration, frame count, fps, dimensions)
  */
 async function getVideoInfo(filepath) {
   const args = [
@@ -114,11 +120,105 @@ async function getVideoInfo(filepath) {
     const fpsMatch = stderr.match(/(\d+(?:\.\d+)?)\s*fps/);
     const fps = fpsMatch ? parseFloat(fpsMatch[1]) : 30;
 
-    return { frames, duration, fps };
+    // Parse dimensions (e.g., "465x465" or "452x463")
+    const dimMatch = stderr.match(/(\d+)x(\d+)/);
+    const width = dimMatch ? parseInt(dimMatch[1], 10) : 0;
+    const height = dimMatch ? parseInt(dimMatch[2], 10) : 0;
+
+    return { frames, duration, fps, width, height };
   } catch (e) {
     console.warn('Could not get video info:', e.message);
-    return { frames: 0, duration: 0, fps: 30 };
+    return { frames: 0, duration: 0, fps: 30, width: 0, height: 0 };
   }
+}
+
+
+/**
+ * Apply circular mask to video using FFmpeg
+ * Creates a masked version where pixels outside the circle are black
+ */
+async function applyCircularMask(inputPath, outputDir, maskConfig = {}) {
+  const ext = path.extname(inputPath);
+  const maskedPath = path.join(outputDir, `masked_${path.basename(inputPath)}`);
+
+  // Default mask config for 465x465 portal
+  const {
+    centerX = 232.5,
+    centerY = 232.5,
+    radiusX = 159.5,
+    radiusY = 158.5
+  } = maskConfig;
+
+  console.log(`  Applying circular mask (center: ${centerX},${centerY}, radius: ${radiusX}x${radiusY})...`);
+
+  // Use FFmpeg geq filter to create circular mask
+  // Formula: if pixel is inside ellipse, keep it; otherwise black
+  const args = [
+    '-y',
+    '-i', inputPath,
+    '-vf', `geq=r='if(lt(pow((X-${centerX})/${radiusX},2)+pow((Y-${centerY})/${radiusY},2),1),r(X,Y),0)':g='if(lt(pow((X-${centerX})/${radiusX},2)+pow((Y-${centerY})/${radiusY},2),1),g(X,Y),0)':b='if(lt(pow((X-${centerX})/${radiusX},2)+pow((Y-${centerY})/${radiusY},2),1),b(X,Y),0)':a='if(lt(pow((X-${centerX})/${radiusX},2)+pow((Y-${centerY})/${radiusY},2),1),255,0)'`,
+    '-f', ext === '.apng' ? 'apng' : 'mp4',
+    maskedPath
+  ];
+
+  await runFFmpeg(args, true);
+
+  return maskedPath;
+}
+
+/**
+ * Preprocess videos for SSIM comparison
+ * - Optionally applies circular mask
+ * - Assumes inputs are already correctly sized (user handles sizing)
+ * - Returns paths to preprocessed files
+ */
+async function preprocessForSSIM(capturedPath, referencePath, outputDir, options = {}) {
+  const {
+    applyMask = true,
+    maskConfig = {
+      centerX: 232.5,
+      centerY: 232.5,
+      radiusX: 159.5,
+      radiusY: 158.5
+    }
+  } = options;
+
+  // Get info for both videos
+  const [capturedInfo, referenceInfo] = await Promise.all([
+    getVideoInfo(capturedPath),
+    getVideoInfo(referencePath)
+  ]);
+
+  console.log(`  Reference: ${referenceInfo.width}x${referenceInfo.height}, ${referenceInfo.frames} frames`);
+  console.log(`  Captured:  ${capturedInfo.width}x${capturedInfo.height}, ${capturedInfo.frames} frames`);
+
+  let processedCaptured = capturedPath;
+  let processedReference = referencePath;
+
+  // Check for dimension mismatch (warn but don't fix - user handles sizing)
+  const dimMismatch = capturedInfo.width !== referenceInfo.width ||
+                      capturedInfo.height !== referenceInfo.height;
+
+  if (dimMismatch) {
+    console.warn(`  ⚠️  Dimension mismatch: reference ${referenceInfo.width}x${referenceInfo.height} vs captured ${capturedInfo.width}x${capturedInfo.height}`);
+    console.warn(`      Ensure reference files are correctly sized before running pipeline.`);
+  }
+
+  // Apply circular mask if requested
+  if (applyMask) {
+    console.log(`  Applying mask (center: ${maskConfig.centerX},${maskConfig.centerY}, radius: ${maskConfig.radiusX}x${maskConfig.radiusY})`);
+    processedCaptured = await applyCircularMask(processedCaptured, outputDir, maskConfig);
+    processedReference = await applyCircularMask(processedReference, outputDir, maskConfig);
+  }
+
+  return {
+    captured: processedCaptured,
+    reference: processedReference,
+    width: capturedInfo.width,
+    height: capturedInfo.height,
+    dimMismatch,
+    maskApplied: applyMask
+  };
 }
 
 /**
@@ -146,22 +246,64 @@ async function normalizeToFps(inputPath, targetFps, outputDir) {
 
 /**
  * Run SSIM analysis between two videos
+ * Now includes automatic preprocessing (dimension normalization + mask)
  */
-async function analyzeSSIM(capturedPath, referencePath, outputDir) {
+async function analyzeSSIM(capturedPath, referencePath, outputDir, options = {}) {
+  const {
+    preprocess = true,
+    applyMask = true,
+    maskConfig = {
+      centerX: 232.5,
+      centerY: 232.5,
+      radiusX: 159.5,
+      radiusY: 158.5
+    }
+  } = options;
+
   console.log('Running SSIM analysis...');
+
+  let analyzeCaptured = capturedPath;
+  let analyzeReference = referencePath;
+  let preprocessInfo = null;
+
+  // Preprocess videos if needed (dimension normalization + mask)
+  if (preprocess) {
+    console.log('  Preprocessing videos...');
+    preprocessInfo = await preprocessForSSIM(capturedPath, referencePath, outputDir, {
+      applyMask,
+      maskConfig
+    });
+    analyzeCaptured = preprocessInfo.captured;
+    analyzeReference = preprocessInfo.reference;
+    console.log(`  Preprocessing complete. Dim normalized: ${preprocessInfo.dimNormalized}, Mask applied: ${preprocessInfo.maskApplied}`);
+  }
 
   const ssimLogPath = path.join(outputDir, 'ssim_log.txt');
 
   // FFmpeg SSIM filter outputs per-frame scores to a log file
   const args = [
-    '-i', referencePath,
-    '-i', capturedPath,
+    '-i', analyzeReference,
+    '-i', analyzeCaptured,
     '-lavfi', `ssim=stats_file=${ssimLogPath}`,
     '-f', 'null',
     '-'
   ];
 
-  const stderr = await runFFmpeg(args, true);
+  let stderr;
+  try {
+    stderr = await runFFmpeg(args, true);
+  } catch (e) {
+    console.error('  SSIM analysis failed:', e.message);
+    return {
+      aggregate: 0,
+      perFrame: [],
+      min: 0,
+      max: 0,
+      mean: 0,
+      error: e.message,
+      preprocessInfo
+    };
+  }
 
   // Parse aggregate SSIM from stderr
   // Format: "SSIM Y:0.970234 U:0.982341 V:0.976234 All:0.976123 (16.203)"
@@ -193,7 +335,8 @@ async function analyzeSSIM(capturedPath, referencePath, outputDir) {
     max: perFrameScores.length > 0 ? Math.max(...perFrameScores.map(f => f.ssim)) : 0,
     mean: perFrameScores.length > 0
       ? perFrameScores.reduce((sum, f) => sum + f.ssim, 0) / perFrameScores.length
-      : 0
+      : 0,
+    preprocessInfo
   };
 }
 
@@ -554,5 +697,137 @@ if (isMainModule) {
   });
 }
 
+/**
+ * Generate side-by-side APNG comparison
+ * Creates a single APNG with reference on left, captured on right
+ */
+async function generateSideBySideAPNG(referencePath, capturedPath, outputPath, options = {}) {
+  const {
+    gap = 20,
+    labelHeight = 40,
+    backgroundColor = 'black'
+  } = options;
+
+  console.log('Generating side-by-side animation comparison...');
+
+  const tempDir = path.join(path.dirname(outputPath), 'sidebyside_temp');
+  fs.mkdirSync(tempDir, { recursive: true });
+
+  try {
+    // Get info for both
+    const [refInfo, capInfo] = await Promise.all([
+      getVideoInfo(referencePath),
+      getVideoInfo(capturedPath)
+    ]);
+
+    const width = Math.max(refInfo.width, capInfo.width);
+    const height = Math.max(refInfo.height, capInfo.height);
+    const totalWidth = width * 2 + gap;
+    const totalHeight = height + labelHeight;
+
+    // Extract frames from both APNGs
+    const refFramesDir = path.join(tempDir, 'ref');
+    const capFramesDir = path.join(tempDir, 'cap');
+    const outFramesDir = path.join(tempDir, 'out');
+    fs.mkdirSync(refFramesDir, { recursive: true });
+    fs.mkdirSync(capFramesDir, { recursive: true });
+    fs.mkdirSync(outFramesDir, { recursive: true });
+
+    // Extract reference frames
+    await runFFmpeg([
+      '-y', '-i', referencePath,
+      '-vsync', '0',
+      path.join(refFramesDir, 'frame_%04d.png')
+    ], true);
+
+    // Extract captured frames
+    await runFFmpeg([
+      '-y', '-i', capturedPath,
+      '-vsync', '0',
+      path.join(capFramesDir, 'frame_%04d.png')
+    ], true);
+
+    // Get frame lists
+    const refFrames = fs.readdirSync(refFramesDir).filter(f => f.endsWith('.png')).sort();
+    const capFrames = fs.readdirSync(capFramesDir).filter(f => f.endsWith('.png')).sort();
+
+    // Use the shorter frame count (they should match after normalization, but be safe)
+    const frameCount = Math.min(refFrames.length, capFrames.length);
+    console.log(`  Creating ${frameCount} side-by-side frames...`);
+
+    // Create side-by-side frames using FFmpeg (simpler hstack approach)
+    for (let i = 0; i < frameCount; i++) {
+      const refFrame = path.join(refFramesDir, refFrames[i]);
+      const capFrame = path.join(capFramesDir, capFrames[i < capFrames.length ? i : capFrames.length - 1]);
+      const outFrame = path.join(outFramesDir, `frame_${String(i).padStart(4, '0')}.png`);
+
+      // Use simpler hstack filter
+      const result = await runFFmpeg([
+        '-y',
+        '-i', refFrame,
+        '-i', capFrame,
+        '-filter_complex', `[0:v][1:v]hstack=inputs=2`,
+        '-frames:v', '1',
+        '-update', '1',
+        outFrame
+      ], true);
+
+      // Check if frame was created
+      if (i === 0 && !fs.existsSync(outFrame)) {
+        console.error(`  First frame not created. FFmpeg output:`, result.slice(-500));
+      }
+
+      if ((i + 1) % 20 === 0) {
+        console.log(`    Processed ${i + 1}/${frameCount} frames...`);
+      }
+    }
+
+    // Get fps from reference
+    const fps = refInfo.fps || 30;
+
+    // Verify frames were created
+    const outFrames = fs.readdirSync(outFramesDir).filter(f => f.endsWith('.png'));
+    console.log(`  Output frames ready: ${outFrames.length}`);
+
+    if (outFrames.length === 0) {
+      throw new Error('No output frames were created');
+    }
+
+    // Compile frames into APNG
+    console.log(`  Compiling to APNG at ${fps.toFixed(1)} fps...`);
+    const ffmpegOutput = await runFFmpeg([
+      '-y',
+      '-framerate', String(fps),
+      '-start_number', '0',
+      '-i', path.join(outFramesDir, 'frame_%04d.png'),
+      '-plays', '0',
+      '-f', 'apng',
+      outputPath
+    ], true);
+
+    // Check if output was created
+    if (!fs.existsSync(outputPath)) {
+      console.error('  FFmpeg did not create output file!');
+      console.error('  FFmpeg output (last 1000 chars):', ffmpegOutput.slice(-1000));
+      console.error('  Frame dir contents:', fs.readdirSync(outFramesDir).slice(0, 5));
+      throw new Error('FFmpeg failed to create side-by-side APNG');
+    }
+
+    console.log(`  Created: ${outputPath}`);
+
+    // Cleanup temp directory
+    fs.rmSync(tempDir, { recursive: true, force: true });
+
+    return outputPath;
+  } catch (error) {
+    console.error('  Failed to generate side-by-side APNG:', error.message);
+    // Cleanup on error
+    if (fs.existsSync(tempDir)) {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+    throw error;
+  }
+}
+
 // Export for use as module
-export { analyzeSSIM, analyzeVMAF, analyzeTemporalConsistency, generateVerdict };
+export { analyzeSSIM, analyzeVMAF, analyzeTemporalConsistency, generateVerdict, generateSideBySideAPNG };

@@ -77,13 +77,13 @@ animations/
 
 ## Calibrated Values (electricity-portal)
 
-Verified and calibrated on 2025-12-22:
+Verified and calibrated on 2025-12-24:
 
 | Parameter | Value | Notes |
 |-----------|-------|-------|
 | **Viewport** | 1440×768 | deviceScaleFactor: 1 |
-| **Crop** | (475, 36) @ 465×465 | Portal center for viewport |
-| **Effect Timing** | 975ms–2138ms | ~1.16s duration |
+| **Crop** | (482, 39) @ 465×465 | Portal center for viewport |
+| **Effect Timing** | 1200ms–2000ms | ~0.8s peak stable window |
 | **Cropping Method** | sharp extract | Preserves exact 465×465 (ffmpeg requires even dims) |
 
 ### Mask
@@ -190,14 +190,13 @@ cat animations/electricity-portal/scenario.json | jq '.currentPhase'
 
 | Script | Command |
 |--------|---------|
-| `pnpm cap:smoke` | Smoke test capture |
-| `pnpm cap:buttons` | Button animation capture |
-| `pnpm cap:newtopics` | New topics animation |
-| `pnpm cap:menu-open` | Menu open animation |
-| `pnpm cap:menu-close` | Menu close animation |
+| `pnpm capture:video` | Video capture using video.mjs |
+| `pnpm cap:latest` | Pick artifact from latest capture |
 | `pnpm diff:pipeline` | Run diff pipeline |
 | `pnpm diff:analyze` | Run analysis |
 | `pnpm iterate:electricity` | Full electricity iteration |
+
+*Note: Deprecated `cap:smoke`, `cap:buttons`, `cap:newtopics`, `cap:menu-open`, `cap:menu-close` scripts were removed on 2025-12-24.*
 
 ## Dual Diff Analysis Stack
 

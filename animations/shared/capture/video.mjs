@@ -78,13 +78,24 @@ async function applyGoldenMask(inputPath, outputPath, goldenMaskPath) {
     .raw()
     .toBuffer();
 
-  // Combine: replace alpha channel in input with our mask
+  // Combine: set pixels outside mask to BLACK (not transparent)
+  // Diff tools expect black background outside mask region
   const outputBuffer = Buffer.alloc(imageMeta.width * imageMeta.height * 4);
   for (let i = 0; i < imageMeta.width * imageMeta.height; i++) {
-    outputBuffer[i * 4 + 0] = inputBuffer[i * 4 + 0]; // R
-    outputBuffer[i * 4 + 1] = inputBuffer[i * 4 + 1]; // G
-    outputBuffer[i * 4 + 2] = inputBuffer[i * 4 + 2]; // B
-    outputBuffer[i * 4 + 3] = alphaBuffer[i];          // A from mask
+    const maskValue = alphaBuffer[i];
+    if (maskValue > 128) {
+      // Inside mask: keep original RGB, full alpha
+      outputBuffer[i * 4 + 0] = inputBuffer[i * 4 + 0]; // R
+      outputBuffer[i * 4 + 1] = inputBuffer[i * 4 + 1]; // G
+      outputBuffer[i * 4 + 2] = inputBuffer[i * 4 + 2]; // B
+      outputBuffer[i * 4 + 3] = 255;                     // Full alpha
+    } else {
+      // Outside mask: black pixel (not transparent)
+      outputBuffer[i * 4 + 0] = 0;   // R = 0
+      outputBuffer[i * 4 + 1] = 0;   // G = 0
+      outputBuffer[i * 4 + 2] = 0;   // B = 0
+      outputBuffer[i * 4 + 3] = 255; // Full alpha (opaque black)
+    }
   }
 
   await sharp(outputBuffer, {
@@ -138,14 +149,16 @@ function parseArgs() {
     viewportWidth: cap.viewport?.width || 1440,
     viewportHeight: cap.viewport?.height || 768,
     fps: cap.videoFps || cap.fps || 30,
-    cropX: cap.crop?.x || 475,
-    cropY: cap.crop?.y || 36,
+    cropX: cap.crop?.x || 482,
+    cropY: cap.crop?.y || 39,
     cropWidth: cap.crop?.width || 465,
     cropHeight: cap.crop?.height || 465,
-    // Effect timing from scenario.json → config.ts is the ultimate source
-    // scenario.json.effectTiming mirrors config.ts values
-    effectStartMs: cap.effectTiming?.startMs || 975,
-    effectEndMs: cap.effectTiming?.endMs || 2138,
+    // Effect timing from scenario.json (source of truth)
+    // Calibrated 2025-12-24: 1200-2000ms is peak-only window
+    effectStartMs: cap.effectTiming?.startMs || 1200,
+    effectEndMs: cap.effectTiming?.endMs || 2000,
+    targetFrameCount: cap.effectTiming?.targetFrameCount || null,
+    loopToMatch: cap.effectTiming?.loopToMatch || false,
     applyMask: cap.crop?.circularMask !== false,
     // Golden mask path from scenario.json - use capture mask for live frames
     goldenMaskPath: scenario?.reference?.maskCapture || scenario?.reference?.mask || null,
@@ -389,7 +402,7 @@ async function main() {
   const effectFrames = effectFrameIndices.map(i => `frame_${String(i + 1).padStart(3, '0')}.png`);
 
   // Create masked frames directory
-  const maskedDir = path.join(outDir, 'masked');
+  let maskedDir = path.join(outDir, 'masked');
   ensureDir(maskedDir);
 
   // Log timing info
@@ -421,10 +434,57 @@ async function main() {
     }
   }
 
-  // Create animated PNG from masked/trimmed frames at actual capture rate
+  // Count masked frames
+  let maskedFrameCount = effectFrames.length;
+
+  // If loopToMatch is enabled, duplicate frames to reach target frame count
+  if (opts.loopToMatch && opts.targetFrameCount && maskedFrameCount > 0) {
+    const targetCount = opts.targetFrameCount;
+    console.log(`Looping ${maskedFrameCount} frames to match target ${targetCount} frames...`);
+
+    if (maskedFrameCount < targetCount) {
+      // Calculate how many times we need to loop and any remainder
+      const fullLoops = Math.floor(targetCount / maskedFrameCount);
+      const remainder = targetCount % maskedFrameCount;
+
+      // Create looped frames directory
+      const loopedDir = path.join(outDir, 'looped');
+      ensureDir(loopedDir);
+
+      let outputIndex = 0;
+      // Copy full loops
+      for (let loop = 0; loop < fullLoops; loop++) {
+        for (let i = 0; i < maskedFrameCount; i++) {
+          const srcPath = path.join(maskedDir, `frame_${String(i).padStart(3, '0')}.png`);
+          const dstPath = path.join(loopedDir, `frame_${String(outputIndex).padStart(3, '0')}.png`);
+          fs.copyFileSync(srcPath, dstPath);
+          outputIndex++;
+        }
+      }
+      // Copy remainder frames
+      for (let i = 0; i < remainder; i++) {
+        const srcPath = path.join(maskedDir, `frame_${String(i).padStart(3, '0')}.png`);
+        const dstPath = path.join(loopedDir, `frame_${String(outputIndex).padStart(3, '0')}.png`);
+        fs.copyFileSync(srcPath, dstPath);
+        outputIndex++;
+      }
+
+      console.log(`  Created ${outputIndex} looped frames (${fullLoops} full loops + ${remainder} remainder)`);
+      maskedFrameCount = outputIndex;
+
+      // Use looped directory for APNG creation
+      maskedDir = loopedDir;
+    } else {
+      console.log(`  Already have ${maskedFrameCount} frames, no looping needed`);
+    }
+  }
+
+  // Create animated PNG from masked/trimmed frames at configured fps (not actual capture rate)
+  // This ensures consistent playback timing matching the reference
+  const outputFps = opts.fps || 30;
   const ffmpegApng = spawn('ffmpeg', [
     '-y',
-    '-framerate', String(actualFps.toFixed(2)),
+    '-framerate', String(outputFps),
     '-i', path.join(maskedDir, 'frame_%03d.png'),
     '-plays', '0',
     '-f', 'apng',
@@ -437,7 +497,7 @@ async function main() {
   });
 
   const apngSize = fs.statSync(path.join(outDir, 'animation.apng')).size;
-  const apngDuration = effectFrames.length / actualFps;
+  const apngDuration = maskedFrameCount / outputFps;
 
   // Save frame timing metadata for debugging
   const timingMeta = {
@@ -465,9 +525,12 @@ async function main() {
   console.log(`\n✅ VIDEO CAPTURE COMPLETE`);
   console.log(`Total frames captured: ${frames.length}`);
   console.log(`Effect frames used: ${effectFrames.length} (timestamp-based trimming)`);
+  if (opts.loopToMatch && opts.targetFrameCount) {
+    console.log(`Looped to: ${maskedFrameCount} frames (target: ${opts.targetFrameCount})`);
+  }
   console.log(`Golden mask: ${opts.applyMask && opts.goldenMaskPath ? 'applied' : 'not applied'}`);
   console.log(`Output directory: ${outDir}`);
-  console.log(`Animated PNG: animation.apng (${(apngSize / 1024 / 1024).toFixed(2)} MB, ${apngDuration.toFixed(2)}s @ ${actualFps.toFixed(2)}fps)`);
+  console.log(`Animated PNG: animation.apng (${(apngSize / 1024 / 1024).toFixed(2)} MB, ${apngDuration.toFixed(2)}s @ ${outputFps}fps)`);
   console.log(`Frame timing metadata: frame_timing.json`);
 }
 

@@ -166,16 +166,21 @@ The Sora reference was generated using this visual specification:
 - Search terms: "electricity", "animation", "game quality", "bloom"
 - Dataset location: `tools/ai/history/datasets/`
 
+*Note: The tools/ai/ path above references the development history dataset, not the animation pipeline.*
+
 ---
 
 ## Quick Start (Next Session)
 
 ```bash
-# Install dependencies
+# Install dependencies (already installed)
 pnpm add three @react-three/fiber @react-three/drei @react-three/postprocessing simplex-noise
 
 # Reference this file
-cat docs/aaa-animation-context.md
+cat animations/electricity-portal/context.md
+
+# Run iteration
+pnpm iterate:electricity
 ```
 
 ---

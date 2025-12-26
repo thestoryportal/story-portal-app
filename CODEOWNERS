@@ -1,0 +1,19 @@
+# Story Portal Code Owners
+# These owners will be requested for review on PRs
+
+# Default owner for everything
+* @robertrhu
+
+# Core application
+/src/ @robertrhu
+
+# Animation pipeline
+/animations/ @robertrhu
+
+# Claude configuration
+/.claude/ @robertrhu
+
+# Build configuration
+/vite.config.ts @robertrhu
+/tsconfig*.json @robertrhu
+/package.json @robertrhu

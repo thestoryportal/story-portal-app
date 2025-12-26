@@ -1,0 +1,119 @@
+{
+  "version": "1.0.0",
+  "reference_device": "iPhone 16 Pro",
+
+  "devices": {
+    "phones_small": [
+      { "name": "iPhone SE", "width": 375, "height": 667, "dpr": 2, "type": "phone" }
+    ],
+
+    "phones_standard": [
+      { "name": "iPhone 12/13/14", "width": 390, "height": 844, "dpr": 3, "type": "phone" },
+      {
+        "name": "iPhone 16 Pro",
+        "width": 393,
+        "height": 852,
+        "dpr": 3,
+        "type": "phone",
+        "reference": true
+      },
+      { "name": "Pixel 7", "width": 412, "height": 915, "dpr": 2.625, "type": "phone" },
+      { "name": "Galaxy S21", "width": 360, "height": 800, "dpr": 3, "type": "phone" }
+    ],
+
+    "phones_large": [
+      { "name": "iPhone 14 Plus", "width": 428, "height": 926, "dpr": 3, "type": "phone" },
+      { "name": "iPhone 16 Pro Max", "width": 430, "height": 932, "dpr": 3, "type": "phone" },
+      { "name": "Galaxy S21 Ultra", "width": 412, "height": 915, "dpr": 3.5, "type": "phone" }
+    ],
+
+    "foldables": [
+      { "name": "Galaxy Fold (closed)", "width": 280, "height": 653, "dpr": 3, "type": "foldable" },
+      {
+        "name": "Galaxy Fold (open)",
+        "width": 768,
+        "height": 884,
+        "dpr": 3,
+        "type": "foldable",
+        "warning": "gap_prone"
+      },
+      { "name": "Galaxy Z Flip", "width": 412, "height": 919, "dpr": 3, "type": "foldable" }
+    ],
+
+    "tablets": [
+      { "name": "iPad Mini", "width": 768, "height": 1024, "dpr": 2, "type": "tablet" },
+      { "name": "iPad Air", "width": 820, "height": 1180, "dpr": 2, "type": "tablet" },
+      { "name": "iPad Pro 11", "width": 834, "height": 1194, "dpr": 2, "type": "tablet" },
+      {
+        "name": "iPad Pro 12.9",
+        "width": 1024,
+        "height": 1366,
+        "dpr": 2,
+        "type": "tablet",
+        "warning": "gap_prone"
+      },
+      {
+        "name": "Surface Pro 7",
+        "width": 912,
+        "height": 1368,
+        "dpr": 2,
+        "type": "tablet",
+        "warning": "unusual_aspect"
+      }
+    ],
+
+    "smart_displays": [
+      { "name": "Nest Hub", "width": 1024, "height": 600, "dpr": 2, "type": "smart_display" },
+      { "name": "Nest Hub Max", "width": 1280, "height": 800, "dpr": 2, "type": "smart_display" }
+    ],
+
+    "laptops": [
+      { "name": "MacBook Air 13", "width": 1280, "height": 800, "dpr": 2, "type": "laptop" },
+      { "name": "MacBook Pro 14", "width": 1512, "height": 982, "dpr": 2, "type": "laptop" },
+      { "name": "MacBook Pro 16", "width": 1728, "height": 1117, "dpr": 2, "type": "laptop" }
+    ],
+
+    "desktops": [
+      { "name": "HD 1080p", "width": 1920, "height": 1080, "dpr": 1, "type": "desktop" },
+      { "name": "QHD 1440p", "width": 2560, "height": 1440, "dpr": 1, "type": "desktop" }
+    ]
+  },
+
+  "breakpoints": {
+    "xs": { "max": 359, "description": "Very small phones" },
+    "sm": { "min": 360, "max": 389, "description": "Small phones" },
+    "md": { "min": 390, "max": 427, "description": "Standard phones" },
+    "lg": { "min": 428, "max": 767, "description": "Large phones" },
+    "tablet": { "min": 768, "max": 1023, "description": "Tablets" },
+    "laptop": { "min": 1024, "max": 1279, "description": "Small laptops" },
+    "desktop": { "min": 1280, "description": "Desktops" }
+  },
+
+  "touch_config": {
+    "show_spin_button": false,
+    "devices": ["phone", "tablet", "foldable", "smart_display"]
+  },
+
+  "pointer_config": {
+    "show_spin_button": true,
+    "devices": ["laptop", "desktop"]
+  },
+
+  "problem_devices": [
+    {
+      "name": "iPad Pro 12.9",
+      "issue": "Large viewport inflates radius causing panel gaps",
+      "fix": "Cap radius at MAX_RADIUS (160px)"
+    },
+    {
+      "name": "Surface Pro 7",
+      "issue": "Unusual portrait aspect ratio",
+      "fix": "Reduce radius multiplier to 0.16"
+    },
+    {
+      "name": "Galaxy Fold (open)",
+      "issue": "Wide aspect when unfolded",
+      "fix": "Use height-based calculation instead of width"
+    }
+  ]
+}

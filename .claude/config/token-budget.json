@@ -1,0 +1,129 @@
+{
+  "$schema": "./token-budget.schema.json",
+  "version": "1.0",
+  "description": "Token budget thresholds and cost configuration for Token Economist",
+
+  "pricing": {
+    "models": {
+      "opus": {
+        "id": "claude-opus-4-5-20251101",
+        "inputPerMillion": 15.0,
+        "outputPerMillion": 75.0
+      },
+      "sonnet": {
+        "id": "claude-sonnet-4-20250514",
+        "inputPerMillion": 3.0,
+        "outputPerMillion": 15.0
+      },
+      "haiku": {
+        "id": "claude-haiku-3-20240307",
+        "inputPerMillion": 0.25,
+        "outputPerMillion": 1.25
+      }
+    },
+    "lastUpdated": "2024-12-27"
+  },
+
+  "budgets": {
+    "session": {
+      "description": "Per-session cost limits",
+      "thresholds": {
+        "info": 2.0,
+        "warning": 5.0,
+        "critical": 10.0,
+        "halt": 20.0
+      },
+      "currency": "USD"
+    },
+    "daily": {
+      "description": "Daily cost limits across all sessions",
+      "thresholds": {
+        "info": 10.0,
+        "warning": 25.0,
+        "critical": 50.0,
+        "halt": 100.0
+      },
+      "currency": "USD"
+    },
+    "weekly": {
+      "description": "Weekly cost limits",
+      "thresholds": {
+        "info": 50.0,
+        "warning": 100.0,
+        "critical": 200.0,
+        "halt": 500.0
+      },
+      "currency": "USD"
+    }
+  },
+
+  "alerts": {
+    "enabled": true,
+    "levels": {
+      "info": {
+        "action": "log",
+        "message": "Approaching budget threshold"
+      },
+      "warning": {
+        "action": "notify",
+        "message": "Budget threshold exceeded — review usage"
+      },
+      "critical": {
+        "action": "notify",
+        "message": "Critical budget threshold — recommend pause"
+      },
+      "halt": {
+        "action": "escalate",
+        "message": "Budget limit reached — escalating to human"
+      }
+    }
+  },
+
+  "contextLimits": {
+    "description": "Context size thresholds for /token-check status",
+    "messageCount": {
+      "ok": 20,
+      "heavy": 50,
+      "bloated": 100
+    },
+    "estimatedTokens": {
+      "ok": 50000,
+      "heavy": 100000,
+      "bloated": 150000
+    }
+  },
+
+  "modelGuidelines": {
+    "description": "Recommended model per task type",
+    "tasks": {
+      "complexReasoning": "opus",
+      "codeGeneration": "sonnet",
+      "codeReview": "sonnet",
+      "fileExploration": "haiku",
+      "statusChecks": "haiku",
+      "summarization": "sonnet",
+      "formatting": "haiku",
+      "gitOperations": "haiku",
+      "searchOperations": "haiku"
+    }
+  },
+
+  "estimationHeuristics": {
+    "description": "Token estimation multipliers for /token-audit",
+    "tokensPerLine": {
+      "code": 12,
+      "prose": 22,
+      "json": 8,
+      "markdown": 18
+    },
+    "toolOverhead": {
+      "read": 50,
+      "write": 50,
+      "bash": 75,
+      "grep": 40,
+      "glob": 30,
+      "task": 200,
+      "memory": 60
+    }
+  }
+}

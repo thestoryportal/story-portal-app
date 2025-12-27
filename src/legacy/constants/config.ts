@@ -2,14 +2,14 @@
  * Configuration constants for the Story Portal
  */
 
-import type { SteamLocation } from '../types';
+import type { SteamLocation } from '../types'
 
 // === TEST MODE FLAGS ===
-export const TEST_MODE = false;
-export const DISABLE_PANEL_ANIMATION = true;
+export const TEST_MODE = false
+export const DISABLE_PANEL_ANIMATION = true
 
 // === ELECTRICITY EFFECT CONFIGURATION ===
-export const ELECTRICITY_DEBUG = false;
+export const ELECTRICITY_DEBUG = false
 
 export const ELECTRICITY_CONFIG = {
   // === DETERMINISTIC MODE (for iteration pipeline) ===
@@ -21,13 +21,13 @@ export const ELECTRICITY_CONFIG = {
   // NOTE: scenario.json is the source of truth for capture pipeline timing.
   // These values are used by:
   //   - useWheelSelection.ts (effect duration, topic swap delay)
-  effectDurationMs: 3000,         // Total effect duration after "New Topics" click
-  topicSwapDelayMs: 1000,         // When wheel topics actually swap
+  effectDurationMs: 8000, // Iter 42: Even longer effect (8 seconds)
+  topicSwapDelayMs: 2000, // When wheel topics actually swap
   // Capture timing is defined in scenario.json (1200-2000ms peak-only window)
   // Calibrated 2025-12-24 for mask alignment and peak stability
 
-  // Bolt structure - 12-20 arcs radiating from center
-  numMainBolts: 18, // Dense radial bolt count
+  // Bolt structure - more dense with varied secondary bolts
+  numMainBolts: 24, // Iter 37: More bolts for density
   boltThicknessMin: 0.8, // THICKER main bolts for chunky look
   boltThicknessMax: 1.4,
   branchThicknessMin: 0.4, // THICKER branches
@@ -64,11 +64,11 @@ export const ELECTRICITY_CONFIG = {
   centerPulseFrequency: 2.0, // Hz - pulses per second
   centerPulseAmount: 0.2, // Pulse intensity variation
 
-  // Plasma volumetric layer - INCREASED to fill portal like reference
-  plasmaDensity: 0.55, // More fill to cover portal
+  // Plasma volumetric layer - Iter 37: Bigger center glow, more amber
+  plasmaDensity: 0.7, // More fill
   plasmaSwirlSpeed: 0.15, // Noise animation speed
-  plasmaCenterBrightness: 1.0, // Good center glow
-  plasmaNoiseScale: 2.0, // Balanced frequency
+  plasmaCenterBrightness: 1.4, // BIGGER center glow
+  plasmaNoiseScale: 1.8, // Slightly larger features
 
   // Multi-scale bloom - INCREASED for warm fill
   bloomTightRadius: 4.0, // Good tight glow
@@ -79,13 +79,12 @@ export const ELECTRICITY_CONFIG = {
   bloomWideWeight: 0.35, // Good wide
   rimBloomBoost: 1.4, // Good rim boost
 
-  // Colors - Deep amber/orange (matching Sora reference)
-  // Pushed more orange, less yellow-green
-  coreColor: [1.0, 0.58, 0.12] as [number, number, number], // Deeper orange core
-  midColor: [1.0, 0.45, 0.0] as [number, number, number], // Rich orange mid
-  outerColor: [0.95, 0.32, 0.0] as [number, number, number], // Deep amber outer
-  plasmaInner: [1.0, 0.52, 0.08] as [number, number, number], // Orange fog center
-  plasmaOuter: [0.85, 0.28, 0.0] as [number, number, number], // Deep amber fog edge
+  // Colors - Iter 40: Keep bolt colors, focus on plasma layers
+  coreColor: [0.35, 0.2, 0.03] as [number, number, number], // Bolt color - leave as is
+  midColor: [0.28, 0.15, 0.03] as [number, number, number],
+  outerColor: [0.18, 0.09, 0.02] as [number, number, number],
+  plasmaInner: [0.28, 0.14, 0.04] as [number, number, number], // Dark orange plasma
+  plasmaOuter: [0.16, 0.08, 0.03] as [number, number, number], // Very dark amber/red
 
   // Glass reflection layer
   glassOpacity: 0.12, // Subtle glass overlay
@@ -94,8 +93,8 @@ export const ELECTRICITY_CONFIG = {
 
   // === R3F LightningStrike Parameters ===
   // These control the three-stdlib LightningStrike geometry
-  lightningRadius0: 0.04, // Bolt thickness at source (center)
-  lightningRadius1: 0.01, // Bolt thickness at destination (edge)
+  lightningRadius0: 0.025, // Iter 26: Moderate thickness (was 0.015 too thin, 0.04 too thick)
+  lightningRadius1: 0.008, // Iter 26: Tapered edge
   lightningMinRadius: 0.005, // Minimum radius before termination
   lightningMaxIterations: 7, // Recursion depth for segments
   lightningRoughness: 0.9, // 0-1: how jagged/erratic the path (higher = more jagged)
@@ -109,23 +108,23 @@ export const ELECTRICITY_CONFIG = {
   lightningSubrayPeriod: 2.0, // Sub-ray animation period
   lightningSubrayDutyCycle: 0.5, // Sub-ray on/off ratio
 
-  // R3F Bloom post-processing
-  r3fBloomIntensity: 1.8, // Overall bloom strength
-  r3fBloomLuminanceThreshold: 0.1, // Min brightness to bloom
-  r3fBloomLuminanceSmoothing: 0.9, // Smoothing factor
-  r3fBloomRadius: 0.6, // Blur radius
+  // R3F Bloom post-processing - Iter 40: Low bloom, stay dark
+  r3fBloomIntensity: 0.3, // Keep low
+  r3fBloomLuminanceThreshold: 0.6, // High threshold
+  r3fBloomLuminanceSmoothing: 0.5,
+  r3fBloomRadius: 0.25, // Tight radius
 
   // R3F Portal dimensions
   r3fPortalRadius: 1.8, // World units for bolt reach
 
   // Compositing - WARM FILL with orange color
-  globalIntensity: 1.4, // Iteration 1: Increased from 1.0 for brighter effect
-  toneMapExposure: 3.2, // Iteration 4: Increased from 2.4 for brighter HDR
-  portalRadius: 0.50, // Standard portal radius
-  centerGlowStrength: 0.55, // Iteration 3: Reduced from 0.95 - was washing out bolt structure
-} as const;
+  globalIntensity: 1.5, // Iter 28b: Moderate intensity
+  toneMapExposure: 3.2, // Iter 28b: Standard exposure
+  portalRadius: 0.5, // Standard portal radius
+  centerGlowStrength: 0.62, // Iter 28b: Moderate center glow
+} as const
 
-export type ElectricityConfigType = typeof ELECTRICITY_CONFIG;
+export type ElectricityConfigType = typeof ELECTRICITY_CONFIG
 
 // === STEAM SPAWN LOCATIONS ===
 export const STEAM_LOCATIONS: SteamLocation[] = [
@@ -170,7 +169,7 @@ export const STEAM_LOCATIONS: SteamLocation[] = [
   { id: 'vent-br-16', right: '27%', bottom: '18.75%', type: 'vent' },
   { id: 'vent-br-17', right: '24.5%', bottom: '18.5%', type: 'vent' },
   { id: 'vent-br-18', right: '26.5%', bottom: '18.5%', type: 'vent' },
-];
+]
 
 // === DEFAULT TEXT EFFECT CONFIG ===
 export const DEFAULT_TEXT_EFFECT_CONFIG = {
@@ -229,7 +228,7 @@ export const DEFAULT_TEXT_EFFECT_CONFIG = {
   textureGradientMidOpacity: 0.7,
   textureGradientBottomOpacity: 0.25,
   textureGradientMidStop: 50,
-} as const;
+} as const
 
 // === DEFAULT BUTTON SHADOW CONFIG ===
 export const DEFAULT_BUTTON_SHADOW_CONFIG = {
@@ -242,4 +241,4 @@ export const DEFAULT_BUTTON_SHADOW_CONFIG = {
   opacity: 0.6,
   layers: 4,
   layerMult: 1.5,
-} as const;
+} as const

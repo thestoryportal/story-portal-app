@@ -5,51 +5,66 @@
  * Uses LightningStrike geometry with Bloom post-processing.
  */
 
-import { useRef, useMemo, useEffect, useState } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { EffectComposer, Bloom } from '@react-three/postprocessing';
-import { LightningStrike, type RayParameters } from 'three-stdlib';
-import * as THREE from 'three';
-import { ELECTRICITY_CONFIG } from '../constants';
+import { useRef, useMemo, useEffect, useState } from 'react'
+import { Canvas, useFrame } from '@react-three/fiber'
+import { EffectComposer, Bloom } from '@react-three/postprocessing'
+import { LightningStrike, type RayParameters } from 'three-stdlib'
+import * as THREE from 'three'
+import { ELECTRICITY_CONFIG } from '../constants'
 
 interface ElectricityR3FProps {
-  visible: boolean;
+  visible: boolean
 }
 
 interface LightningBoltProps {
-  angle: number;
-  radius: number;
-  startTime: number;
+  angle: number
+  radius: number
+  startTime: number
+  isPrimary?: boolean // 8 prominent bolts vs thin secondary
+  thicknessScale?: number // Multiplier for bolt thickness
+  lengthScale?: number // Multiplier for bolt length
 }
 
 // Seeded random for deterministic bolt variation
 function seededRandom(seed: number): number {
-  const x = Math.sin(seed * 12.9898) * 43758.5453;
-  return x - Math.floor(x);
+  const x = Math.sin(seed * 12.9898) * 43758.5453
+  return x - Math.floor(x)
 }
 
 /**
  * Individual lightning bolt component
  */
-function LightningBolt({ angle, radius, startTime }: LightningBoltProps) {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const cfg = ELECTRICITY_CONFIG;
+function LightningBolt({
+  angle,
+  radius,
+  startTime,
+  isPrimary = true,
+  thicknessScale = 1.0,
+  lengthScale = 1.0,
+}: LightningBoltProps) {
+  const meshRef = useRef<THREE.Mesh>(null)
+  const cfg = ELECTRICITY_CONFIG
 
   // Create LightningStrike geometry with deterministic variation based on angle
   const strike = useMemo(() => {
-    const seed = angle * 1000; // Use angle as seed for variation
-    const timeScaleRange = cfg.lightningTimeScaleMax - cfg.lightningTimeScaleMin;
-    const ramificationRange = cfg.lightningRamificationMax - cfg.lightningRamificationMin;
+    const seed = angle * 1000 // Use angle as seed for variation
+    const timeScaleRange = cfg.lightningTimeScaleMax - cfg.lightningTimeScaleMin
+    const ramificationRange = cfg.lightningRamificationMax - cfg.lightningRamificationMin
+
+    // Apply thickness and length scales
+    const effectiveRadius = radius * lengthScale
+    const r0 = cfg.lightningRadius0 * thicknessScale
+    const r1 = cfg.lightningRadius1 * thicknessScale
 
     const rayParams: RayParameters = {
       sourceOffset: new THREE.Vector3(0, 0, 0),
       destOffset: new THREE.Vector3(
-        Math.cos(angle) * radius,
-        Math.sin(angle) * radius,
+        Math.cos(angle) * effectiveRadius,
+        Math.sin(angle) * effectiveRadius,
         0
       ),
-      radius0: cfg.lightningRadius0,
-      radius1: cfg.lightningRadius1,
+      radius0: r0,
+      radius1: r1,
       minRadius: cfg.lightningMinRadius,
       maxIterations: cfg.lightningMaxIterations,
       isEternal: true,
@@ -59,117 +74,154 @@ function LightningBolt({ angle, radius, startTime }: LightningBoltProps) {
       subrayPeriod: cfg.lightningSubrayPeriod,
       subrayDutyCycle: cfg.lightningSubrayDutyCycle,
       maxSubrayRecursion: cfg.lightningMaxSubrayRecursion,
-      ramification: Math.floor(cfg.lightningRamificationMin + seededRandom(seed + 1) * ramificationRange),
+      ramification: Math.floor(
+        cfg.lightningRamificationMin + seededRandom(seed + 1) * ramificationRange
+      ),
       recursionProbability: cfg.lightningRecursionProbability,
       roughness: cfg.lightningRoughness,
       straightness: cfg.lightningStraightness,
-    };
-    return new LightningStrike(rayParams);
-  }, [angle, radius, cfg]);
+    }
+    return new LightningStrike(rayParams)
+  }, [angle, radius, cfg])
 
   // Animation loop
   useFrame((state) => {
-    const elapsed = Date.now() - startTime;
-    const time = state.clock.getElapsedTime();
+    const elapsed = Date.now() - startTime
+    const time = state.clock.getElapsedTime()
 
     // Update lightning geometry
-    strike.update(time);
+    strike.update(time)
 
-    // Calculate intensity (fade in/out over 3 seconds)
-    let intensity: number;
-    if (elapsed < 200) {
-      intensity = 0.3 + (elapsed / 200) ** 2 * 0.7;
-    } else if (elapsed < 2600) {
-      intensity = 1;
-    } else if (elapsed < 3000) {
-      intensity = 1 - ((elapsed - 2600) / 400) ** 2;
+    // Calculate intensity (fade in/out over 8 seconds - Iter 42)
+    let intensity: number
+    if (elapsed < 400) {
+      intensity = 0.3 + (elapsed / 400) ** 2 * 0.7
+    } else if (elapsed < 7400) {
+      intensity = 1
+    } else if (elapsed < 8000) {
+      intensity = 1 - ((elapsed - 7400) / 600) ** 2
     } else {
-      intensity = 0;
+      intensity = 0
     }
 
     // Surge cycle
-    const elapsedSec = elapsed / 1000;
-    const cyclePos = (elapsedSec % cfg.surgeCycleDuration) / cfg.surgeCycleDuration;
-    let surge: number;
+    const elapsedSec = elapsed / 1000
+    const cyclePos = (elapsedSec % cfg.surgeCycleDuration) / cfg.surgeCycleDuration
+    let surge: number
     if (cyclePos < cfg.surgeBuildPhase) {
-      surge = cfg.surgeBaseBrightness + (cfg.surgePeakBrightness - cfg.surgeBaseBrightness) * (cyclePos / cfg.surgeBuildPhase) ** 2;
+      surge =
+        cfg.surgeBaseBrightness +
+        (cfg.surgePeakBrightness - cfg.surgeBaseBrightness) * (cyclePos / cfg.surgeBuildPhase) ** 2
     } else if (cyclePos < cfg.surgePeakPhase) {
-      surge = cfg.surgePeakBrightness;
+      surge = cfg.surgePeakBrightness
     } else {
-      surge = cfg.surgePeakBrightness - (cfg.surgePeakBrightness - cfg.surgeBaseBrightness) * ((cyclePos - cfg.surgePeakPhase) / (1 - cfg.surgePeakPhase));
+      surge =
+        cfg.surgePeakBrightness -
+        (cfg.surgePeakBrightness - cfg.surgeBaseBrightness) *
+          ((cyclePos - cfg.surgePeakPhase) / (1 - cfg.surgePeakPhase))
     }
 
     // Update material
     if (meshRef.current) {
-      const mat = meshRef.current.material as THREE.MeshBasicMaterial;
-      mat.opacity = intensity * surge;
+      const mat = meshRef.current.material as THREE.MeshBasicMaterial
+      mat.opacity = intensity * surge
     }
-  });
+  })
 
   // Cleanup
   useEffect(() => {
     return () => {
-      strike.dispose();
-    };
-  }, [strike]);
+      strike.dispose()
+    }
+  }, [strike])
+
+  // Primary bolts: darker gold (coreColor)
+  // Secondary bolts: even darker amber (outerColor) - blend into background
+  // Iter 39: Much lower opacity to prevent brightness blowout
+  const boltColor = isPrimary
+    ? new THREE.Color(cfg.coreColor[0], cfg.coreColor[1], cfg.coreColor[2])
+    : new THREE.Color(cfg.outerColor[0], cfg.outerColor[1], cfg.outerColor[2])
+  const boltOpacity = isPrimary ? 0.45 : 0.2 // Iter 40: Even lower opacity
 
   return (
     <mesh ref={meshRef} geometry={strike}>
       <meshBasicMaterial
-        color={new THREE.Color(cfg.coreColor[0], cfg.coreColor[1], cfg.coreColor[2])}
+        color={boltColor}
         transparent
-        opacity={1}
+        opacity={boltOpacity}
         side={THREE.DoubleSide}
         depthWrite={false}
         blending={THREE.AdditiveBlending}
       />
     </mesh>
-  );
+  )
 }
 
 /**
- * Plasma background glow
+ * Plasma background glow - supports multiple layers at different depths
  */
-function PlasmaBackground({ startTime }: { startTime: number }) {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const materialRef = useRef<THREE.ShaderMaterial>(null);
-  const cfg = ELECTRICITY_CONFIG;
+interface PlasmaProps {
+  startTime: number
+  zDepth?: number // z-position for layering
+  noiseOffset?: number // Offset for noise variation
+  opacity?: number // Layer opacity multiplier
+  innerColor?: [number, number, number] // Custom inner color
+  outerColor?: [number, number, number] // Custom outer color
+}
+
+function PlasmaBackground({
+  startTime,
+  zDepth = -0.5,
+  noiseOffset = 0,
+  opacity = 1.0,
+  innerColor,
+  outerColor,
+}: PlasmaProps) {
+  const meshRef = useRef<THREE.Mesh>(null)
+  const materialRef = useRef<THREE.ShaderMaterial>(null)
+  const cfg = ELECTRICITY_CONFIG
+
+  // Use custom colors or fall back to config
+  const inner = innerColor || cfg.plasmaInner
+  const outer = outerColor || cfg.plasmaOuter
 
   const uniforms = useMemo(
     () => ({
       u_time: { value: 0 },
       u_intensity: { value: 1.0 },
-      u_innerColor: { value: new THREE.Vector3(...cfg.plasmaInner) },
-      u_outerColor: { value: new THREE.Vector3(...cfg.plasmaOuter) },
+      u_innerColor: { value: new THREE.Vector3(...inner) },
+      u_outerColor: { value: new THREE.Vector3(...outer) },
+      u_noiseOffset: { value: noiseOffset },
+      u_opacity: { value: opacity },
     }),
-    [cfg.plasmaInner, cfg.plasmaOuter]
-  );
+    [inner, outer, noiseOffset, opacity]
+  )
 
   useFrame((state) => {
-    const elapsed = Date.now() - startTime;
+    const elapsed = Date.now() - startTime
 
-    // Intensity calculation
-    let intensity: number;
-    if (elapsed < 200) {
-      intensity = 0.3 + (elapsed / 200) ** 2 * 0.7;
-    } else if (elapsed < 2600) {
-      intensity = 1;
-    } else if (elapsed < 3000) {
-      intensity = 1 - ((elapsed - 2600) / 400) ** 2;
+    // Intensity calculation - 8 second duration (Iter 42)
+    let intensity: number
+    if (elapsed < 400) {
+      intensity = 0.3 + (elapsed / 400) ** 2 * 0.7
+    } else if (elapsed < 7400) {
+      intensity = 1
+    } else if (elapsed < 8000) {
+      intensity = 1 - ((elapsed - 7400) / 600) ** 2
     } else {
-      intensity = 0;
+      intensity = 0
     }
 
     // Update uniforms via material ref to avoid immutability issues
     if (materialRef.current) {
-      materialRef.current.uniforms.u_time.value = state.clock.getElapsedTime();
-      materialRef.current.uniforms.u_intensity.value = intensity;
+      materialRef.current.uniforms.u_time.value = state.clock.getElapsedTime()
+      materialRef.current.uniforms.u_intensity.value = intensity
     }
-  });
+  })
 
   return (
-    <mesh ref={meshRef} position={[0, 0, -0.5]}>
-      <circleGeometry args={[2, 64]} />
+    <mesh ref={meshRef} position={[0, 0, zDepth]}>
+      <circleGeometry args={[2.5, 64]} />
       <shaderMaterial
         ref={materialRef}
         transparent
@@ -188,6 +240,8 @@ function PlasmaBackground({ startTime }: { startTime: number }) {
           uniform float u_intensity;
           uniform vec3 u_innerColor;
           uniform vec3 u_outerColor;
+          uniform float u_noiseOffset;
+          uniform float u_opacity;
           varying vec2 vUv;
 
           float hash(vec2 p) {
@@ -208,48 +262,125 @@ function PlasmaBackground({ startTime }: { startTime: number }) {
           void main() {
             vec2 centered = vUv - 0.5;
             float dist = length(centered) * 2.0;
-            float falloff = 1.0 - smoothstep(0.0, 1.0, dist);
-            falloff = pow(falloff, 2.0);
+            // Iter 37: Softer falloff for more amber fill
+            float falloff = 1.0 - smoothstep(0.0, 1.2, dist);
+            falloff = pow(falloff, 1.3); // Softer = more fill
 
-            float n = noise(centered * 4.0 + u_time * 0.3);
-            n += noise(centered * 8.0 - u_time * 0.2) * 0.5;
-            n = n / 1.5;
+            // Iter 41: More patchy, less uniform - break up the surface
+            vec2 offsetCentered = centered + u_noiseOffset;
+            float n1 = noise(offsetCentered * 2.5 + u_time * 0.15);
+            float n2 = noise(offsetCentered * 5.0 - u_time * 0.1) * 0.7;
+            float n3 = noise(offsetCentered * 10.0 + u_time * 0.08) * 0.4;
+            float n4 = noise(offsetCentered * 20.0 - u_time * 0.05) * 0.2; // Fine detail
+            float n = (n1 + n2 + n3 + n4) / 2.3;
 
-            vec3 color = mix(u_outerColor, u_innerColor, falloff);
-            float alpha = falloff * 0.4 * u_intensity * (0.8 + n * 0.4);
+            // Strong color variation for patchiness
+            float colorVar = noise(offsetCentered * 1.5 + u_time * 0.03);
+            vec3 color = mix(u_outerColor, u_innerColor, falloff * (0.5 + colorVar * 0.5));
+
+            // Patchy alpha - use noise to create holes/gaps
+            float patchiness = smoothstep(0.3, 0.7, n); // Creates patches
+            float alpha = falloff * 0.6 * u_intensity * patchiness * u_opacity;
 
             gl_FragColor = vec4(color, alpha);
           }
         `}
       />
     </mesh>
-  );
+  )
 }
 
 /**
  * Main electricity scene with all lightning bolts
  */
 function ElectricityScene({ startTime }: { startTime: number }) {
-  const cfg = ELECTRICITY_CONFIG;
-  const numBolts = cfg.numMainBolts;
-  const portalRadius = cfg.r3fPortalRadius;
+  const cfg = ELECTRICITY_CONFIG
+  const numBolts = cfg.numMainBolts
+  const portalRadius = cfg.r3fPortalRadius
 
-  // Generate bolt angles
-  const boltAngles = useMemo(() => {
-    return Array.from({ length: numBolts }, (_, i) => (i / numBolts) * Math.PI * 2);
-  }, [numBolts]);
+  // 10 prominent primary bolts + remaining thin/short secondary bolts
+  const NUM_PRIMARY = 10
+
+  const bolts = useMemo(() => {
+    return Array.from({ length: numBolts }, (_, i) => {
+      const angle = (i / numBolts) * Math.PI * 2
+      const seed = i * 137.5
+
+      // Every Nth bolt is primary (evenly spaced)
+      const spacing = numBolts / NUM_PRIMARY
+      const isPrimary = i % Math.round(spacing) === 0 && Math.floor(i / spacing) < NUM_PRIMARY
+
+      // Secondary bolts: thin, VERY varied lengths, darker
+      const thicknessScale = isPrimary ? 1.3 : 0.15 + seededRandom(seed) * 0.25 // 0.15-0.4x (thinner)
+      const lengthScale = isPrimary ? 1.0 : 0.2 + seededRandom(seed + 1) * 0.5 // 0.2-0.7x (more varied, some very short)
+
+      return { angle, isPrimary, thicknessScale, lengthScale }
+    })
+  }, [numBolts])
 
   return (
     <>
       {/* Camera */}
       <perspectiveCamera position={[0, 0, 5]} />
 
-      {/* Plasma background */}
-      <PlasmaBackground startTime={startTime} />
+      {/* Dark but GLOWING plasma - near-black outer, BRIGHTER inner glow for luminosity contrast */}
+      {/* Layer 1: Deep base - warm ember glow from darkness */}
+      <PlasmaBackground
+        startTime={startTime}
+        zDepth={-2.0}
+        noiseOffset={0}
+        opacity={0.65}
+        innerColor={[0.28, 0.12, 0.04]} // Brighter warm glow
+        outerColor={[0.02, 0.008, 0.004]} // Even darker outer
+      />
+      {/* Layer 2: Rich amber glow */}
+      <PlasmaBackground
+        startTime={startTime}
+        zDepth={-1.4}
+        noiseOffset={0.7}
+        opacity={0.55}
+        innerColor={[0.3, 0.14, 0.04]} // Richer amber glow
+        outerColor={[0.025, 0.01, 0.006]} // Near black
+      />
+      {/* Layer 3: Hot orange core glow */}
+      <PlasmaBackground
+        startTime={startTime}
+        zDepth={-1.0}
+        noiseOffset={1.4}
+        opacity={0.5}
+        innerColor={[0.35, 0.16, 0.05]} // Hot orange - brighter!
+        outerColor={[0.03, 0.012, 0.008]} // Near black
+      />
+      {/* Layer 4: Golden mid glow */}
+      <PlasmaBackground
+        startTime={startTime}
+        zDepth={-0.6}
+        noiseOffset={2.1}
+        opacity={0.45}
+        innerColor={[0.32, 0.15, 0.05]} // Golden glow
+        outerColor={[0.025, 0.01, 0.008]} // Near black
+      />
+      {/* Layer 5: Red-orange accent highlights */}
+      <PlasmaBackground
+        startTime={startTime}
+        zDepth={-0.2}
+        noiseOffset={2.8}
+        opacity={0.4}
+        innerColor={[0.28, 0.1, 0.06]} // Red-orange accent
+        outerColor={[0.03, 0.015, 0.012]} // Near black with red warmth
+      />
 
-      {/* Lightning bolts */}
-      {boltAngles.map((angle, i) => (
-        <LightningBolt key={i} angle={angle} radius={portalRadius} startTime={startTime} />
+      {/* Lightning bolts - 8 primary (prominent) + secondary (thin/short/dim) */}
+      {bolts.map((bolt, i) => (
+        <LightningBolt
+          key={i}
+          angle={bolt.angle}
+          radius={portalRadius}
+          startTime={startTime}
+          isPrimary={bolt.isPrimary}
+          thicknessScale={bolt.thicknessScale}
+          lengthScale={bolt.lengthScale}
+        />
       ))}
 
       {/* Post-processing */}
@@ -262,7 +393,7 @@ function ElectricityScene({ startTime }: { startTime: number }) {
         />
       </EffectComposer>
     </>
-  );
+  )
 }
 
 /**
@@ -277,7 +408,7 @@ function ElectricityWrapper({ startTime }: { startTime: number }) {
     >
       <ElectricityScene startTime={startTime} />
     </Canvas>
-  );
+  )
 }
 
 /**
@@ -288,33 +419,33 @@ function ElectricityWrapper({ startTime }: { startTime: number }) {
  */
 export function ElectricityR3F({ visible }: ElectricityR3FProps) {
   // State for canvas instance (key + startTime captured together)
-  const [instance, setInstance] = useState<{ key: number; startTime: number } | null>(null);
-  const wasVisibleRef = useRef(false);
+  const [instance, setInstance] = useState<{ key: number; startTime: number } | null>(null)
+  const wasVisibleRef = useRef(false)
 
   // Handle visibility transitions with deferred state update
   useEffect(() => {
     if (visible && !wasVisibleRef.current) {
       // Becoming visible - capture startTime NOW, defer state update
-      const now = Date.now();
+      const now = Date.now()
       const timer = setTimeout(() => {
-        setInstance({ key: now, startTime: now });
-      }, 0);
-      wasVisibleRef.current = visible;
-      return () => clearTimeout(timer);
+        setInstance({ key: now, startTime: now })
+      }, 0)
+      wasVisibleRef.current = visible
+      return () => clearTimeout(timer)
     } else if (!visible && wasVisibleRef.current) {
       // Becoming hidden - clear instance
       const timer = setTimeout(() => {
-        setInstance(null);
-      }, 0);
-      wasVisibleRef.current = visible;
-      return () => clearTimeout(timer);
+        setInstance(null)
+      }, 0)
+      wasVisibleRef.current = visible
+      return () => clearTimeout(timer)
     }
-    wasVisibleRef.current = visible;
-    return undefined;
-  }, [visible]);
+    wasVisibleRef.current = visible
+    return undefined
+  }, [visible])
 
   // Don't render until we have an instance
-  if (!visible || !instance) return null;
+  if (!visible || !instance) return null
 
   return (
     <div
@@ -333,5 +464,5 @@ export function ElectricityR3F({ visible }: ElectricityR3FProps) {
     >
       <ElectricityWrapper key={instance.key} startTime={instance.startTime} />
     </div>
-  );
+  )
 }

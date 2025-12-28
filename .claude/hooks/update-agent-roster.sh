@@ -1,20 +1,53 @@
 #!/bin/bash
-# Auto-update agent roster after agent file changes
-# Triggered by PostToolUse hook on Write/Edit to .claude/agents/*.md
+# Auto-update agent roster and browser after .claude/ file changes
+# Triggered by PostToolUse hook on Write/Edit to .claude/**/*.md
 
 PROJECT_DIR="/Users/robertrhu/Projects/story-portal"
 AGENTS_DIR="$PROJECT_DIR/.claude/agents"
 ROSTER_FILE="$AGENTS_DIR/ROSTER.md"
+BROWSER_GENERATOR="$PROJECT_DIR/.claude/tools/generate-agent-browser.mjs"
 TIMESTAMP=$(date "+%B %d, %Y")
 
-# Only run if an agent file was modified (not ROSTER.md itself)
 MODIFIED_FILE="$1"
+
+# Skip if modifying ROSTER.md itself (prevent infinite loop)
 if [[ "$MODIFIED_FILE" == *"ROSTER.md"* ]]; then
   exit 0
 fi
 
-# Check if we're dealing with an agent file
-if [[ ! "$MODIFIED_FILE" == *".claude/agents/"* ]]; then
+# Check if we're dealing with a .claude/ file that should trigger updates
+if [[ ! "$MODIFIED_FILE" == *".claude/"* ]]; then
+  exit 0
+fi
+
+# Determine what was modified
+IS_AGENT=false
+IS_SKILL=false
+IS_COMMAND=false
+
+if [[ "$MODIFIED_FILE" == *".claude/agents/"* ]]; then
+  IS_AGENT=true
+fi
+if [[ "$MODIFIED_FILE" == *".claude/skills/"* ]]; then
+  IS_SKILL=true
+fi
+if [[ "$MODIFIED_FILE" == *".claude/commands/"* ]]; then
+  IS_COMMAND=true
+fi
+
+# If not an agent, skill, or command, exit
+if [[ "$IS_AGENT" == false && "$IS_SKILL" == false && "$IS_COMMAND" == false ]]; then
+  exit 0
+fi
+
+# Regenerate agent browser (for any .claude/ content change)
+if [[ -f "$BROWSER_GENERATOR" ]]; then
+  node "$BROWSER_GENERATOR" 2>/dev/null
+  echo "Regenerated: /tmp/agent-browser.html"
+fi
+
+# Only regenerate ROSTER.md if an agent file was modified
+if [[ "$IS_AGENT" == false ]]; then
   exit 0
 fi
 

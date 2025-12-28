@@ -1,7 +1,15 @@
 #!/usr/bin/env node
 /**
  * Agent Browser Generator
- * Generates an HTML browser for viewing agents, skills, and commands
+ * Generates an HTML browser for viewing roles, agents, skills, commands, and knowledge
+ *
+ * Sources:
+ *   ~/.claude/roles/       - Global role templates (by department)
+ *   ~/.claude/skills/      - Global skills (by category)
+ *   ~/.claude/knowledge/   - Knowledge base documents
+ *   .claude/agents/        - Project-specific agents
+ *   .claude/skills/        - Project-specific skills
+ *   .claude/commands/      - Slash commands
  *
  * Usage: node .claude/tools/generate-agent-browser.mjs
  * Output: /tmp/agent-browser.html
@@ -9,45 +17,83 @@
 
 import fs from 'fs'
 import path from 'path'
+import os from 'os'
 import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const projectRoot = path.resolve(__dirname, '../..')
-const claudeDir = path.join(projectRoot, '.claude')
+const projectClaudeDir = path.join(projectRoot, '.claude')
+const globalClaudeDir = path.join(os.homedir(), '.claude')
 
-// Read all files from a directory
-function readFiles(dir, pattern = '.md') {
+// Read all .md files from a directory (non-recursive)
+function readFiles(dir, pattern = '.md', exclude = []) {
   const result = {}
   if (!fs.existsSync(dir)) return result
 
-  const files = fs.readdirSync(dir).filter((f) => f.endsWith(pattern) && f !== 'ROSTER.md')
+  const files = fs.readdirSync(dir).filter((f) => f.endsWith(pattern) && !exclude.includes(f))
   for (const file of files) {
-    const name = file.replace(pattern, '')
-    const content = fs.readFileSync(path.join(dir, file), 'utf-8')
-    result[name] = content
+    const filePath = path.join(dir, file)
+    if (fs.statSync(filePath).isFile()) {
+      const name = file.replace(pattern, '')
+      const content = fs.readFileSync(filePath, 'utf-8')
+      result[name] = content
+    }
+  }
+  return result
+}
+
+// Read files organized by subdirectory (for roles, skills categories)
+function readBySubdirectory(dir, pattern = '.md') {
+  const result = {}
+  if (!fs.existsSync(dir)) return result
+
+  const subdirs = fs.readdirSync(dir).filter((f) => {
+    const fullPath = path.join(dir, f)
+    return fs.statSync(fullPath).isDirectory()
+  })
+
+  for (const subdir of subdirs) {
+    const files = readFiles(path.join(dir, subdir), pattern)
+    if (Object.keys(files).length > 0) {
+      result[subdir] = files
+    }
   }
   return result
 }
 
 // Build templates object
 const templates = {
+  // Global roles from ~/.claude/roles/ (organized by department)
+  roles: readBySubdirectory(path.join(globalClaudeDir, 'roles')),
+
+  // Project agents from .claude/agents/
   agents: {
-    'project-agents': readFiles(path.join(claudeDir, 'agents')),
+    'project-agents': readFiles(path.join(projectClaudeDir, 'agents'), '.md', ['ROSTER.md']),
   },
+
+  // Skills from both global and project
   skills: {
+    ...readBySubdirectory(path.join(globalClaudeDir, 'skills')),
     'project-skills': {},
   },
+
+  // Commands from .claude/commands/
   commands: {
-    'slash-commands': readFiles(path.join(claudeDir, 'commands')),
+    'slash-commands': readFiles(path.join(projectClaudeDir, 'commands')),
+  },
+
+  // Knowledge base from ~/.claude/knowledge/
+  knowledge: {
+    'knowledge-base': readFiles(path.join(globalClaudeDir, 'knowledge')),
   },
 }
 
-// Read skills (including nested SKILL.md files)
-const skillsDir = path.join(claudeDir, 'skills')
-if (fs.existsSync(skillsDir)) {
-  const items = fs.readdirSync(skillsDir)
+// Read project skills (including nested SKILL.md files)
+const projectSkillsDir = path.join(projectClaudeDir, 'skills')
+if (fs.existsSync(projectSkillsDir)) {
+  const items = fs.readdirSync(projectSkillsDir)
   for (const item of items) {
-    const itemPath = path.join(skillsDir, item)
+    const itemPath = path.join(projectSkillsDir, item)
     if (fs.statSync(itemPath).isDirectory()) {
       const skillFile = path.join(itemPath, 'SKILL.md')
       if (fs.existsSync(skillFile)) {
@@ -63,6 +109,10 @@ if (fs.existsSync(skillsDir)) {
 }
 
 // Count totals
+const roleCount = Object.values(templates.roles).reduce(
+  (sum, dept) => sum + Object.keys(dept).length,
+  0
+)
 const agentCount = Object.values(templates.agents).reduce(
   (sum, dept) => sum + Object.keys(dept).length,
   0
@@ -72,6 +122,10 @@ const skillCount = Object.values(templates.skills).reduce(
   0
 )
 const commandCount = Object.values(templates.commands).reduce(
+  (sum, dept) => sum + Object.keys(dept).length,
+  0
+)
+const knowledgeCount = Object.values(templates.knowledge).reduce(
   (sum, dept) => sum + Object.keys(dept).length,
   0
 )
@@ -88,16 +142,16 @@ const html = `<!DOCTYPE html>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; height: 100vh; background: #1a1a2e; color: #eee; }
 
-    .sidebar { width: 280px; background: #16213e; overflow-y: auto; border-right: 1px solid #0f3460; }
+    .sidebar { width: 300px; background: #16213e; overflow-y: auto; border-right: 1px solid #0f3460; }
     .sidebar h2 { padding: 16px; background: #0f3460; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #e94560; }
     .search { padding: 12px; }
     .search input { width: 100%; padding: 8px 12px; border: 1px solid #0f3460; border-radius: 6px; background: #1a1a2e; color: #fff; font-size: 14px; }
     .search input:focus { outline: none; border-color: #e94560; }
 
     .section { border-bottom: 1px solid #0f3460; }
-    .section-header { padding: 12px 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: #1a1a2e; }
+    .section-header { padding: 12px 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: #1a1a2e; font-weight: 600; }
     .section-header:hover { background: #0f3460; }
-    .section-header .count { font-size: 12px; color: #888; }
+    .section-header .count { font-size: 12px; color: #888; font-weight: normal; }
     .section-header .arrow { transition: transform 0.2s; }
     .section-header.collapsed .arrow { transform: rotate(-90deg); }
     .section-items { display: none; }
@@ -105,8 +159,8 @@ const html = `<!DOCTYPE html>
 
     .dept-header { padding: 8px 16px 8px 24px; font-size: 12px; color: #888; text-transform: uppercase; cursor: pointer; display: flex; justify-content: space-between; }
     .dept-header:hover { background: #0f3460; }
-    .dept-items { display: none; }
-    .dept-header:not(.collapsed) + .dept-items { display: block; }
+    .dept-header.collapsed + .dept-items { display: none; }
+    .dept-items { display: block; }
 
     .item { padding: 8px 16px 8px 40px; cursor: pointer; font-size: 13px; color: #aaa; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .item:hover { background: #0f3460; color: #fff; }
@@ -143,25 +197,27 @@ const html = `<!DOCTYPE html>
     .welcome { text-align: center; padding: 60px 40px; }
     .welcome h1 { font-size: 32px; margin-bottom: 16px; }
     .welcome p { color: #888; font-size: 16px; max-width: 500px; margin: 0 auto; }
-    .stats { display: flex; justify-content: center; gap: 30px; margin-top: 40px; flex-wrap: wrap; }
+    .stats { display: flex; justify-content: center; gap: 24px; margin-top: 40px; flex-wrap: wrap; }
     .stat { text-align: center; }
-    .stat-num { font-size: 42px; color: #e94560; font-weight: bold; }
-    .stat-label { color: #888; margin-top: 8px; }
+    .stat-num { font-size: 36px; color: #e94560; font-weight: bold; }
+    .stat-label { color: #888; margin-top: 8px; font-size: 14px; }
 
     .toast { position: fixed; bottom: 20px; right: 20px; background: #0f3460; padding: 12px 20px; border-radius: 8px; display: none; z-index: 200; }
     .toast.visible { display: block; animation: fadeIn 0.3s; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-    .section-header.commands { color: #54a0ff; }
+    .section-header.roles { color: #9b59b6; }
     .section-header.agents { color: #2ecc71; }
     .section-header.skills { color: #f39c12; }
+    .section-header.commands { color: #54a0ff; }
+    .section-header.knowledge { color: #1abc9c; }
 
     .generated { font-size: 11px; color: #555; margin-top: 12px; }
   </style>
 </head>
 <body>
   <div class="sidebar">
-    <h2>Agent Library</h2>
+    <h2>Template Library</h2>
     <div class="search"><input type="text" id="search" placeholder="Search..."></div>
     <div id="nav"></div>
   </div>
@@ -176,12 +232,14 @@ const html = `<!DOCTYPE html>
 
     <div id="content" class="content">
       <div class="welcome">
-        <h1>Agent & Skill Browser</h1>
-        <p>Browse agents, skills, and commands for Story Portal. Select an item from the sidebar to view its contents.</p>
+        <h1>Template Library</h1>
+        <p>Browse roles, agents, skills, commands, and knowledge for your AI workforce.</p>
         <div class="stats">
+          <div class="stat"><div class="stat-num">${roleCount}</div><div class="stat-label">Roles</div></div>
           <div class="stat"><div class="stat-num">${agentCount}</div><div class="stat-label">Agents</div></div>
           <div class="stat"><div class="stat-num">${skillCount}</div><div class="stat-label">Skills</div></div>
           <div class="stat"><div class="stat-num">${commandCount}</div><div class="stat-label">Commands</div></div>
+          <div class="stat"><div class="stat-num">${knowledgeCount}</div><div class="stat-label">Knowledge</div></div>
         </div>
         <p class="generated">Generated: ${new Date().toISOString()}</p>
       </div>
@@ -202,9 +260,24 @@ const html = `<!DOCTYPE html>
     function buildNav() {
       let html = '';
 
+      // Roles section (from ~/.claude/roles/)
+      const roleCount = Object.values(templates.roles).reduce((sum, dept) => sum + Object.keys(dept).length, 0);
+      html += '<div class="section"><div class="section-header roles collapsed" onclick="toggleSection(this)">Roles <span class="count">(' + roleCount + ')</span> <span class="arrow">▼</span></div>';
+      html += '<div class="section-items">';
+      Object.keys(templates.roles).sort().forEach(dept => {
+        const items = Object.keys(templates.roles[dept]).sort();
+        html += '<div class="dept-header collapsed" onclick="toggleDept(this)">' + dept + ' <span>(' + items.length + ')</span></div>';
+        html += '<div class="dept-items">';
+        items.forEach(name => {
+          html += '<div class="item" data-type="roles" data-key="' + dept + '" data-name="' + name + '" onclick="loadItem(this)">' + name + '</div>';
+        });
+        html += '</div>';
+      });
+      html += '</div></div>';
+
       // Agents section
       const agentCount = Object.values(templates.agents).reduce((sum, dept) => sum + Object.keys(dept).length, 0);
-      html += '<div class="section"><div class="section-header agents" onclick="toggleSection(this)">Agents <span class="count">(' + agentCount + ')</span> <span class="arrow">▼</span></div>';
+      html += '<div class="section"><div class="section-header agents collapsed" onclick="toggleSection(this)">Agents <span class="count">(' + agentCount + ')</span> <span class="arrow">▼</span></div>';
       html += '<div class="section-items">';
       Object.keys(templates.agents).sort().forEach(cat => {
         const items = Object.keys(templates.agents[cat]).sort();
@@ -219,11 +292,12 @@ const html = `<!DOCTYPE html>
 
       // Skills section
       const skillCount = Object.values(templates.skills).reduce((sum, dept) => sum + Object.keys(dept).length, 0);
-      html += '<div class="section"><div class="section-header skills" onclick="toggleSection(this)">Skills <span class="count">(' + skillCount + ')</span> <span class="arrow">▼</span></div>';
+      html += '<div class="section"><div class="section-header skills collapsed" onclick="toggleSection(this)">Skills <span class="count">(' + skillCount + ')</span> <span class="arrow">▼</span></div>';
       html += '<div class="section-items">';
       Object.keys(templates.skills).sort().forEach(cat => {
         const items = Object.keys(templates.skills[cat]).sort();
-        html += '<div class="dept-header" onclick="toggleDept(this)">' + cat + ' <span>(' + items.length + ')</span></div>';
+        if (items.length === 0) return;
+        html += '<div class="dept-header collapsed" onclick="toggleDept(this)">' + cat + ' <span>(' + items.length + ')</span></div>';
         html += '<div class="dept-items">';
         items.forEach(name => {
           html += '<div class="item" data-type="skills" data-key="' + cat + '" data-name="' + name + '" onclick="loadItem(this)">' + name + '</div>';
@@ -234,7 +308,7 @@ const html = `<!DOCTYPE html>
 
       // Commands section
       const cmdCount = Object.values(templates.commands).reduce((sum, dept) => sum + Object.keys(dept).length, 0);
-      html += '<div class="section"><div class="section-header commands" onclick="toggleSection(this)">Commands <span class="count">(' + cmdCount + ')</span> <span class="arrow">▼</span></div>';
+      html += '<div class="section"><div class="section-header commands collapsed" onclick="toggleSection(this)">Commands <span class="count">(' + cmdCount + ')</span> <span class="arrow">▼</span></div>';
       html += '<div class="section-items">';
       Object.keys(templates.commands).sort().forEach(cat => {
         const items = Object.keys(templates.commands[cat]).sort();
@@ -242,6 +316,21 @@ const html = `<!DOCTYPE html>
         html += '<div class="dept-items">';
         items.forEach(name => {
           html += '<div class="item" data-type="commands" data-key="' + cat + '" data-name="' + name + '" onclick="loadItem(this)">/' + name + '</div>';
+        });
+        html += '</div>';
+      });
+      html += '</div></div>';
+
+      // Knowledge section
+      const knowCount = Object.values(templates.knowledge).reduce((sum, dept) => sum + Object.keys(dept).length, 0);
+      html += '<div class="section"><div class="section-header knowledge collapsed" onclick="toggleSection(this)">Knowledge <span class="count">(' + knowCount + ')</span> <span class="arrow">▼</span></div>';
+      html += '<div class="section-items">';
+      Object.keys(templates.knowledge).sort().forEach(cat => {
+        const items = Object.keys(templates.knowledge[cat]).sort();
+        html += '<div class="dept-header" onclick="toggleDept(this)">' + cat + ' <span>(' + items.length + ')</span></div>';
+        html += '<div class="dept-items">';
+        items.forEach(name => {
+          html += '<div class="item" data-type="knowledge" data-key="' + cat + '" data-name="' + name + '" onclick="loadItem(this)">' + name + '</div>';
         });
         html += '</div>';
       });
@@ -299,6 +388,8 @@ const html = `<!DOCTYPE html>
 const outputPath = '/tmp/agent-browser.html'
 fs.writeFileSync(outputPath, html)
 console.log('Generated:', outputPath)
+console.log('Roles:', roleCount)
 console.log('Agents:', agentCount)
 console.log('Skills:', skillCount)
 console.log('Commands:', commandCount)
+console.log('Knowledge:', knowledgeCount)
